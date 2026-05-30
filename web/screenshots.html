@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ekran Görüntüleri — PardusEdu</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/gallery.css">
+</head>
+<body>
+
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">
+        <img src="img/pardus.png" alt="Pardus" class="logo-img">
+        <span>Pardus<span class="logo-highlight">Edu</span></span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#about">Hakkında</a></li>
+        <li><a href="index.html#dashboard">Pano</a></li>
+        <li><a href="index.html#pomodoro">Pomodoro</a></li>
+        <li><a href="index.html#tasks">Görevler</a></li>
+        <li><a href="index.html#notes">Notlar</a></li>
+        <li><a href="index.html#schedule">Ders Programı</a></li>
+        <li><a href="index.html#focus">Odak</a></li>
+        <li><a href="index.html#commands">Komutlar</a></li>
+        <li><a href="index.html#ai">Yapay Zeka</a></li>
+        <li><a href="index.html#python">Python</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="theme-btn" id="themeBtn" aria-label="Temayı değiştir">
+          <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+        </button>
+        <button class="nav-toggle" id="navToggle" aria-label="Menüyü aç/kapat">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <section class="gallery-hero">
+    <div class="gallery-hero-bg"></div>
+    <div class="gallery-hero-content">
+      <a href="index.html" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Ana Sayfa
+      </a>
+      <div class="gallery-hero-badge">GÖRSEL TUR</div>
+      <h1>Ekran <span class="gradient-text">Görüntüleri</span></h1>
+      <p>PardusEdu'nun tüm modüllerine ait ekran görüntülerini keşfedin. Her bir modül, öğrencilerin ihtiyaçları düşünülerek tasarlandı.</p>
+    </div>
+  </section>
+
+  <section class="gallery-section">
+    <div class="gallery-filter">
+      <button class="filter-btn active" data-filter="all">Tümü</button>
+      <button class="filter-btn" data-filter="panel">Pano</button>
+      <button class="filter-btn" data-filter="gorevler">Görevler</button>
+      <button class="filter-btn" data-filter="program">Ders Programı</button>
+      <button class="filter-btn" data-filter="odak">Odak Modu</button>
+      <button class="filter-btn" data-filter="linux">Linux</button>
+      <button class="filter-btn" data-filter="notlar">Notlar</button>
+      <button class="filter-btn" data-filter="python">Python</button>
+      <button class="filter-btn" data-filter="yapayzeka">Yapay Zeka</button>
+    </div>
+    <div class="gallery-grid">
+
+      <div class="gallery-card" data-category="panel">
+        <div class="gallery-card-img">
+          <img src="img/panel.png" alt="Pano" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Pano</span>
+          <h3>Kişisel Kontrol Merkezi</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="gorevler">
+        <div class="gallery-card-img">
+          <img src="img/gorevler.png" alt="Görevler" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Görevler</span>
+          <h3>Görev Yöneticisi</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="program">
+        <div class="gallery-card-img">
+          <img src="img/dersprogramı.png" alt="Ders Programı" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Ders Programı</span>
+          <h3>Haftalık Zaman Çizelgesi</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="program">
+        <div class="gallery-card-img">
+          <img src="img/dersprogramı2.png" alt="Ders Programı 2" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Ders Programı</span>
+          <h3>Ders Düzenleme</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="odak">
+        <div class="gallery-card-img">
+          <img src="img/dikkatmodu.png" alt="Odak Modu" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Odak Modu</span>
+          <h3>Sosyal Medya Engelleyici</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="odak">
+        <div class="gallery-card-img">
+          <img src="img/dikkatmodu2.png" alt="Odak Modu 2" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Odak Modu</span>
+          <h3>Odak Süresi Takibi</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="linux">
+        <div class="gallery-card-img">
+          <img src="img/linux.png" alt="Linux Komutları" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Linux</span>
+          <h3>52 Temel Linux Komutu</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="linux">
+        <div class="gallery-card-img">
+          <img src="img/linux2.png" alt="Linux Komutları 2" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Linux</span>
+          <h3>Kategorik Anlatım</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="notlar">
+        <div class="gallery-card-img">
+          <img src="img/notlarım.png" alt="Notlar" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Notlar</span>
+          <h3>Ders Notları ve Not Hesaplama</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="notlar">
+        <div class="gallery-card-img">
+          <img src="img/notlarım2.png" alt="Notlar 2" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Notlar</span>
+          <h3>Zengin Metin Düzenleyici</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="python">
+        <div class="gallery-card-img">
+          <img src="img/pythonogren.png" alt="Python" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Python</span>
+          <h3>42 Bölümlük Python Eğitimi</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="python">
+        <div class="gallery-card-img">
+          <img src="img/pythonogren2.png" alt="Python 2" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Python</span>
+          <h3>Etkileşimli Ders İçeriği</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="python">
+        <div class="gallery-card-img">
+          <img src="img/pythonogren3.png" alt="Python 3" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Python</span>
+          <h3>Uygulamalı Alıştırmalar</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="yapayzeka">
+        <div class="gallery-card-img">
+          <img src="img/yapayzeka.png" alt="Yapay Zeka" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Yapay Zeka</span>
+          <h3>Groq ile Akıllı Asistan</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="yapayzeka">
+        <div class="gallery-card-img">
+          <img src="img/yapayzeka2.png" alt="Yapay Zeka 2" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Yapay Zeka</span>
+          <h3>Çoklu Model Desteği</h3>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" id="lightboxClose">
+      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+    </button>
+    <img src="" alt="" class="lightbox-img" id="lightboxImg">
+    <div class="lightbox-caption" id="lightboxCaption"></div>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <img src="img/pardus.png" alt="Pardus" class="footer-logo-img">
+        <span>PardusEdu</span>
+      </div>
+      <p class="footer-desc">TEKNOFEST Eğitim Teknolojileri Kategorisi — Açık Kaynak GTK4 Uygulaması</p>
+      <div class="footer-links">
+        <a href="https://github.com/coderianx/pardusedu" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a>
+        <a href="LICENCE" target="_blank">Lisans (GPL v3)</a>
+        <a href="TEKNOFEST.md" target="_blank">TEKNOFEST</a>
+      </div>
+      <p class="footer-copy">Geliştirici: Ali Eymen Icli &middot; &copy; 2026</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+  <script src="js/gallery.js"></script>
+</body>
+</html>

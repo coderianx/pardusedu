@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PardusEdu - Öğrenci Merkezi</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#" class="nav-logo">
+        <img src="img/pardus.png" alt="Pardus" class="logo-img">
+        <span>Pardus<span class="logo-highlight">Edu</span></span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="#about">Hakkında</a></li>
+        <li><a href="#dashboard">Pano</a></li>
+        <li><a href="#pomodoro">Pomodoro</a></li>
+        <li><a href="#tasks">Görevler</a></li>
+        <li><a href="#notes">Notlar</a></li>
+        <li><a href="#schedule">Ders Programı</a></li>
+        <li><a href="#focus">Odak</a></li>
+        <li><a href="#commands">Komutlar</a></li>
+        <li><a href="#ai">Yapay Zeka</a></li>
+        <li><a href="#python">Python</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="theme-btn" id="themeBtn" aria-label="Temayı değiştir">
+          <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+        </button>
+        <button class="nav-toggle" id="navToggle" aria-label="Menüyü aç/kapat">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <section class="hero" id="about">
+    <div class="hero-bg"></div>
+    <div class="hero-content">
+      <div class="hero-badge">Pardus Öğrenci Merkezi</div>
+      <h1>Öğrencilerin tüm akademik ihtiyaçları<br><span class="gradient-text">tek bir uygulamada</span></h1>
+      <p>
+        PardusEdu, Pardus Linux için geliştirilmiş açık kaynaklı bir GTK4 masaüstü uygulamasıdır.
+        Ders programından yapay zeka asistanına, pomodoro zamanlayıcıdan odak moduna kadar
+        ihtiyacın olan her şey burada.
+      </p>
+      <div class="hero-features">
+        <div class="hero-feature"><i class="fa-solid fa-server hf-icon"></i> Tamamen Yerel</div>
+        <div class="hero-feature"><i class="fa-solid fa-lock hf-icon"></i> Gizlilik Odaklı</div>
+        <div class="hero-feature"><i class="fa-solid fa-code hf-icon"></i> Ücretsiz & Açık Kaynak</div>
+        <div class="hero-feature"><i class="fa-solid fa-puzzle-piece hf-icon"></i> 9 Modül</div>
+      </div>
+      <div class="hero-actions">
+        <a href="#dashboard" class="btn btn-primary">Kesfet</a>
+        <a href="screenshots.html" class="btn btn-alt">Ekran Görüntüleri</a>
+        <a href="https://github.com/coderianx/pardus" target="_blank" class="btn btn-outline"><i class="fa-brands fa-github"></i> GitHub</a>
+      </div>
+    </div>
+    <div class="hero-scroll">
+      <span>Aşağı kaydır</span>
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+    </div>
+  </section>
+
+  <main>
+
+    <section class="feature left" id="dashboard">
+      <div class="feature-container">
+        <div class="feature-visual">
+          <div class="mockup">
+            <div class="mockup-bar"><span></span><span></span><span></span></div>
+            <div class="mockup-body dashboard-mock">
+              <div class="dash-header">
+                <div class="dash-avatar"></div>
+                <div class="dash-greeting"><span class="m-line l1"></span><span class="m-line l2 s"></span></div>
+              </div>
+              <div class="dash-cards">
+                <div class="dash-card"></div>
+                <div class="dash-card"></div>
+                <div class="dash-card"></div>
+              </div>
+              <div class="dash-chart"></div>
+            </div>
+          </div>
+        </div>
+        <div class="feature-text">
+          <div class="feature-number">01</div>
+          <h2>Pano</h2>
+          <h3>Kişisel Kontrol Merkezin</h3>
+          <p>
+            Uygulamaya her girişinde seni kişisel bir karşılama bekliyor. Pardus logolu
+            ana ekranında, günün özeti, yaklaşan görevlerin ve devam eden derslerin
+            hakkında hızlı bir bakış sunar. Tüm modüllerine buradan tek tıkla ulaş.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature right" id="pomodoro">
+      <div class="feature-container">
+        <div class="feature-text">
+          <div class="feature-number">02</div>
+          <h2>Pomodoro Zamanlayıcı</h2>
+          <h3>Odaklan, Üretken Ol</h3>
+          <p>
+            Zaman yönetimini sanatını keşfet. Varsayılan 25 dakikalık çalışma ve 5 dakikalık
+            mola döngüleriyle başla, ardından kendi aralıklarını belirle. Başlat, duraklat,
+            sıfırla ve atla kontrolleriyle döngülerini yönet. Her tamamlanan döngüyle
+            serini (streak) biriktir, sesli bildirimlerle motivasyonunu koru.
+          </p>
+        </div>
+        <div class="feature-visual">
+          <div class="mockup">
+            <div class="mockup-bar"><span></span><span></span><span></span></div>
+            <div class="mockup-body pomo-mock">
+              <div class="pomo-circle">
+                <div class="pomo-ring"><span>25:00</span></div>
+              </div>
+              <div class="pomo-controls">
+                <span></span><span></span><span></span><span></span>
+              </div>
+              <div class="pomo-streak"><span class="m-line l1 s"></span><span class="m-line l2 s"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature left" id="tasks">
+      <div class="feature-container">
+        <div class="feature-visual">
+          <div class="mockup">
+            <div class="mockup-bar"><span></span><span></span><span></span></div>
+            <div class="mockup-body task-mock">
+              <div class="task-input"><span class="m-line"></span></div>
+              <div class="task-list">
+                <div class="task-item"><span class="task-check"></span><span class="m-line l2"></span><span class="task-badge"></span></div>
+                <div class="task-item"><span class="task-check"></span><span class="m-line l2"></span><span class="task-badge"></span></div>
+                <div class="task-item done"><span class="task-check"></span><span class="m-line l2"></span><span class="task-badge"></span></div>
+                <div class="task-item"><span class="task-check"></span><span class="m-line l2"></span><span class="task-badge"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="feature-text">
+          <div class="feature-number">03</div>
+          <h2>Görev Yöneticisi</h2>
+          <h3>Planla ve Başarıya Ulaş</h3>
+          <p>
+            Görevlerini oluştur, kategorilere ayır (Genel, Ders, Proje, Sınav, Ödev)
+            ve önceliklendir (Düşük, Orta, Yüksek). Renk kodlu arayüz sayesinde
+            görevlerini bir bakışta ayırt et. Takvim entegrasyonu ve tamamlama
+            işaretlemeleriyle üretkenliğini takip et.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature right" id="notes">
+      <div class="feature-container">
+        <div class="feature-text">
+          <div class="feature-number">04</div>
+          <h2>Not Modülü</h2>
+          <h3>Ders Notlarını Derle</h3>
+          <p>
+            Ders bazlı not alma deneyimi. Zengin metin düzenleyici ile notlarını yaz,
+            ders ekle/çıkar, vize ve final notlarını gir. Sistem senin için harf
+            notunu otomatik hesaplasın. Tüm notların yerel olarak saklanır,
+            istediğin zaman erişebilirsin.
+          </p>
+        </div>
+        <div class="feature-visual">
+          <div class="mockup">
+            <div class="mockup-bar"><span></span><span></span><span></span></div>
+            <div class="mockup-body note-mock">
+              <div class="note-sidebar"><span class="m-line"></span><span class="m-line"></span><span class="m-line"></span></div>
+              <div class="note-editor">
+                <span class="m-line l1"></span><span class="m-line l2"></span><span class="m-line l2"></span>
+                <div class="note-grade"><span></span><span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature left" id="schedule">
+      <div class="feature-container">
+        <div class="feature-visual">
+          <div class="mockup">
+            <div class="mockup-bar"><span></span><span></span><span></span></div>
+            <div class="mockup-body sched-mock">
+              <div class="sched-header"><span></span><span></span><span></span><span></span><span></span></div>
+              <div class="sched-grid">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="feature-text">
+          <div class="feature-number">05</div>
+          <h2>Ders Programı</h2>
+          <h3>Haftalık Zaman Çizelgen</h3>
+          <p>
+            Pazartesiden Cumaya haftalık ders takvimin. Saat dilimlerini kendine göre
+            özelleştir, derslerini konum bilgisiyle ekle, düzenle veya sil.
+            Renklendirilmiş ders bloklarıyla programını bir bakışta gör.
+            Akademik hayatını düzenlemenin en kolay yolu.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature right" id="focus">
+      <div class="feature-container">
+        <div class="feature-text">
+          <div class="feature-number">06</div>
+          <h2>Odak Modu</h2>
+          <h3>Sosyal Medyayı Engelle, Odaklan</h3>
+          <p>
+            Ders çalışırken dikkat dağıtan 17'den fazla siteyi (Instagram, Twitter/X,
+            Facebook, TikTok, Reddit, Netflix, Discord, Twitch, YouTube ve daha fazlası)
+            tek tıkla engelle. Sistem seviyesinde çalışan bu özellik, sen çalışırken
+            bildirimlerle odak süreni takip eder. Pomodoro ile entegre çalışır.
+          </p>
+        </div>
+        <div class="feature-visual">
+          <div class="mockup">
+            <div class="mockup-bar"><span></span><span></span><span></span></div>
+            <div class="mockup-body focus-mock">
+              <div class="focus-timer"><span>45:00</span></div>
+              <div class="focus-list">
+                <span class="blocked">instagram.com</span>
+                <span class="blocked">x.com</span>
+                <span class="blocked">tiktok.com</span>
+                <span class="blocked">youtube.com</span>
+              </div>
+              <div class="focus-btn"><span></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature left" id="commands">
+      <div class="feature-container">
+        <div class="feature-visual">
+          <div class="mockup">
+            <div class="mockup-bar"><span></span><span></span><span></span></div>
+            <div class="mockup-body cmd-mock">
+              <div class="cmd-search"><span class="m-line s"></span></div>
+              <div class="cmd-categories">
+                <span></span><span></span><span></span>
+              </div>
+              <div class="cmd-list">
+                <span class="cmd-item"><span class="m-line"></span><span class="m-line s"></span></span>
+                <span class="cmd-item"><span class="m-line"></span><span class="m-line s"></span></span>
+                <span class="cmd-item"><span class="m-line"></span><span class="m-line s"></span></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="feature-text">
+          <div class="feature-number">07</div>
+          <h2>Linux Komutları</h2>
+          <h3>52 Temel Komut, Kategorik Anlatım</h3>
+          <p>
+            Linux dünyasına adım at. Dosya işlemleri, izinler, süreç yönetimi,
+            ağ, paket yönetimi, kullanıcı ve disk yönetimi olmak üzere 7 kategoride
+            52 temel Linux komutunu keşfet. Arama filtresi ve genişleyen kartlarla
+            (Gtk::Revealer) istediğin bilgiye anında ulaş.
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature right" id="ai">
+      <div class="feature-container">
+        <div class="feature-text">
+          <div class="feature-number">08</div>
+          <h2>Yapay Zeka Asistanı</h2>
+          <h3>Groq Cloud ile Akıllı Yardım</h3>
+          <p>
+            Groq Cloud API ile güçlendirilmiş yapay zeka asistanınla ders çalış,
+            araştırma yap veya merak ettiğin her şeyi sor. Wikipedia entegrasyonu
+            sayesinde araştırma sorularında otomatik bağlam getirir. Mesajları
+            sağ tıkla kopyala, Enter ile gönder, Shift+Enter ile yeni satır.
+            API anahtarını kendin belirle, tam kontrol sende.
+          </p>
+          <div class="ai-models">
+            <h4>Aktif Modeller</h4>
+            <div class="model-grid">
+              <button class="model-badge" data-model="llama33">Llama 3.3 70B</button>
+              <button class="model-badge" data-model="llama31">Llama 3.1 8B</button>
+              <button class="model-badge" data-model="llama4">Llama 4 17B 16E</button>
+              <button class="model-badge" data-model="gptoss20">GPT OSS 20B</button>
+              <button class="model-badge" data-model="gptoss120">GPT OSS 120B</button>
+              <button class="model-badge" data-model="gptsafeguard">GPT OSS SafeGuard 20B</button>
+              <button class="model-badge" data-model="qwen3">Qwen 3 32B</button>
+              <button class="model-badge" data-model="groq">Groq Compound</button>
+            </div>
+          </div>
+        </div>
+        <div class="feature-visual">
+          <div class="mockup">
+            <div class="mockup-bar"><span></span><span></span><span></span></div>
+            <div class="mockup-body ai-mock">
+              <div class="ai-msg received"><span class="m-line l1"></span><span class="m-line l2"></span></div>
+              <div class="ai-msg sent"><span class="m-line l2"></span></div>
+              <div class="ai-msg received"><span class="m-line l1"></span><span class="m-line l2"></span><span class="m-line l2 s"></span></div>
+              <div class="ai-input"><span class="m-line"></span><span class="ai-send"></span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature left" id="python">
+      <div class="feature-container">
+        <div class="feature-visual">
+          <div class="mockup">
+            <div class="mockup-bar"><span></span><span></span><span></span></div>
+            <div class="mockup-body py-mock">
+              <div class="py-sidebar"><span></span><span></span><span></span><span></span></div>
+              <div class="py-content">
+                <span class="m-line l1"></span><span class="m-line l1"></span>
+                <span class="m-line l2"></span><span class="m-line l2"></span>
+                <div class="py-code"><span class="m-line l2"></span><span class="m-line l2 s"></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="feature-text">
+          <div class="feature-number">09</div>
+          <h2>Python Öğrenme Modülü</h2>
+          <h3>Sıfırdan Uzmanlığa</h3>
+          <p>
+            60+ bölüm, ~15 bin satırlık kapsamlı bir Python eğitimi. Temel bilgilerden
+            başlayıp NumPy, Pandas, Matplotlib, Flask, FastAPI, test yazma ve
+            veritabanlarına kadar ilerle. WebKitWebView ile markdown'dan HTML'ye
+            dönüştürülen dersler, tarayıcıya ihtiyaç duymadan uygulama içinde
+            görüntülenir.
+          </p>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <img src="img/pardus.png" alt="Pardus" class="footer-logo-img">
+        <span>PardusEdu</span>
+      </div>
+      <p class="footer-desc">TEKNOFEST Pardus Öneri ve Geliştrime Kategorisi — Açık Kaynak GTK4 Uygulaması</p>
+      <div class="footer-links">
+        <a href="https://github.com/coderianx/pardusedu" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a>
+        <a href="LICENCE" target="_blank">Lisans (GPL v3)</a>
+        <a href="https://teknofest.org" target="_blank">TEKNOFEST</a>
+      </div>
+      <p class="footer-copy">Geliştirici: Ali Eymen İçli &middot; &copy; 2026</p>
+    </div>
+  </footer>
+
+  <div class="modal-overlay" id="modelModal">
+    <div class="modal">
+      <button class="modal-close" id="modalClose">
+        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+      <div class="modal-icon" id="modalIcon">
+        <i class="fa-solid fa-brain"></i>
+      </div>
+      <h3 id="modalTitle">Model Adı</h3>
+      <p id="modalDesc">Açıklama burada görünecek.</p>
+    </div>
+  </div>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
