@@ -460,7 +460,7 @@ std::string call_ai(
 
         "Taban Modelin " + global_model + ". "
 
-        "Ali Eymen İçli (Coderian) tarafından "
+        "Coderian tarafından "
         "geliştirildin. (Taban Modelin Hariç)"
 
         "Emoji Kullan ama az sayıda kullan."
