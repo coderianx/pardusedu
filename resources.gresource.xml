@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+  <gresource prefix="/org/ogrenci/merkezi">
+    <file>assets/style.css</file>
+    <file>assets/pardus.svg</file>
+    <file>assets/pardus_symbol.svg</file>
+    <file>assets/send.svg</file>
+    <file>assets/sun.svg</file>
+    <file>assets/moon.svg</file>
+    <file>assets/save.svg</file>
+    <file>docs/python/python.md</file>
+  </gresource>
+</gresources>

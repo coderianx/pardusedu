@@ -1,0 +1,496 @@
+window {
+    background: __bg_color;
+}
+
+.app-title {
+    font-size: 18px;
+    font-weight: bold;
+    color: __accent;
+}
+
+.sidebar-box {
+    background: __sidebar_bg;
+}
+
+.sidebar-title {
+    color: __muted;
+    font-size: 11px;
+    font-weight: bold;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+list {
+    background: transparent;
+}
+
+list row {
+    border-radius: 8px;
+    margin: 2px 6px;
+}
+
+list row:hover {
+    background: __hover_bg;
+}
+
+list row:selected {
+    background: __accent;
+}
+
+list row:selected label {
+    color: #ffffff;
+    font-weight: bold;
+}
+
+list row label {
+    color: __text_color;
+    padding: 6px 0;
+}
+
+.page-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: __accent;
+}
+
+.card {
+    background: __card_bg;
+    border: 1px solid __border;
+    border-radius: 10px;
+}
+
+.card label {
+    color: __text_color;
+}
+
+.pomo-time {
+    font-size: 56px;
+    font-weight: bold;
+    color: __accent;
+    font-family: monospace;
+}
+
+.pomo-status {
+    font-size: 16px;
+    color: __accent_light;
+}
+
+.focus-time {
+    font-size: 48px;
+    font-weight: bold;
+    color: __danger;
+    font-family: monospace;
+}
+
+progressbar > trough {
+    background: __border;
+    border-radius: 6px;
+    min-height: 10px;
+}
+
+progressbar > trough > progress {
+    background: __accent;
+    border-radius: 6px;
+}
+
+.pomo-btn {
+    background: __accent;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 8px 20px;
+    min-width: 70px;
+}
+
+.pomo-btn:hover {
+    background: __accent_dark;
+}
+
+.focus-btn-on {
+    background: __danger;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 10px 28px;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.focus-btn-off {
+    background: __success;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 10px 28px;
+    font-size: 15px;
+    font-weight: bold;
+}
+
+.action-btn {
+    background: __accent_light;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: bold;
+}
+
+.action-btn:hover {
+    background: __accent;
+}
+
+.delete-btn {
+    background: transparent;
+    color: __danger;
+    border: 1px solid __danger;
+    border-radius: 6px;
+    padding: 4px 10px;
+}
+
+.delete-btn:hover {
+    background: __danger;
+    color: #ffffff;
+}
+
+.task-row {
+    background: __card_bg;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.task-row:hover {
+    background: __hover_bg;
+}
+
+.grade-row {
+    background: __card_bg;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+.grade-row:hover {
+    background: __hover_bg;
+}
+
+entry {
+    background: __card_bg;
+    color: __text_color;
+    border: 1px solid __border;
+    border-radius: 8px;
+    padding: 8px;
+}
+
+entry:focus {
+    border-color: __accent;
+}
+
+comboboxtext {
+    background: __card_bg;
+    color: __text_color;
+    border: 1px solid __border;
+    border-radius: 8px;
+}
+
+checkbutton {
+    color: __accent;
+}
+
+spinbutton {
+    background: __card_bg;
+    color: __text_color;
+    border: 1px solid __border;
+    border-radius: 8px;
+}
+
+.cmd-card {
+    background: __card_bg;
+    border-radius: 8px;
+    padding: 10px;
+    border-left: 3px solid __accent;
+}
+
+.cmd-card:hover {
+    background: __hover_bg;
+}
+
+.cmd-card-expanded {
+    border-left-width: 4px;
+}
+
+.cmd-detail {
+    color: __muted;
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 8px 0 2px 0;
+    margin: 4px 0 0 0;
+}
+
+.cmd-name {
+    color: __accent;
+    font-size: 15px;
+}
+
+.cmd-example {
+    color: __accent_light;
+    font-size: 12px;
+}
+
+scrolledwindow {
+    border-radius: 8px;
+}
+
+scrolledwindow > viewport {
+    background: transparent;
+}
+
+label {
+    color: __text_color;
+}
+
+button {
+    background: __btn_bg;
+    color: __btn_text;
+    border: 1px solid __border;
+    border-radius: 8px;
+    padding: 6px 12px;
+}
+
+button:hover {
+    background: __btn_hover;
+}
+
+.theme-btn, .save-btn {
+    padding: 6px 12px;
+    min-width: 34px;
+    min-height: 34px;
+}
+
+frame {
+    border: none;
+}
+
+separator {
+    background: __border;
+}
+
+.note-paper {
+    background: #ffffff;
+    color: #333333;
+    border-radius: 4px;
+}
+
+.note-paper textview {
+    background: #ffffff;
+    color: #333333;
+}
+
+.course-row {
+    background: __card_bg;
+    border-radius: 8px;
+}
+
+.course-row:hover {
+    background: __hover_bg;
+}
+
+.task-form {
+    background: __card_bg;
+    border-radius: 10px;
+    padding: 12px;
+}
+
+.dash-welcome {
+    font-size: 36px;
+    font-weight: bold;
+    color: __accent;
+}
+
+.dash-sub {
+    font-size: 18px;
+    color: __muted;
+}
+
+.pardusedu {
+    font-size: 16px;
+    color: __muted;
+}
+
+.pomo-setting-label {
+    font-size: 12px;
+    color: __muted;
+    font-weight: bold;
+}
+
+.pomo-spin {
+    font-size: 18px;
+    font-weight: bold;
+    font-family: monospace;
+    padding: 6px 12px;
+    border-radius: 8px;
+    background: __card_bg;
+    color: __accent;
+    border: 2px solid __border;
+    min-width: 60px;
+}
+
+.pomo-spin:focus {
+    border-color: __accent;
+}
+
+.pomo-spin:disabled {
+    opacity: 0.5;
+}
+
+.schedule-corner {
+    background: __sidebar_bg;
+    border-radius: 6px;
+    padding: 6px;
+}
+
+.schedule-header {
+    background: __accent;
+    color: #ffffff;
+    border-radius: 6px;
+    padding: 6px;
+}
+
+.schedule-time-btn {
+    background: __card_bg;
+    color: __muted;
+    border: 1px dashed __border;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.schedule-time-btn:hover {
+    background: __hover_bg;
+    color: __accent;
+    border-color: __accent;
+    border-style: solid;
+}
+
+.schedule-cell {
+    background: __accent;
+    color: #ffffff;
+    border-radius: 6px;
+    padding: 8px 6px;
+    font-weight: bold;
+    font-size: 13px;
+    min-height: 40px;
+}
+
+.schedule-cell:hover {
+    background: __accent_dark;
+}
+
+.schedule-cell-empty {
+    background: __card_bg;
+    color: __muted;
+    border: 1px dashed __border;
+    border-radius: 6px;
+    padding: 8px 6px;
+    font-size: 16px;
+    min-height: 40px;
+}
+
+.schedule-cell-empty:hover {
+    background: __hover_bg;
+    color: __accent;
+    border-color: __accent;
+    border-style: solid;
+}
+
+/* ================= AI CHAT BALONLARI ================= */
+
+/* USER (SAĞ - MAVİ) */
+.user-msg {
+    background: __accent;
+    color: #ffffff;
+    border-radius: 16px;
+    padding: 10px;
+    margin: 4px 0;
+    margin-left: 80px;
+}
+
+/* AI (SOL - KART RENGİ) */
+.ai-msg {
+    background: __card_bg;
+    color: __text_color;
+    border-radius: 16px;
+    padding: 10px;
+    margin: 4px 0;
+    margin-right: 80px;
+    border: 1px solid __border;
+}
+
+.ai-send-btn {
+    background: __accent;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 8px 20px;
+    min-width: 70px;
+}
+
+.ai-page-title {
+    font-size: 20px;
+    font-weight: bold;
+    color: #38BDF8;
+    text-shadow: 0 0 px rgba(15, 76, 129, 0.6);
+}
+
+.ai-key-btn {
+    background: __accent;
+    color: #ffffff;
+    border-radius: 8px;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 0;
+    min-width: 36px;
+    min-height: 36px;
+}
+
+.ai-key-btn:hover {
+    background: __accent_dark;
+}
+
+/* FRAME temiz görünüm */
+frame {
+    border: none;
+}
+
+menu,
+popover,
+modelmenu {
+    border-radius: 12px;
+
+    border: 1px solid alpha(currentColor, 0.10);
+
+    padding: 8px;
+
+    box-shadow:
+        0 6px 18px alpha(black, 0.12);
+}
+
+modelbutton,
+menuitem {
+    border-radius: 8px;
+
+    padding: 10px 14px;
+    margin: 2px 0;
+
+    background: transparent;
+}
+
+modelbutton:hover,
+menuitem:hover {
+    background: alpha(currentColor, 0.08);
+}
+
+modelbutton:active,
+menuitem:active {
+    background: alpha(currentColor, 0.14);
+}
+
+separator {
+    background: alpha(currentColor, 0.10);
+    min-height: 1px;
+    margin: 6px 4px;
+}
