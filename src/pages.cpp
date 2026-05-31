@@ -1974,84 +1974,36 @@ void MainWindow::process_ai_notes(std::string& ai_text) {
     }
 }
 
-void MainWindow::setup_ai_chat() {
+void MainWindow::on_ai_response() {
+    std::string result;
+    {
+        std::lock_guard<std::mutex> lock(ai_mutex);
+        result = pending_ai_response;
+        pending_ai_response.clear();
+    }
 
-    auto send_message = [this]() {
+    ai_waiting = false;
+    ai_input.set_sensitive(true);
+    btn_ai_send.set_sensitive(true);
 
-        std::string text = ai_input.get_text();
-        if(text.empty()) return;
-
-        // Kullanıcının mesajını sağ tarafta mavi bir balon içinde gösteriyoruz
-        auto* user_msg = Gtk::make_managed<Gtk::Frame>();
-        auto* user_lbl = Gtk::make_managed<Gtk::Label>(text);
-        user_msg->add_css_class("user-msg");
-
-        user_lbl->set_wrap(true);
-        user_lbl->set_margin(8);
-
-        user_msg->set_child(*user_lbl);
-        user_msg->set_halign(Gtk::Align::END);
-
-        ai_chat_box.append(*user_msg);
-
-        // Asistanın cevabı için sol tarafta gri bir balon oluşturuyoruz
-        auto* ai_msg = Gtk::make_managed<Gtk::Frame>();
-        auto* ai_lbl = Gtk::make_managed<Gtk::Label>("Cevap alınıyor...");
-        ai_msg->add_css_class("ai-msg");
-
-        ai_lbl->set_wrap(true);
-        ai_lbl->set_margin(8);
-        ai_lbl->set_selectable(true);
-
-        auto gesture = Gtk::GestureClick::create();
-        gesture->set_button(3);
-
-        gesture->signal_pressed().connect([ai_lbl](int, double, double) {
-            auto clipboard = Gdk::Display::get_default()->get_clipboard();
-            clipboard->set_text(ai_lbl->get_text());
-        });
-
-        ai_lbl->add_controller(gesture);
-        
-        ai_msg->set_child(*ai_lbl);
-        ai_msg->set_halign(Gtk::Align::START);
-
-        ai_chat_box.append(*ai_msg);
-
-        ai_input.set_text("");
-
-        std::string app_context;
-        {
-            std::string lower = text;
-            std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
-            static const std::vector<std::string> keywords = {
-                "not", "ders", "görev", "gorev", "ödev", "odev",
-                "oku", "analiz", "program", "takvim", "çalışma", "calisma"
-            };
-            bool needs = false;
-            for (auto& kw : keywords)
-                if (lower.find(kw) != std::string::npos) { needs = true; break; }
-            if (needs) {
-                for (auto& n : course_notes) {
-                    app_context += "- Ders: " + n.course + "\n";
-                    if (!n.content.empty())
-                        app_context += "  İçerik:\n" + n.content + "\n\n";
-                }
-            }
+    if (pending_ai_label) {
+        std::string display_text;
+        if (!result.empty()) {
+            display_text = extract_ai_reply(result);
+            process_ai_notes(display_text);
         }
-        std::string raw = call_ai(text, app_context);
-        std::string clean = extract_ai_reply(raw);
-        process_ai_notes(clean);
+        if (display_text.empty())
+            display_text = "API cevap veremedi. Daha sonra dene.";
+        pending_ai_label->set_text(display_text);
+        pending_ai_label = nullptr;
+    }
 
-        if(!clean.empty())
-            ai_lbl->set_text(clean);
-        else
-            ai_lbl->set_text("API cevap veremedi. Daha sonra dene.");
+    auto adj = ai_scroll.get_vadjustment();
+    adj->set_value(adj->get_upper());
+}
 
-        // Sohbeti en alta kaydırarak yeni mesajı göstermesini sağlıyoruz
-        auto adj = ai_scroll.get_vadjustment();
-        adj->set_value(adj->get_upper());
-    };
+void MainWindow::setup_ai_chat() {
+    ai_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_ai_response));
 
     auto* sw = Gtk::make_managed<Gtk::ScrolledWindow>();
     sw->set_policy(Gtk::PolicyType::AUTOMATIC,
@@ -2081,7 +2033,6 @@ void MainWindow::setup_ai_chat() {
     title_box->append(*title);
     title_box->append(btn_ai_key);
 
-    // Sohbet alanını hazırlıyoruz, bütün mesajlar bu kutunun içinde görünecek
     ai_chat_box.set_orientation(Gtk::Orientation::VERTICAL);
     ai_chat_box.set_spacing(8);
     ai_chat_box.set_vexpand(true);
@@ -2092,9 +2043,7 @@ void MainWindow::setup_ai_chat() {
     ai_scroll.set_vexpand(true);
     ai_scroll.set_child(ai_chat_box);
 
-    // Kullanıcının mesaj yazması için giriş kutusu ve gönderme butonu
     ai_input.set_placeholder_text("PardusEdu Asistana soru sor...");
-    ai_input.set_hexpand(true);
 
     auto* send_icon = Gtk::make_managed<Gtk::Image>();
     send_icon->set_from_resource("/org/ogrenci/merkezi/assets/send.svg");
@@ -2107,54 +2056,48 @@ void MainWindow::setup_ai_chat() {
     auto* input_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
     input_box->set_halign(Gtk::Align::FILL);
 
-    // Yazı alanı mümkün olduğunca geniş olsun ki kullanıcı rahatça yazsın
     ai_input.set_hexpand(true);
-    ai_input.signal_activate().connect(send_message);
 
-    // Gönderme butonu küçük ve sabit dursun, asıl alanı yazı kutusu kaplasın
     btn_ai_send.set_hexpand(false);
     btn_ai_send.set_size_request(90, -1);
     btn_ai_send.set_halign(Gtk::Align::END);
     input_box->append(ai_input);
     input_box->append(btn_ai_send);
 
-    // Kullanıcı butona tıklayınca veya Enter'a basınca mesajı gönderiyoruz
-    btn_ai_send.signal_clicked().connect([this]() {
-
+    auto send_message = [this]() {
+        if (ai_waiting) return;
         std::string text = ai_input.get_text();
         if(text.empty()) return;
 
-        // Kullanıcının yazdığı mesajı sohbete ekliyoruz
         auto* user_msg = Gtk::make_managed<Gtk::Frame>();
         auto* user_lbl = Gtk::make_managed<Gtk::Label>(text);
         user_msg->add_css_class("user-msg");
-
         user_lbl->set_wrap(true);
         user_lbl->set_margin(8);
-
         user_msg->set_child(*user_lbl);
         user_msg->set_halign(Gtk::Align::END);
-
         ai_chat_box.append(*user_msg);
 
-        // Yapay zekanın cevabı için beklerken "Cevap alınıyor..." yazısı gösteriyoruz
         auto* ai_msg = Gtk::make_managed<Gtk::Frame>();
         auto* ai_lbl = Gtk::make_managed<Gtk::Label>("Cevap alınıyor...");
         ai_msg->add_css_class("ai-msg");
-
         ai_lbl->set_wrap(true);
         ai_lbl->set_margin(8);
         ai_lbl->set_selectable(true);
-        ai_lbl->set_focusable(true);
+
+        auto gesture = Gtk::GestureClick::create();
+        gesture->set_button(3);
+        gesture->signal_pressed().connect([ai_lbl](int, double, double) {
+            auto clipboard = Gdk::Display::get_default()->get_clipboard();
+            clipboard->set_text(ai_lbl->get_text());
+        });
+        ai_lbl->add_controller(gesture);
 
         ai_msg->set_child(*ai_lbl);
         ai_msg->set_halign(Gtk::Align::START);
-
         ai_chat_box.append(*ai_msg);
-
         ai_input.set_text("");
 
-        // API'ye istek atıp yapay zekanın cevabını alıyoruz
         std::string app_context;
         {
             std::string lower = text;
@@ -2174,28 +2117,33 @@ void MainWindow::setup_ai_chat() {
                 }
             }
         }
-        std::string raw = call_ai(text, app_context);
-        std::string clean = extract_ai_reply(raw);
-        process_ai_notes(clean);
-        
-        if(!clean.empty()) {
-            ai_lbl->set_text(clean);
-        } else {
-            ai_lbl->set_text("API cevap veremedi. Daha sonra dene.");
-        }
 
-        // En son mesaja odaklanmak için aşağı kaydırıyoruz
-        auto adj = ai_scroll.get_vadjustment();
-        adj->set_value(adj->get_upper());
-    });
+        ai_waiting = true;
+        ai_input.set_sensitive(false);
+        btn_ai_send.set_sensitive(false);
+        pending_ai_label = ai_lbl;
 
-    // Sayfadaki tüm öğeleri birleştirip ana ekrana ekliyoruz
+        std::string text_copy = text;
+        std::string context_copy = app_context;
+
+        std::thread([this, text_copy, context_copy]() {
+            std::string raw = call_ai(text_copy, context_copy);
+            {
+                std::lock_guard<std::mutex> lock(ai_mutex);
+                pending_ai_response = raw;
+            }
+            ai_dispatcher.emit();
+        }).detach();
+    };
+
+    ai_input.signal_activate().connect(send_message);
+    btn_ai_send.signal_clicked().connect(send_message);
+
     page->append(*title_box);
     page->append(ai_scroll);
     page->append(*input_box);
 
     sw->set_child(*page);
-
     stack.add(*sw, "ai");
 }
 
@@ -2204,41 +2152,142 @@ void MainWindow::show_ai_key_dialog() {
     dialog->set_title("Yapay Zeka Ayarları");
     dialog->set_transient_for(*this);
     dialog->set_modal(true);
-    dialog->set_default_size(420, 220);
+    dialog->set_default_size(500, 420);
 
     auto* content = dialog->get_content_area();
     content->set_margin(16);
     content->set_spacing(12);
 
-    // Kullanıcının Groq API anahtarını girmesi için bir metin kutusu ekliyoruz
-    auto* key_lbl = Gtk::make_managed<Gtk::Label>(
-        "Groq API Anahtarı:\n(https://console.groq.com/keys adresinden alabilirsiniz)");
-    key_lbl->set_wrap(true);
-    key_lbl->set_halign(Gtk::Align::START);
+    // Sağlayıcı seçimi
+    auto* provider_lbl = Gtk::make_managed<Gtk::Label>("Sağlayıcı:");
+    provider_lbl->set_halign(Gtk::Align::START);
 
-    auto* key_entry = Gtk::make_managed<Gtk::Entry>();
-    key_entry->set_placeholder_text("gsk_...");
-    key_entry->set_text(ai_api_key);
-    key_entry->set_hexpand(true);
+    auto* provider_combo = Gtk::make_managed<Gtk::ComboBoxText>();
+    provider_combo->append("groq", "Groq Cloud");
+    provider_combo->append("openrouter", "OpenRouter");
+    provider_combo->set_active_id(ai_provider == AIProvider::OPENROUTER ? "openrouter" : "groq");
 
-    // Hangi yapay zeka modelini kullanmak istediğini seçmesi için bir liste ekliyoruz
-    auto* model_lbl = Gtk::make_managed<Gtk::Label>("Model:");
-    model_lbl->set_halign(Gtk::Align::START);
+    content->append(*provider_lbl);
+    content->append(*provider_combo);
 
-    auto* model_combo = Gtk::make_managed<Gtk::ComboBoxText>();
-    model_combo->append("llama-3.1-8b-instant", "Llama 3.1 8B");
-    model_combo->append("llama-3.3-70b-versatile", "Llama 3.3 70B");
-    model_combo->append("meta-llama/llama-4-scout-17b-16e-instruct", "Llama 4 17B 16E");
-    model_combo->append("openai/gpt-oss-120b", "OpenAi GPT OSS 120B");
-    model_combo->append("openai/gpt-oss-20b", "OpenAi GPT OSS 20B");
-    model_combo->append("openai/gpt-oss-safeguard-20b", "OpenAi GPT OSS SafeGuard 20B");
-    model_combo->append("qwen/qwen3-32b", "Qwen 3 32B");
-    model_combo->append("groq/compound", "Groq Compound");
-    model_combo->set_active_id(ai_model);
+    auto* sep = Gtk::make_managed<Gtk::Separator>(Gtk::Orientation::HORIZONTAL);
+    sep->set_margin_top(8);
+    sep->set_margin_bottom(8);
+    content->append(*sep);
+
+    // Groq Cloud bölümü
+    auto* groq_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 8);
+
+    auto* groq_header = Gtk::make_managed<Gtk::Label>("");
+    groq_header->set_markup("<b>Groq Cloud</b>");
+    groq_header->set_halign(Gtk::Align::START);
+
+    auto* groq_key_lbl = Gtk::make_managed<Gtk::Label>(
+        "API Anahtarı:\n(https://console.groq.com/keys adresinden alabilirsiniz)");
+    groq_key_lbl->set_wrap(true);
+    groq_key_lbl->set_halign(Gtk::Align::START);
+
+    auto* groq_key_entry = Gtk::make_managed<Gtk::Entry>();
+    groq_key_entry->set_placeholder_text("gsk_...");
+    groq_key_entry->set_text(ai_api_key_groq);
+    groq_key_entry->set_hexpand(true);
+
+    auto* groq_model_lbl = Gtk::make_managed<Gtk::Label>("Model:");
+    groq_model_lbl->set_halign(Gtk::Align::START);
+
+    auto* groq_model_combo = Gtk::make_managed<Gtk::ComboBoxText>();
+    groq_model_combo->append("llama-3.1-8b-instant", "Llama 3.1 8B");
+    groq_model_combo->append("llama-3.3-70b-versatile", "Llama 3.3 70B");
+    groq_model_combo->append("meta-llama/llama-4-scout-17b-16e-instruct", "Llama 4 Scout 17B-16E");
+    groq_model_combo->append("openai/gpt-oss-120b", "OpenAi GPT OSS 120B");
+    groq_model_combo->append("openai/gpt-oss-20b", "OpenAi GPT OSS 20B");
+    groq_model_combo->append("openai/gpt-oss-safeguard-20b", "OpenAİ GPT OSS SafeGuard 20B");
+    groq_model_combo->append("qwen/qwen3-32b", "Qwen 3 32B");
+    groq_model_combo->append("groq-compound", "Groq Compound");
+
+    
+    groq_model_combo->set_active_id(ai_model_groq);
+    groq_box->append(*groq_header);
+    groq_box->append(*groq_key_lbl);
+    groq_box->append(*groq_key_entry);
+    groq_box->append(*groq_model_lbl);
+    groq_box->append(*groq_model_combo);
+
+    // OpenRouter bölümü
+    auto* or_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 8);
+
+    auto* or_header = Gtk::make_managed<Gtk::Label>("");
+    or_header->set_markup("<b>OpenRouter</b>");
+    or_header->set_halign(Gtk::Align::START);
+
+    auto* or_key_lbl = Gtk::make_managed<Gtk::Label>(
+        "API Anahtarı:\n(https://openrouter.ai/keys adresinden alabilirsiniz)");
+    or_key_lbl->set_wrap(true);
+    or_key_lbl->set_halign(Gtk::Align::START);
+
+    auto* or_key_entry = Gtk::make_managed<Gtk::Entry>();
+    or_key_entry->set_placeholder_text("sk-or-...");
+    or_key_entry->set_text(ai_api_key_openrouter);
+    or_key_entry->set_hexpand(true);
+
+    auto* or_model_lbl = Gtk::make_managed<Gtk::Label>("Model:");
+    or_model_lbl->set_halign(Gtk::Align::START);
+
+    auto* or_model_combo = Gtk::make_managed<Gtk::ComboBoxText>();
+    // Google
+    or_model_combo->append("google/gemma-4-31b-it", "Google Gemma 4 31B");
+    or_model_combo->append("google/gemini-3.5-flash", "Gemini 3.5 Flash");
+    or_model_combo->append("google/gemini-2.5-flash", "Gemini 2.5 Flash");
+    or_model_combo->append("google/gemini-3.1-flash-lite", "Gemini 3.1 Flash Lite");
+    or_model_combo->append("google/gemini-2.5-pro", "Gemini 2.5 Pro");
+    // Qwen
+    or_model_combo->append("qwen/qwen3.6-flash", "Qwen 3.6 Flash");
+    or_model_combo->append("qwen/qwen3-coder", "Qwen 3 Coder");
+    or_model_combo->append("qwen/qwen3.7-max", "Qwen 3.7 Max");
+    // Deepseek
+    or_model_combo->append("deepseek/deepseek-r1", "Deepseek R1");
+    or_model_combo->append("deepseek/deepseek-v4-pro", "Deepseek V4 Pro");
+    or_model_combo->append("deepseek/deepseek-v4-flash:nitro", "Deepseek V4 Flash Nitro");
+    // Mistral
+    or_model_combo->append("mistralai/mistral-small-2603", "Mistral Small 4");
+    // Kimi
+    or_model_combo->append("moonshotai/kimi-k2-thinking", "Kimi K2");
+    or_model_combo->append("moonshotai/kimi-k2.6", "Kimi K2.6");
+    // Claude
+    or_model_combo->append("anthropic/claude-haiku-4.5", "Claude Haiku 4.5");
+    or_model_combo->append("anthropic/claude-sonnet-4.6", "Claude Sonnet 4.6");
+    or_model_combo->append("anthropic/claude-opus-4.8", "Claude Opus 4.8");
+    // GPT
+    or_model_combo->append("openai/gpt-5-mini", "ChatGPT 5 Mini");
+    or_model_combo->append("openai/gpt-4o-mini", "ChatGPT 4o Mini");
+    or_model_combo->append("openai/gpt-4.1-mini", "ChatGPT 4.1 Mini");
+
+    
+
+    or_model_combo->set_active_id(ai_model_openrouter);
+
+    or_box->append(*or_header);
+    or_box->append(*or_key_lbl);
+    or_box->append(*or_key_entry);
+    or_box->append(*or_model_lbl);
+    or_box->append(*or_model_combo);
+
+    content->append(*groq_box);
+    content->append(*or_box);
+
+    // Sağlayıcı değişince görünürlüğü ayarla
+    auto update_visibility = [groq_box, or_box, provider_combo]() {
+        bool groq_active = provider_combo->get_active_id() == "groq";
+        groq_box->set_visible(groq_active);
+        or_box->set_visible(!groq_active);
+    };
+    provider_combo->signal_changed().connect(update_visibility);
+    update_visibility();
 
     // Kullanıcının ayarları kaydetmesi veya iptal etmesi için butonlar
     auto* btn_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
     btn_box->set_halign(Gtk::Align::END);
+    btn_box->set_margin_top(12);
 
     auto* btn_cancel = Gtk::make_managed<Gtk::Button>("İptal");
     auto* btn_save = Gtk::make_managed<Gtk::Button>("Kaydet");
@@ -2247,24 +2296,39 @@ void MainWindow::show_ai_key_dialog() {
     btn_box->append(*btn_cancel);
     btn_box->append(*btn_save);
 
-    content->append(*key_lbl);
-    content->append(*key_entry);
-    content->append(*model_lbl);
-    content->append(*model_combo);
     content->append(*btn_box);
 
     btn_cancel->signal_clicked().connect([dialog]() {
         dialog->close();
     });
 
-    btn_save->signal_clicked().connect([this, dialog, key_entry, model_combo]() {
-        std::string key = key_entry->get_text();
-        if (!key.empty()) {
-            ai_api_key = key;
-            set_api_key(key);
+    btn_save->signal_clicked().connect([this, dialog, provider_combo, groq_key_entry, groq_model_combo, or_key_entry, or_model_combo]() {
+        ai_provider = provider_combo->get_active_id() == "openrouter" ? AIProvider::OPENROUTER : AIProvider::GROQ;
+        set_provider(ai_provider);
+
+        // Groq ayarlarını kaydet
+        std::string groq_key = groq_key_entry->get_text();
+        if (!groq_key.empty()) {
+            ai_api_key_groq = groq_key;
+            set_groq_api_key(groq_key);
         }
-        ai_model = model_combo->get_active_id();
-        set_model(ai_model);
+        ai_model_groq = groq_model_combo->get_active_id();
+
+        // OpenRouter ayarlarını kaydet
+        std::string or_key = or_key_entry->get_text();
+        if (!or_key.empty()) {
+            ai_api_key_openrouter = or_key;
+            set_openrouter_api_key(or_key);
+        }
+        ai_model_openrouter = or_model_combo->get_active_id();
+
+        // Aktif sağlayıcının modelini uygula
+        if (ai_provider == AIProvider::GROQ) {
+            set_model(ai_model_groq);
+        } else {
+            set_model(ai_model_openrouter);
+        }
+
         save_data();
         dialog->close();
     });

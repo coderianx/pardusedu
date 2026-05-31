@@ -686,7 +686,9 @@ body {
 }
 
 .model-badge {
-  display: inline-block;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   font-size: .8rem;
   font-weight: 500;
   padding: 5px 14px;
@@ -696,6 +698,24 @@ body {
   color: var(--model-text);
   transition: all .2s;
 }
+
+.cl-icon {
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.model-badge[data-company="meta"]     { --clr: #0866FF; }
+.model-badge[data-company="openai"]   { --clr: #10A37F; }
+.model-badge[data-company="qwen"]     { --clr: #FF6A00; }
+.model-badge[data-company="groq"]     { --clr: #A855F7; }
+.model-badge[data-company="google"]   { --clr: #4285F4; }
+.model-badge[data-company="deepseek"] { --clr: #4FC3F7; }
+.model-badge[data-company="mistral"]  { --clr: #6366F1; }
+.model-badge[data-company="kimi"]     { --clr: #EC4899; }
+.model-badge[data-company="anthropic"]{ --clr: #D97706; }
+
+.model-badge .cl-icon { color: var(--clr); }
 
 .model-badge:hover {
   background: var(--model-hover-bg);
@@ -788,6 +808,67 @@ body {
   font-size: .95rem;
   color: var(--text-muted);
   line-height: 1.8;
+}
+
+/* ── Models List Modal ── */
+
+.modal-models {
+  max-width: 640px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.models-list-content {
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.models-list-section {
+  margin-bottom: 20px;
+}
+
+.models-list-section:last-child {
+  margin-bottom: 0;
+}
+
+.models-list-section h4 {
+  font-size: .85rem;
+  font-weight: 600;
+  color: var(--accent-light);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-bottom: 12px;
+}
+
+.models-list-content .model-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* ── Models Toggle Button ── */
+
+.models-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  font-size: .9rem;
+  font-weight: 600;
+  padding: 10px 22px;
+  border-radius: 100px;
+  background: linear-gradient(135deg, rgba(79,70,229,.2), rgba(99,102,241,.12));
+  border: 1px solid rgba(79,70,229,.25);
+  color: var(--accent-light);
+  cursor: pointer;
+  transition: all .25s;
+}
+
+.models-toggle-btn:hover {
+  background: linear-gradient(135deg, rgba(79,70,229,.3), rgba(99,102,241,.22));
+  border-color: rgba(79,70,229,.4);
+  transform: translateY(-2px);
 }
 
 /* ── Footer ── */

@@ -28,17 +28,43 @@ static std::vector<Message> conversation_history;
 static std::unordered_map<std::string,
                           std::string> wiki_cache;
 
-// API'ye erişmek için kullandığımız anahtar, kullanıcı kendininkini girebilir
-static std::string global_api_key = "";
+// API'ye erişmek için kullandığımız anahtarlar, kullanıcı kendininkini girebilir
+static std::string global_groq_api_key = "";
+static std::string global_openrouter_api_key = "";
 
-
-
-void set_api_key(const std::string& key) {
-    global_api_key = key;
-}
+// Hangi sağlayıcının kullanılacağı (Groq Cloud veya OpenRouter)
+static AIProvider global_provider = AIProvider::GROQ;
 
 // Hangi yapay zeka modelini kullanacağımızı belirtiyor, kullanıcı ayarlardan değiştirebilir
 static std::string global_model = "llama-3.3-70b-versatile";
+
+void set_groq_api_key(const std::string& key) {
+    global_groq_api_key = key;
+}
+
+std::string get_groq_api_key() {
+    return global_groq_api_key;
+}
+
+void set_openrouter_api_key(const std::string& key) {
+    global_openrouter_api_key = key;
+}
+
+std::string get_openrouter_api_key() {
+    return global_openrouter_api_key;
+}
+
+void set_provider(AIProvider provider) {
+    global_provider = provider;
+}
+
+AIProvider get_provider() {
+    return global_provider;
+}
+
+std::string get_provider_name() {
+    return global_provider == AIProvider::GROQ ? "groq" : "openrouter";
+}
 
 void set_model(const std::string& model) {
     global_model = model;
@@ -449,7 +475,7 @@ std::string call_ai(
         return "CURL başlatılamadı";
 
 
-    std::string api_key = global_api_key;
+    std::string api_key = global_provider == AIProvider::GROQ ? global_groq_api_key : global_openrouter_api_key;
 
     std::string system_prompt =
         "Sen Pardus Linux üzerinde çalışan "
@@ -460,7 +486,7 @@ std::string call_ai(
 
         "Taban Modelin " + global_model + ". "
 
-        "Coderian tarafından "
+        "Ali Eymen İçli (Coderian) tarafından "
         "geliştirildin. (Taban Modelin Hariç)"
 
         "Emoji Kullan ama az sayıda kullan."
@@ -559,7 +585,36 @@ std::string call_ai(
             "- Test Yazma. "
             "- Ve çok daha fazla şey"
 
+        "Groq mu OpenRouter mı? "
+
+        "Groq: "
+        "- Çok hızlı cevap verir. "
+        "- Gerçek zamanlı kullanım için uygundur. "
+        "- Düşük gecikme (latency) sunar. "
+        "- Daha sınırlı model seçenekleri vardır. "
+        "- Kimler içindir: "
+            "- Anlık sohbet isteyenler. "
+            "- Canlı asistan kullananlar. "
+            "- Hızın önemli olduğu uygulamalar. "
+
+        "OpenRouter: "
+        "- Daha yavaş olabilir (Aşırı fark hissedilmez). "
+        "- Çok fazla model seçeneği sunar. "
+        "- GPT, Claude, Gemini, Qwen, DeepSeek gibi modelleri içerir. "
+        "- En iyi modeli seçme imkanı sağlar. "
+        "- Hız modelden modele değişir. "
+        "- Kimler içindir: "
+            "- Kaliteli cevap isteyenler. "
+            "- Kodlama ve analiz yapanlar. "
+            "- Farklı modelleri denemek isteyenler. "
+
+        "Özet: "
+        "- Groq = En hızlı sistem. "
+        "- OpenRouter = En akıllı ve en geniş model sistemi. "
+
         "Model Açıklamaları(Kullanıcılar için): "
+
+        "Groq Cloud Servisinde: "
 
         "- Llama 3.1 8B; "
             "- Çok hızlı çalışır. "
@@ -655,6 +710,185 @@ std::string call_ai(
                 "- Beklemek istemeyen kullanıcılar. "
             "- UYARI: "
                 "- Bu Model Sorun Çıkarabilir!!! "
+        
+        
+        
+        "OpenRouter Servisinde: "
+
+        "- DeepSeek R1; "
+            "- Çok güçlü akıl yürütme modelidir. "
+            "- Zor matematik, mantık ve analiz sorularında başarılıdır. "
+            "- Adım adım düşünme kabiliyeti yüksektir. "
+            "- Dezavantaj: "
+                "- Bazen yavaş cevap verebilir. "
+                "- Günlük sohbet için fazla detaylı olabilir. "
+            "- Kimler içindir: "
+                "- Matematik ve problem çözmek isteyenler. "
+                "- Analiz ve mantık soruları çözenler. "
+                "- Derin düşünme gerektiren işler yapanlar. "
+
+        "- DeepSeek V4 Flash; "
+            "- Çok hızlı ve verimli çalışan yeni nesil bir modeldir. "
+            "- Uzun metinleri (çok büyük bağlamları) işleyebilir. "
+            "- Kodlama ve yapay zeka ajan görevlerinde güçlüdür. "
+            "- Dezavantaj: "
+                "- Çok yeni olduğu için bazı durumlarda tutarsız olabilir. "
+                "- R1 kadar saf düşünme odaklı değildir. "
+            "- Kimler içindir: "
+                "- Hızlı ama akıllı cevap isteyenler. "
+                "- Kod yazan ve proje geliştirenler. "
+                "- Uzun dokümanlarla çalışanlar. "
+
+        "- Kimi K2 Thinking; "
+            "- Uzun metinleri çok iyi analiz edebilir. "
+            "- Mantık yürütme ve planlama konusunda başarılıdır. "
+            "- Sohbetlerde bağlamı iyi korur. "
+            "- Dezavantaj: "
+                "- Bazen gereğinden uzun cevaplar verebilir. "
+                "- Hızlı kullanımda biraz ağır kalabilir. "
+            "- Kimler içindir: "
+                "- Uzun proje ve araştırma yapanlar. "
+                "- Detaylı analiz isteyen kullanıcılar. "
+                "- Adım adım plan çıkaranlar. "
+
+        "- Qwen 3 Coder; "
+            "- Yazılım geliştirme için özel olarak güçlüdür. "
+            "- Kod yazma, düzeltme ve açıklamada başarılıdır. "
+            "- Birçok programlama dilini destekler. "
+            "- Dezavantaj: "
+                "- Genel sohbetlerde diğer modellere göre daha teknik kalabilir. "
+            "- Kimler içindir: "
+                "- Yazılım öğrenenler. "
+                "- Kod yazan geliştiriciler. "
+                "- Proje geliştiren kullanıcılar. "
+
+        "- Qwen 3.6 Flash; "
+            "- Çok hızlı ve düşük maliyetli bir modeldir. "
+            "- Günlük kullanım için idealdir. "
+            "- Basit sorulara hızlı cevap verir. "
+            "- Dezavantaj: "
+                "- Karmaşık sorularda yüzeysel kalabilir. "
+            "- Kimler içindir: "
+                "- Hızlı cevap isteyen kullanıcılar. "
+                "- Günlük sohbet yapanlar. "
+                "- Basit işler için model arayanlar. "
+
+        "- Claude Haiku 4.5; "
+            "- Çok hızlı ve dengeli bir modeldir. "
+            "- Doğal ve akıcı metin üretir. "
+            "- Kodlama ve yazı yazmada başarılıdır. "
+            "- Dezavantaj: "
+                "- Sonnet modellerine göre daha zayıftır. "
+                "- Çok karmaşık görevlerde sınırlı kalabilir. "
+            "- Kimler içindir: "
+                "- Hızlı ve kaliteli cevap isteyenler. "
+                "- Yazı yazma ve sohbet amaçlı kullanıcılar. "
+
+        "- Claude Sonnet 4.6; "
+            "- Çok güçlü ve profesyonel bir modeldir. "
+            "- Analiz, yazı yazma ve kodlamada üst seviye performans verir. "
+            "- Karmaşık görevleri iyi çözebilir. "
+            "- Dezavantaj: "
+                "- Daha pahalı ve daha yavaştır. "
+            "- Kimler içindir: "
+                "- Profesyonel kullanım isteyenler. "
+                "- En kaliteli cevapları arayanlar. "
+                "- İleri seviye analiz yapanlar. "
+
+        "- GPT 5 Mini; "
+            "- Dengeli, modern ve güçlü bir modeldir. "
+            "- Çoğu görevde yüksek kalite verir. "
+            "- Kodlama ve sohbet performansı iyidir. "
+            "- Dezavantaj: "
+                "- En büyük modeller kadar derin analiz yapamaz. "
+            "- Kimler içindir: "
+                "- Genel kullanım isteyenler. "
+                "- Öğrenciler ve günlük kullanıcılar. "
+                "- Hız + kalite dengesi isteyenler. "
+
+        "- GPT 4o Mini; "
+            "- Çok hızlı ve ekonomik bir modeldir. "
+            "- Günlük sohbet ve basit işler için uygundur. "
+            "- Dezavantaj: "
+                "- Karmaşık sorularda zayıf kalabilir. "
+            "- Kimler içindir: "
+                "- Hızlı cevap isteyen kullanıcılar. "
+                "- Basit kullanım için model arayanlar. "
+
+        "- Gemini 2.5 Flash; "
+            "- Çok hızlı çalışan Google modelidir. "
+            "- Günlük kullanım için idealdir. "
+            "- Akıcı ve stabil cevaplar verir. "
+            "- Dezavantaj: "
+                "- Derin analizlerde sınırlı kalabilir. "
+            "- Kimler içindir: "
+                "- Hızlı cevap isteyenler. "
+                "- Günlük sohbet kullanıcıları. "
+
+        "- Gemini 2.5 Pro; "
+            "- Çok güçlü analiz ve reasoning modelidir. "
+            "- Karmaşık problemleri çözmede başarılıdır. "
+            "- Kodlama ve araştırmada güçlüdür. "
+            "- Dezavantaj: "
+                "- Flash modellere göre daha yavaştır. "
+            "- Kimler içindir: "
+                "- Araştırma yapanlar. "
+                "- Zor problemleri çözenler. "
+                "- Profesyonel kullanıcılar. "
+
+        "- Gemma 4 31B; "
+            "- Açık kaynaklı güçlü bir modeldir. "
+            "- Dengeli ve genel kullanım için uygundur. "
+            "- Türkçe dahil birçok dilde iyi performans verir. "
+            "- Dezavantaj: "
+                "- En üst seviye modeller kadar güçlü değildir. "
+            "- Kimler içindir: "
+                "- Açık kaynak model tercih edenler. "
+                "- Dengeli kullanım isteyenler. "
+
+        "- Mistral Large; "
+            "- Çok güçlü genel amaçlı bir modeldir. "
+            "- Yazı yazma, analiz ve eğitim içeriklerinde başarılıdır. "
+            "- Uzun ve detaylı açıklamalar üretebilir. "
+            "- Dezavantaj: "
+                "- Daha yavaş ve maliyetli olabilir. "
+            "- Kimler içindir: "
+                "- Öğretici ve detaylı cevap isteyenler. "
+                "- Analiz ve araştırma yapanlar. "
+
+        "- Mistral Small 4; "
+            "- Hızlı ve çok yönlü bir modeldir. "
+            "- Kodlama, analiz ve agent görevlerinde dengelidir. "
+            "- Dezavantaj: "
+                "- Çok karmaşık görevlerde sınırlı kalabilir. "
+            "- Kimler içindir: "
+                "- Günlük kullanım isteyenler. "
+                "- Hızlı ama akıllı cevap isteyenler. "
+
+        "- Gemini 1.5 Flash; "
+            "- Çok hızlı ve ekonomik bir Google modelidir. "
+            "- Özetleme ve basit görevlerde başarılıdır. "
+            "- Dezavantaj: "
+                "- Derin analizlerde sınırlı kalabilir. "
+            "- Kimler içindir: "
+                "- Hızlı cevap isteyen kullanıcılar. "
+                "- Ders ve günlük kullanım. "
+
+        "- GPT 4.1 Mini; "
+            "- Stabil ve dengeli bir OpenAI modelidir. "
+            "- Eğitim ve açıklama görevlerinde başarılıdır. "
+            "- Dezavantaj: "
+                "- Büyük modeller kadar güçlü değildir. "
+            "- Kimler içindir: "
+                "- Güvenilir günlük kullanım isteyenler. "
+
+        "- Qwen 3.7 Max; "
+            "- Uzun görevleri planlayabilen güçlü bir modeldir. "
+            "- Agent ve proje yönetiminde başarılıdır. "
+            "- Dezavantaj: "
+                "- Basit sorular için ağır olabilir. "
+            "- Kimler içindir: "
+                "- Proje yapan ve uzun işlerle uğraşanlar. "
             
         "Kurallar: "
         "- Öğrencilerin seviyesine göre anlatımS yap. "
@@ -737,6 +971,7 @@ std::string call_ai(
         {"model", global_model},
         {"temperature", 0.4},
         {"top_p", 0.9},
+        {"max_tokens", 2048},
         {"messages", messages}
     };
 
@@ -753,9 +988,21 @@ std::string call_ai(
         headers,
         "Content-Type: application/json");
 
-    // CURL ile Groq API'sine HTTP POST isteği gönderiyoruz
-    curl_easy_setopt(curl, CURLOPT_URL,
-        "https://api.groq.com/openai/v1/chat/completions");
+    // Sağlayıcıya göre doğru API adresini belirliyoruz
+    std::string api_url;
+    if (global_provider == AIProvider::GROQ) {
+        api_url = "https://api.groq.com/openai/v1/chat/completions";
+    } else {
+        api_url = "https://openrouter.ai/api/v1/chat/completions";
+    }
+
+    curl_easy_setopt(curl, CURLOPT_URL, api_url.c_str());
+
+    // OpenRouter ekstra başlıklar ister
+    if (global_provider == AIProvider::OPENROUTER) {
+        headers = curl_slist_append(headers, "HTTP-Referer: https://pardusedu.app");
+        headers = curl_slist_append(headers, "X-Title: PardusEdu");
+    }
 
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_body.c_str());

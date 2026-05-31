@@ -8,6 +8,9 @@
 #include <webkit/webkit.h>
 #include <vector>
 #include <map>
+#include <mutex>
+#include <thread>
+#include "ai_client.h"
 
 struct Task {
     std::string title;
@@ -185,9 +188,19 @@ private:
     Gtk::Entry ai_input;
     Gtk::Button btn_ai_send{};
     Gtk::Button btn_ai_key{};
-    std::string ai_api_key;
-    std::string ai_model = "llama-3.3-70b-versatile";
+    AIProvider ai_provider = AIProvider::GROQ;
+    std::string ai_api_key_groq;
+    std::string ai_api_key_openrouter;
+    std::string ai_model_groq = "llama-3.3-70b-versatile";
+    std::string ai_model_openrouter = "openai/gpt-4o-mini";
     void show_ai_key_dialog();
+
+    Glib::Dispatcher ai_dispatcher;
+    std::string pending_ai_response;
+    Gtk::Label* pending_ai_label = nullptr;
+    std::mutex ai_mutex;
+    bool ai_waiting = false;
+    void on_ai_response();
 
     void on_select(Gtk::ListBoxRow* row);
 

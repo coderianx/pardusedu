@@ -122,25 +122,56 @@ void MainWindow::setup_data() {
         if (schedule_times.empty()) schedule_times = {"08:30", "09:30", "10:30", "11:30", "13:00", "14:00", "15:00", "16:00"};
     }
 
-    auto akf = dir + "/apikey.dat";
-    if (fs::exists(akf)) {
-        std::ifstream f(akf);
+    auto pf_ = dir + "/provider.dat";
+    if (fs::exists(pf_)) {
+        std::ifstream f(pf_);
         std::string line;
         if (std::getline(f, line) && !line.empty()) {
-            ai_api_key = line;
-            set_api_key(line);
+            ai_provider = (line == "openrouter") ? AIProvider::OPENROUTER : AIProvider::GROQ;
+            set_provider(ai_provider);
         }
     }
 
-    auto mf = dir + "/model.dat";
-    if (fs::exists(mf)) {
-        std::ifstream f(mf);
+    auto akf_g = dir + "/apikey_groq.dat";
+    if (fs::exists(akf_g)) {
+        std::ifstream f(akf_g);
         std::string line;
         if (std::getline(f, line) && !line.empty()) {
-            ai_model = line;
-            set_model(line);
+            ai_api_key_groq = line;
+            set_groq_api_key(line);
         }
     }
+
+    auto akf_o = dir + "/apikey_openrouter.dat";
+    if (fs::exists(akf_o)) {
+        std::ifstream f(akf_o);
+        std::string line;
+        if (std::getline(f, line) && !line.empty()) {
+            ai_api_key_openrouter = line;
+            set_openrouter_api_key(line);
+        }
+    }
+
+    auto mf_g = dir + "/model_groq.dat";
+    if (fs::exists(mf_g)) {
+        std::ifstream f(mf_g);
+        std::string line;
+        if (std::getline(f, line) && !line.empty()) {
+            ai_model_groq = line;
+        }
+    }
+
+    auto mf_o = dir + "/model_openrouter.dat";
+    if (fs::exists(mf_o)) {
+        std::ifstream f(mf_o);
+        std::string line;
+        if (std::getline(f, line) && !line.empty()) {
+            ai_model_openrouter = line;
+        }
+    }
+
+    // Apply the active provider's model
+    set_model(ai_provider == AIProvider::GROQ ? ai_model_groq : ai_model_openrouter);
 }
 
 void MainWindow::save_data() {
@@ -158,7 +189,10 @@ void MainWindow::save_data() {
     { std::ofstream f(dir + "/grades.dat"); for (auto& g : grades) f << g.course << "|" << g.midterm << "|" << g.final << "|\n"; }
     { std::ofstream f(dir + "/schedule.dat"); for (auto& s : schedule) f << s.day << "|" << s.time << "|" << s.course << "|" << s.location << "\n"; }
     { std::ofstream f(dir + "/schedule_times.dat"); for (auto& t : schedule_times) f << t << "\n"; }
-    { std::ofstream f(dir + "/apikey.dat"); f << ai_api_key << "\n"; }
-    { std::ofstream f(dir + "/model.dat"); f << ai_model << "\n"; }
+    { std::ofstream f(dir + "/provider.dat"); f << (ai_provider == AIProvider::OPENROUTER ? "openrouter" : "groq") << "\n"; }
+    { std::ofstream f(dir + "/apikey_groq.dat"); f << ai_api_key_groq << "\n"; }
+    { std::ofstream f(dir + "/apikey_openrouter.dat"); f << ai_api_key_openrouter << "\n"; }
+    { std::ofstream f(dir + "/model_groq.dat"); f << ai_model_groq << "\n"; }
+    { std::ofstream f(dir + "/model_openrouter.dat"); f << ai_model_openrouter << "\n"; }
 }
 
