@@ -14,11 +14,14 @@ webkit_dep = dependency('webkitgtk-6.0')
 # ================= MD4C =================
 md4c_dep = dependency('md4c-html')
 
+# ================= QRencode =================
+qrencode_dep = dependency('libqrencode')
+
 gresource = gnome.compile_resources('resources',
   'resources.gresource.xml',
   source_dir : '.',
   c_name : 'ogrenci'
-)
+) 
 
 executable(
   'student-hub',
@@ -34,7 +37,8 @@ executable(
     gtkmm_dep,
     curl_dep,
     webkit_dep,
-    md4c_dep
+    md4c_dep,
+    qrencode_dep
   ],
   sources : gresource,
   install : false
