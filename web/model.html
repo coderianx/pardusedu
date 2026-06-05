@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Modeller — PardusEdu</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .models-hero {
+      min-height: 40vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      padding: 120px 24px 60px;
+      text-align: center;
+      overflow: hidden;
+    }
+    .models-hero-bg {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(ellipse at 30% 50%, rgba(79,70,229,.15) 0%, transparent 50%),
+        radial-gradient(ellipse at 70% 50%, rgba(129,140,248,.1) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .models-hero-content {
+      position: relative;
+      max-width: 720px;
+    }
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: .85rem;
+      font-weight: 500;
+      margin-bottom: 20px;
+      transition: color .2s;
+    }
+    .back-link:hover { color: var(--accent-light); }
+    .models-hero-badge {
+      display: inline-block;
+      font-size: .75rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      color: var(--badge-text);
+      background: var(--badge-bg);
+      border: 1px solid var(--badge-border);
+      padding: 6px 18px;
+      border-radius: 100px;
+      margin-bottom: 20px;
+      text-transform: uppercase;
+    }
+    .models-hero h1 {
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      letter-spacing: -.03em;
+    }
+    .models-hero p {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 560px;
+      margin: 0 auto;
+    }
+    .models-section {
+      padding: 60px 24px 100px;
+    }
+    .models-container {
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .models-provider {
+      margin-bottom: 48px;
+    }
+    .models-provider:last-child {
+      margin-bottom: 0;
+    }
+    .provider-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border-light);
+    }
+    .provider-header h2 {
+      font-size: 1.3rem;
+      font-weight: 700;
+    }
+    .provider-header span {
+      font-size: .85rem;
+      color: var(--text-dim);
+      font-weight: 500;
+    }
+    .provider-count {
+      margin-left: auto;
+      font-size: .8rem;
+      color: var(--text-dim);
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      padding: 2px 12px;
+      border-radius: 100px;
+    }
+    .model-card {
+      background: var(--mock-bg);
+      border: 1px solid var(--border-mock);
+      border-radius: 16px;
+      padding: 24px 28px;
+      margin-bottom: 16px;
+      transition: all .3s;
+    }
+    .model-card:last-child {
+      margin-bottom: 0;
+    }
+    .model-card:hover {
+      border-color: var(--model-border);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px var(--mock-shadow);
+    }
+    .model-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      margin-bottom: 14px;
+    }
+    .model-card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      flex-shrink: 0;
+      background: var(--model-bg);
+      border: 1px solid var(--model-border);
+      color: var(--model-text);
+    }
+    .model-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+    .model-card-info h3 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 2px;
+    }
+    .model-card-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 12px;
+      font-size: .8rem;
+      color: var(--text-dim);
+    }
+    .model-card-meta .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 1px 10px;
+      border-radius: 100px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+    }
+    .model-card-desc {
+      font-size: .92rem;
+      color: var(--text-muted);
+      line-height: 1.75;
+    }
+    .model-card-details {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 14px;
+      padding-top: 14px;
+      border-top: 1px solid var(--border-light);
+    }
+    .model-detail {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: .78rem;
+      color: var(--text-dim);
+      padding: 4px 12px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+    }
+    .model-detail i {
+      color: var(--accent-light);
+      width: 14px;
+      text-align: center;
+    }
+    @media (max-width: 768px) {
+      .models-hero { padding: 100px 20px 40px; min-height: auto; }
+      .models-section { padding: 40px 20px 60px; }
+      .model-card { padding: 20px; }
+      .model-card-header { gap: 12px; }
+      .model-card-icon { width: 36px; height: 36px; font-size: 1rem; }
+      .model-card-info h3 { font-size: 1rem; }
+      .model-card-desc { font-size: .85rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="index.html" class="nav-logo">
+        <img src="img/pardus.png" alt="Pardus" class="logo-img">
+        <span>Pardus<span class="logo-highlight">Edu</span></span>
+      </a>
+      <ul class="nav-links" id="navLinks">
+        <li><a href="index.html#about">Hakkında</a></li>
+        <li><a href="index.html#dashboard">Pano</a></li>
+        <li><a href="index.html#pomodoro">Pomodoro</a></li>
+        <li><a href="index.html#tasks">Görevler</a></li>
+        <li><a href="index.html#notes">Notlar</a></li>
+        <li><a href="index.html#schedule">Ders Programı</a></li>
+        <li><a href="index.html#focus">Odak</a></li>
+        <li><a href="index.html#commands">Komutlar</a></li>
+        <li><a href="index.html#ai">Yapay Zeka</a></li>
+        <li><a href="index.html#python">Python</a></li>
+      </ul>
+      <div class="nav-actions">
+        <button class="theme-btn" id="themeBtn" aria-label="Temayı değiştir">
+          <svg class="sun-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"/>
+            <path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/>
+          </svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z"/>
+          </svg>
+        </button>
+        <button class="nav-toggle" id="navToggle" aria-label="Menüyü aç/kapat">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <section class="models-hero">
+    <div class="models-hero-bg"></div>
+    <div class="models-hero-content">
+      <a href="index.html" class="back-link">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+        Ana Sayfa
+      </a>
+      <div class="models-hero-badge">YAPAY ZEKA MODELLERİ</div>
+      <h1>Tüm <span class="gradient-text">Modeller</span></h1>
+      <p>PardusEdu yapay zeka asistanı tarafından desteklenen tüm modellerin detaylı açıklamaları. Groq, OpenRouter ve Google Gemini sağlayıcıları üzerinden 30'dan fazla modele erişin.</p>
+    </div>
+  </section>
+
+  <section class="models-section">
+    <div class="models-container">
+
+      <div class="models-provider">
+        <div class="provider-header">
+          <svg width="22" height="22" viewBox="0 0 14 14" fill="none"><path d="M8.5 1L2 8.5h4L5.5 13l6-7H7.5L9 1z" fill="currentColor" opacity=".7"/></svg>
+          <h2>Groq</h2>
+          <span>LPU Donanımında Çalışan Modeller</span>
+          <span class="provider-count">8 model</span>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-meta"></i></div>
+            <div class="model-card-info">
+              <h3>Llama 3.3 70B</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-meta"></i>Meta</span>
+                <span class="tag">70B parametre</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Meta'nın en gelişmiş açık kaynak modellerinden biri olan Llama 3.3 70B, 70 milyar parametre ile yüksek doğrulukta metin üretimi, karmaşık mantıksal akıl yürütme ve çok dilli görevlerde üstün performans sunar. Akademik araştırma ve derinlemesine analiz için idealdir.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>70B params</span>
+            <span class="model-detail"><i class="fa-solid fa-language"></i>Çoklu Dil</span>
+            <span class="model-detail"><i class="fa-solid fa-brain"></i>Derin Analiz</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-meta"></i></div>
+            <div class="model-card-info">
+              <h3>Llama 3.1 8B</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-meta"></i>Meta</span>
+                <span class="tag">8B parametre</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Llama 3.1 8B, 8 milyar parametrelik kompakt yapısıyla hızlı yanıt süreleri ve düşük gecikme sunar. Günlük sorular, hızlı araştırmalar ve hafif görevler için optimize edilmiştir. Verimlilik ve hızın buluştuğu nokta.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>8B params</span>
+            <span class="model-detail"><i class="fa-solid fa-bolt"></i>Düşük Gecikme</span>
+            <span class="model-detail"><i class="fa-solid fa-coins"></i>Ekonomik</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-meta"></i></div>
+            <div class="model-card-info">
+              <h3>Llama 4 Scout 17B-16E</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-meta"></i>Meta</span>
+                <span class="tag">17B-16E (MoE)</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Meta'nın en yeni nesil modeli Llama 4 Scout, 17 milyar aktif parametre ve 16 uzman (MoE) mimarisi ile çalışır. Çok modlu yetenekleri, geniş bağlam penceresi ve üstün verimliliği ile hem görsel hem metinsel görevlerde çığır açar.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>17B-16E MoE</span>
+            <span class="model-detail"><i class="fa-solid fa-image"></i>Çok Modlu</span>
+            <span class="model-detail"><i class="fa-solid fa-expand"></i>Geniş Bağlam</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><svg width="20" height="20" viewBox="0 0 640 512" fill="currentColor"><path d="M260.4 249.8L260.4 201.2C260.4 197.1 261.9 194 265.5 192L363.3 135.7C376.6 128 392.5 124.4 408.9 124.4C470.3 124.4 509.3 172 509.3 222.7C509.3 226.3 509.3 230.4 508.8 234.5L407.3 175.1C401.2 171.5 395 171.5 388.9 175.1L260.4 249.8zM488.7 439.2L488.7 323C488.7 315.8 485.6 310.7 479.5 307.1L351 232.4L393 208.3C396.6 206.3 399.7 206.3 403.2 208.3L501 264.7C529.2 281.1 548.1 315.9 548.1 349.7C548.1 388.6 525.1 424.5 488.7 439.3zM230.2 336.8L188.2 312.2C184.6 310.2 183.1 307.1 183.1 303L183.1 190.4C183.1 135.6 225.1 94.1 281.9 94.1C303.4 94.1 323.4 101.3 340.3 114.1L239.4 172.5C233.3 176.1 230.2 181.2 230.2 188.4L230.2 336.9zM320.6 389L260.4 355.2L260.4 283.5L320.6 249.7L380.8 283.5L380.8 355.2L320.6 389zM359.3 544.7C337.8 544.7 317.8 537.5 300.9 524.7L401.8 466.3C407.9 462.7 411 457.6 411 450.4L411 301.9L453.5 326.5C457.1 328.5 458.6 331.6 458.6 335.7L458.6 448.3C458.6 503.1 416.1 544.6 359.3 544.6zM237.8 430.5L140.1 374.2C111.9 357.8 93 323 93 289.2C93 249.8 116.6 214.4 152.9 199.6L152.9 316.3C152.9 323.5 156 328.6 162.1 332.2L290.1 406.4L248.1 430.5C244.5 432.5 241.4 432.5 237.9 430.5zM232.2 514.5C174.3 514.5 131.8 471 131.8 417.2C131.8 413.1 132.3 409 132.8 404.9L233.7 463.3C239.8 466.9 246 466.9 252.1 463.3L380.6 389.1L380.6 437.7C380.6 441.8 379.1 444.9 375.5 446.9L277.7 503.2C264.4 510.9 248.5 514.5 232.1 514.5zM359.2 575.4C421.2 575.4 472.9 531.4 484.6 473C541.9 458.1 578.8 404.4 578.8 349.6C578.8 313.8 563.4 278.9 535.8 253.9C538.4 243.1 539.9 232.4 539.9 221.6C539.9 148.4 480.5 93.6 411.9 93.6C398.1 93.6 384.8 95.6 371.5 100.3C348.5 77.8 316.7 63.4 281.9 63.4C219.9 63.4 168.2 107.4 156.5 165.8C99.2 180.6 62.3 234.4 62.3 289.2C62.3 325 77.7 359.9 105.3 384.9C102.7 395.7 101.2 406.4 101.2 417.2C101.2 490.4 160.6 545.2 229.2 545.2C243 545.2 256.3 543.2 269.6 538.5C292.6 561 324.4 575.4 359.2 575.4z"/></svg></div>
+            <div class="model-card-info">
+              <h3>GPT OSS 20B</h3>
+              <div class="model-card-meta">
+                <span class="tag"><svg width="12" height="12" viewBox="0 0 640 512" fill="currentColor"><path d="M260.4 249.8L260.4 201.2C260.4 197.1 261.9 194 265.5 192L363.3 135.7C376.6 128 392.5 124.4 408.9 124.4C470.3 124.4 509.3 172 509.3 222.7C509.3 226.3 509.3 230.4 508.8 234.5L407.3 175.1C401.2 171.5 395 171.5 388.9 175.1L260.4 249.8zM488.7 439.2L488.7 323C488.7 315.8 485.6 310.7 479.5 307.1L351 232.4L393 208.3C396.6 206.3 399.7 206.3 403.2 208.3L501 264.7C529.2 281.1 548.1 315.9 548.1 349.7C548.1 388.6 525.1 424.5 488.7 439.3zM230.2 336.8L188.2 312.2C184.6 310.2 183.1 307.1 183.1 303L183.1 190.4C183.1 135.6 225.1 94.1 281.9 94.1C303.4 94.1 323.4 101.3 340.3 114.1L239.4 172.5C233.3 176.1 230.2 181.2 230.2 188.4L230.2 336.9zM320.6 389L260.4 355.2L260.4 283.5L320.6 249.7L380.8 283.5L380.8 355.2L320.6 389zM359.3 544.7C337.8 544.7 317.8 537.5 300.9 524.7L401.8 466.3C407.9 462.7 411 457.6 411 450.4L411 301.9L453.5 326.5C457.1 328.5 458.6 331.6 458.6 335.7L458.6 448.3C458.6 503.1 416.1 544.6 359.3 544.6zM237.8 430.5L140.1 374.2C111.9 357.8 93 323 93 289.2C93 249.8 116.6 214.4 152.9 199.6L152.9 316.3C152.9 323.5 156 328.6 162.1 332.2L290.1 406.4L248.1 430.5C244.5 432.5 241.4 432.5 237.9 430.5zM232.2 514.5C174.3 514.5 131.8 471 131.8 417.2C131.8 413.1 132.3 409 132.8 404.9L233.7 463.3C239.8 466.9 246 466.9 252.1 463.3L380.6 389.1L380.6 437.7C380.6 441.8 379.1 444.9 375.5 446.9L277.7 503.2C264.4 510.9 248.5 514.5 232.1 514.5zM359.2 575.4C421.2 575.4 472.9 531.4 484.6 473C541.9 458.1 578.8 404.4 578.8 349.6C578.8 313.8 563.4 278.9 535.8 253.9C538.4 243.1 539.9 232.4 539.9 221.6C539.9 148.4 480.5 93.6 411.9 93.6C398.1 93.6 384.8 95.6 371.5 100.3C348.5 77.8 316.7 63.4 281.9 63.4C219.9 63.4 168.2 107.4 156.5 165.8C99.2 180.6 62.3 234.4 62.3 289.2C62.3 325 77.7 359.9 105.3 384.9C102.7 395.7 101.2 406.4 101.2 417.2C101.2 490.4 160.6 545.2 229.2 545.2C243 545.2 256.3 543.2 269.6 538.5C292.6 561 324.4 575.4 359.2 575.4z"/></svg>OpenAI</span>
+                <span class="tag">20B parametre</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">GPT-OSS 20B, tamamen açık kaynaklı 20 milyar parametrelik bir dil modelidir. Özellikle yaratıcı yazma, kod üretimi ve problem çözme görevlerinde güçlüdür. Şeffaf ve özelleştirilebilir yapısıyla geliştiriciler için idealdir.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>20B params</span>
+            <span class="model-detail"><i class="fa-solid fa-code"></i>Kod Üretimi</span>
+            <span class="model-detail"><i class="fa-solid fa-lock-open"></i>Açık Kaynak</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><svg width="20" height="20" viewBox="0 0 640 512" fill="currentColor"><path d="M260.4 249.8L260.4 201.2C260.4 197.1 261.9 194 265.5 192L363.3 135.7C376.6 128 392.5 124.4 408.9 124.4C470.3 124.4 509.3 172 509.3 222.7C509.3 226.3 509.3 230.4 508.8 234.5L407.3 175.1C401.2 171.5 395 171.5 388.9 175.1L260.4 249.8zM488.7 439.2L488.7 323C488.7 315.8 485.6 310.7 479.5 307.1L351 232.4L393 208.3C396.6 206.3 399.7 206.3 403.2 208.3L501 264.7C529.2 281.1 548.1 315.9 548.1 349.7C548.1 388.6 525.1 424.5 488.7 439.3zM230.2 336.8L188.2 312.2C184.6 310.2 183.1 307.1 183.1 303L183.1 190.4C183.1 135.6 225.1 94.1 281.9 94.1C303.4 94.1 323.4 101.3 340.3 114.1L239.4 172.5C233.3 176.1 230.2 181.2 230.2 188.4L230.2 336.9zM320.6 389L260.4 355.2L260.4 283.5L320.6 249.7L380.8 283.5L380.8 355.2L320.6 389zM359.3 544.7C337.8 544.7 317.8 537.5 300.9 524.7L401.8 466.3C407.9 462.7 411 457.6 411 450.4L411 301.9L453.5 326.5C457.1 328.5 458.6 331.6 458.6 335.7L458.6 448.3C458.6 503.1 416.1 544.6 359.3 544.6zM237.8 430.5L140.1 374.2C111.9 357.8 93 323 93 289.2C93 249.8 116.6 214.4 152.9 199.6L152.9 316.3C152.9 323.5 156 328.6 162.1 332.2L290.1 406.4L248.1 430.5C244.5 432.5 241.4 432.5 237.9 430.5zM232.2 514.5C174.3 514.5 131.8 471 131.8 417.2C131.8 413.1 132.3 409 132.8 404.9L233.7 463.3C239.8 466.9 246 466.9 252.1 463.3L380.6 389.1L380.6 437.7C380.6 441.8 379.1 444.9 375.5 446.9L277.7 503.2C264.4 510.9 248.5 514.5 232.1 514.5zM359.2 575.4C421.2 575.4 472.9 531.4 484.6 473C541.9 458.1 578.8 404.4 578.8 349.6C578.8 313.8 563.4 278.9 535.8 253.9C538.4 243.1 539.9 232.4 539.9 221.6C539.9 148.4 480.5 93.6 411.9 93.6C398.1 93.6 384.8 95.6 371.5 100.3C348.5 77.8 316.7 63.4 281.9 63.4C219.9 63.4 168.2 107.4 156.5 165.8C99.2 180.6 62.3 234.4 62.3 289.2C62.3 325 77.7 359.9 105.3 384.9C102.7 395.7 101.2 406.4 101.2 417.2C101.2 490.4 160.6 545.2 229.2 545.2C243 545.2 256.3 543.2 269.6 538.5C292.6 561 324.4 575.4 359.2 575.4z"/></svg></div>
+            <div class="model-card-info">
+              <h3>GPT OSS 120B</h3>
+              <div class="model-card-meta">
+                <span class="tag"><svg width="12" height="12" viewBox="0 0 640 512" fill="currentColor"><path d="M260.4 249.8L260.4 201.2C260.4 197.1 261.9 194 265.5 192L363.3 135.7C376.6 128 392.5 124.4 408.9 124.4C470.3 124.4 509.3 172 509.3 222.7C509.3 226.3 509.3 230.4 508.8 234.5L407.3 175.1C401.2 171.5 395 171.5 388.9 175.1L260.4 249.8zM488.7 439.2L488.7 323C488.7 315.8 485.6 310.7 479.5 307.1L351 232.4L393 208.3C396.6 206.3 399.7 206.3 403.2 208.3L501 264.7C529.2 281.1 548.1 315.9 548.1 349.7C548.1 388.6 525.1 424.5 488.7 439.3zM230.2 336.8L188.2 312.2C184.6 310.2 183.1 307.1 183.1 303L183.1 190.4C183.1 135.6 225.1 94.1 281.9 94.1C303.4 94.1 323.4 101.3 340.3 114.1L239.4 172.5C233.3 176.1 230.2 181.2 230.2 188.4L230.2 336.9zM320.6 389L260.4 355.2L260.4 283.5L320.6 249.7L380.8 283.5L380.8 355.2L320.6 389zM359.3 544.7C337.8 544.7 317.8 537.5 300.9 524.7L401.8 466.3C407.9 462.7 411 457.6 411 450.4L411 301.9L453.5 326.5C457.1 328.5 458.6 331.6 458.6 335.7L458.6 448.3C458.6 503.1 416.1 544.6 359.3 544.6zM237.8 430.5L140.1 374.2C111.9 357.8 93 323 93 289.2C93 249.8 116.6 214.4 152.9 199.6L152.9 316.3C152.9 323.5 156 328.6 162.1 332.2L290.1 406.4L248.1 430.5C244.5 432.5 241.4 432.5 237.9 430.5zM232.2 514.5C174.3 514.5 131.8 471 131.8 417.2C131.8 413.1 132.3 409 132.8 404.9L233.7 463.3C239.8 466.9 246 466.9 252.1 463.3L380.6 389.1L380.6 437.7C380.6 441.8 379.1 444.9 375.5 446.9L277.7 503.2C264.4 510.9 248.5 514.5 232.1 514.5zM359.2 575.4C421.2 575.4 472.9 531.4 484.6 473C541.9 458.1 578.8 404.4 578.8 349.6C578.8 313.8 563.4 278.9 535.8 253.9C538.4 243.1 539.9 232.4 539.9 221.6C539.9 148.4 480.5 93.6 411.9 93.6C398.1 93.6 384.8 95.6 371.5 100.3C348.5 77.8 316.7 63.4 281.9 63.4C219.9 63.4 168.2 107.4 156.5 165.8C99.2 180.6 62.3 234.4 62.3 289.2C62.3 325 77.7 359.9 105.3 384.9C102.7 395.7 101.2 406.4 101.2 417.2C101.2 490.4 160.6 545.2 229.2 545.2C243 545.2 256.3 543.2 269.6 538.5C292.6 561 324.4 575.4 359.2 575.4z"/></svg>OpenAI</span>
+                <span class="tag">120B parametre</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">GPT-OSS serisinin amiral gemisi olan 120B, 120 milyar parametre ile piyasadaki en büyük açık kaynak modellerden biridir. Karmaşık matematik, bilimsel analiz ve çok dilli çeviri gibi zorlu görevlerde insan seviyesinde performans gösterir.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>120B params</span>
+            <span class="model-detail"><i class="fa-solid fa-flask"></i>Bilimsel Analiz</span>
+            <span class="model-detail"><i class="fa-solid fa-arrow-up-trend"></i>En Büyük</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><svg width="20" height="20" viewBox="0 0 640 512" fill="currentColor"><path d="M260.4 249.8L260.4 201.2C260.4 197.1 261.9 194 265.5 192L363.3 135.7C376.6 128 392.5 124.4 408.9 124.4C470.3 124.4 509.3 172 509.3 222.7C509.3 226.3 509.3 230.4 508.8 234.5L407.3 175.1C401.2 171.5 395 171.5 388.9 175.1L260.4 249.8zM488.7 439.2L488.7 323C488.7 315.8 485.6 310.7 479.5 307.1L351 232.4L393 208.3C396.6 206.3 399.7 206.3 403.2 208.3L501 264.7C529.2 281.1 548.1 315.9 548.1 349.7C548.1 388.6 525.1 424.5 488.7 439.3zM230.2 336.8L188.2 312.2C184.6 310.2 183.1 307.1 183.1 303L183.1 190.4C183.1 135.6 225.1 94.1 281.9 94.1C303.4 94.1 323.4 101.3 340.3 114.1L239.4 172.5C233.3 176.1 230.2 181.2 230.2 188.4L230.2 336.9zM320.6 389L260.4 355.2L260.4 283.5L320.6 249.7L380.8 283.5L380.8 355.2L320.6 389zM359.3 544.7C337.8 544.7 317.8 537.5 300.9 524.7L401.8 466.3C407.9 462.7 411 457.6 411 450.4L411 301.9L453.5 326.5C457.1 328.5 458.6 331.6 458.6 335.7L458.6 448.3C458.6 503.1 416.1 544.6 359.3 544.6zM237.8 430.5L140.1 374.2C111.9 357.8 93 323 93 289.2C93 249.8 116.6 214.4 152.9 199.6L152.9 316.3C152.9 323.5 156 328.6 162.1 332.2L290.1 406.4L248.1 430.5C244.5 432.5 241.4 432.5 237.9 430.5zM232.2 514.5C174.3 514.5 131.8 471 131.8 417.2C131.8 413.1 132.3 409 132.8 404.9L233.7 463.3C239.8 466.9 246 466.9 252.1 463.3L380.6 389.1L380.6 437.7C380.6 441.8 379.1 444.9 375.5 446.9L277.7 503.2C264.4 510.9 248.5 514.5 232.1 514.5zM359.2 575.4C421.2 575.4 472.9 531.4 484.6 473C541.9 458.1 578.8 404.4 578.8 349.6C578.8 313.8 563.4 278.9 535.8 253.9C538.4 243.1 539.9 232.4 539.9 221.6C539.9 148.4 480.5 93.6 411.9 93.6C398.1 93.6 384.8 95.6 371.5 100.3C348.5 77.8 316.7 63.4 281.9 63.4C219.9 63.4 168.2 107.4 156.5 165.8C99.2 180.6 62.3 234.4 62.3 289.2C62.3 325 77.7 359.9 105.3 384.9C102.7 395.7 101.2 406.4 101.2 417.2C101.2 490.4 160.6 545.2 229.2 545.2C243 545.2 256.3 543.2 269.6 538.5C292.6 561 324.4 575.4 359.2 575.4z"/></svg></div>
+            <div class="model-card-info">
+              <h3>GPT OSS SafeGuard 20B</h3>
+              <div class="model-card-meta">
+                <span class="tag"><svg width="12" height="12" viewBox="0 0 640 512" fill="currentColor"><path d="M260.4 249.8L260.4 201.2C260.4 197.1 261.9 194 265.5 192L363.3 135.7C376.6 128 392.5 124.4 408.9 124.4C470.3 124.4 509.3 172 509.3 222.7C509.3 226.3 509.3 230.4 508.8 234.5L407.3 175.1C401.2 171.5 395 171.5 388.9 175.1L260.4 249.8zM488.7 439.2L488.7 323C488.7 315.8 485.6 310.7 479.5 307.1L351 232.4L393 208.3C396.6 206.3 399.7 206.3 403.2 208.3L501 264.7C529.2 281.1 548.1 315.9 548.1 349.7C548.1 388.6 525.1 424.5 488.7 439.3zM230.2 336.8L188.2 312.2C184.6 310.2 183.1 307.1 183.1 303L183.1 190.4C183.1 135.6 225.1 94.1 281.9 94.1C303.4 94.1 323.4 101.3 340.3 114.1L239.4 172.5C233.3 176.1 230.2 181.2 230.2 188.4L230.2 336.9zM320.6 389L260.4 355.2L260.4 283.5L320.6 249.7L380.8 283.5L380.8 355.2L320.6 389zM359.3 544.7C337.8 544.7 317.8 537.5 300.9 524.7L401.8 466.3C407.9 462.7 411 457.6 411 450.4L411 301.9L453.5 326.5C457.1 328.5 458.6 331.6 458.6 335.7L458.6 448.3C458.6 503.1 416.1 544.6 359.3 544.6zM237.8 430.5L140.1 374.2C111.9 357.8 93 323 93 289.2C93 249.8 116.6 214.4 152.9 199.6L152.9 316.3C152.9 323.5 156 328.6 162.1 332.2L290.1 406.4L248.1 430.5C244.5 432.5 241.4 432.5 237.9 430.5zM232.2 514.5C174.3 514.5 131.8 471 131.8 417.2C131.8 413.1 132.3 409 132.8 404.9L233.7 463.3C239.8 466.9 246 466.9 252.1 463.3L380.6 389.1L380.6 437.7C380.6 441.8 379.1 444.9 375.5 446.9L277.7 503.2C264.4 510.9 248.5 514.5 232.1 514.5zM359.2 575.4C421.2 575.4 472.9 531.4 484.6 473C541.9 458.1 578.8 404.4 578.8 349.6C578.8 313.8 563.4 278.9 535.8 253.9C538.4 243.1 539.9 232.4 539.9 221.6C539.9 148.4 480.5 93.6 411.9 93.6C398.1 93.6 384.8 95.6 371.5 100.3C348.5 77.8 316.7 63.4 281.9 63.4C219.9 63.4 168.2 107.4 156.5 165.8C99.2 180.6 62.3 234.4 62.3 289.2C62.3 325 77.7 359.9 105.3 384.9C102.7 395.7 101.2 406.4 101.2 417.2C101.2 490.4 160.6 545.2 229.2 545.2C243 545.2 256.3 543.2 269.6 538.5C292.6 561 324.4 575.4 359.2 575.4z"/></svg>OpenAI</span>
+                <span class="tag">20B parametre</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">GPT-OSS SafeGuard 20B, güvenlik odaklı olarak ince ayar yapılmış 20 milyar parametrelik bir modeldir. Zararlı çıktıları filtreleme, hassas bilgileri koruma ve güvenli yanıt üretme konularında uzmanlaşmıştır. Eğitim ortamları için en güvenli seçenek.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>20B params</span>
+            <span class="model-detail"><i class="fa-solid fa-shield-halved"></i>Güvenlik Odaklı</span>
+            <span class="model-detail"><i class="fa-solid fa-school"></i>Eğitim İçin</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><img src="https://cdn.simpleicons.org/qwen/FF6A00" alt="" style="width:20px;height:20px;"></div>
+            <div class="model-card-info">
+              <h3>Qwen 3 32B</h3>
+              <div class="model-card-meta">
+                <span class="tag"><img src="https://cdn.simpleicons.org/qwen/FF6A00" alt="" style="width:12px;height:12px;">Alibaba</span>
+                <span class="tag">32B parametre</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Alibaba Cloud tarafından geliştirilen Qwen 3 32B, 32 milyar parametre ile Çince ve İngilizce başta olmak üzere çoklu dil desteğinde mükemmeldir. Matematiksel akıl yürütme, kod anlama ve uzun belge işlemede güçlü bir rakip.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>32B params</span>
+            <span class="model-detail"><i class="fa-solid fa-language"></i>Çoklu Dil</span>
+            <span class="model-detail"><i class="fa-solid fa-calculator"></i>Matematik</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><svg width="20" height="20" viewBox="0 0 14 14" fill="none"><path d="M8.5 1L2 8.5h4L5.5 13l6-7H7.5L9 1z" fill="currentColor"/></svg></div>
+            <div class="model-card-info">
+              <h3>Groq Compound</h3>
+              <div class="model-card-meta">
+                <span class="tag"><svg width="12" height="12" viewBox="0 0 14 14" fill="none"><path d="M8.5 1L2 8.5h4L5.5 13l6-7H7.5L9 1z" fill="currentColor"/></svg>Groq</span>
+                <span class="tag">Birden çok model</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Groq Compound, Groq'un özel LPU (Language Processing Unit) donanımında çalışan birden fazla modelin birleşimidir. Düşük gecikme süresi ve yüksek çıktı hızı sayesinde neredeyse anlık yanıtlar sunar. Gerçek zamanlı uygulamalar için en hızlı seçenek.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-bolt"></i>Anlık Yanıt</span>
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>LPU Donanım</span>
+            <span class="model-detail"><i class="fa-solid fa-gauge-high"></i>En Hızlı</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="models-provider">
+        <div class="provider-header">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" opacity=".7"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>
+          <h2>OpenRouter</h2>
+          <span>Çoklu Sağlayıcı Üzerinden Modeller</span>
+          <span class="provider-count">21 model</span>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-google" style="color:#4285F4;"></i></div>
+            <div class="model-card-info">
+              <h3>Google Gemma 4 31B</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-google"></i>Google</span>
+                <span class="tag">31B parametre</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Google'ın en yeni açık kaynak modeli Gemma 4 31B, 31 milyar parametre ile yüksek performanslı metin üretimi ve akıl yürütme sunar. Hafif yapısı sayesinde hızlı çalışır ve özellikle geliştiriciler için ideal bir seçenektir.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>31B params</span>
+            <span class="model-detail"><i class="fa-solid fa-feather"></i>Hafif</span>
+            <span class="model-detail"><i class="fa-solid fa-code"></i>Geliştirici</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-google" style="color:#4285F4;"></i></div>
+            <div class="model-card-info">
+              <h3>Gemini 3.5 Flash</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-google"></i>Google</span>
+                <span class="tag">Çok modlu</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Google'ın en yeni nesil Gemini modeli olan 3.5 Flash, hız ve doğruluk arasında mükemmel denge kurar. Çok modlu yetenekleri, geniş bağlam penceresi ve düşük gecikme süresi ile günlük kullanım için en ideal Google modelidir.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-bolt"></i>Hızlı</span>
+            <span class="model-detail"><i class="fa-solid fa-image"></i>Çok Modlu</span>
+            <span class="model-detail"><i class="fa-solid fa-expand"></i>Geniş Bağlam</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-google" style="color:#4285F4;"></i></div>
+            <div class="model-card-info">
+              <h3>Gemini 2.5 Flash</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-google"></i>Google</span>
+                <span class="tag">Dengeli</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Gemini 2.5 Flash, Google'ın dengeli ve hızlı modelidir. Özellikle uzun belgeleri işleme, kod üretimi ve çok dilli görevlerde güçlüdür. Düşük maliyetli ve yüksek verimli bir seçenek arayanlar için biçilmiş kaftan.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-file-lines"></i>Uzun Belge</span>
+            <span class="model-detail"><i class="fa-solid fa-code"></i>Kod</span>
+            <span class="model-detail"><i class="fa-solid fa-coins"></i>Düşük Maliyet</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-google" style="color:#4285F4;"></i></div>
+            <div class="model-card-info">
+              <h3>Gemini 3.1 Flash Lite</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-google"></i>Google</span>
+                <span class="tag">Hafif</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Gemini 3.1 Flash Lite, Google'ın en hafif ve en hızlı modelidir. Basit görevler, hızlı yanıtlar ve düşük maliyetli işlemler için optimize edilmiştir. Yüksek hacimli API çağrıları için ekonomik bir çözümdür.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-feather"></i>En Hafif</span>
+            <span class="model-detail"><i class="fa-solid fa-bolt"></i>En Hızlı</span>
+            <span class="model-detail"><i class="fa-solid fa-coins"></i>Ekonomik</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-google" style="color:#4285F4;"></i></div>
+            <div class="model-card-info">
+              <h3>Gemini 2.5 Pro</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-google"></i>Google</span>
+                <span class="tag">En güçlü</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Google'ın en güçlü ve en yetenekli modeli olan Gemini 2.5 Pro, karmaşık akıl yürütme, matematik, bilimsel analiz ve profesyonel düzeyde kod üretiminde çığır açar. En zorlu görevler için nihai çözüm.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-crown"></i>En Güçlü</span>
+            <span class="model-detail"><i class="fa-solid fa-flask"></i>Bilimsel</span>
+            <span class="model-detail"><i class="fa-solid fa-brain"></i>Derin Analiz</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-google" style="color:#4285F4;"></i></div>
+            <div class="model-card-info">
+              <h3>Gemini 3.1 Pro</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-google"></i>Google</span>
+                <span class="tag">Profesyonel</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Google'ın en yeni profesyonel seviye modeli olan Gemini 3.1 Pro, gelişmiş akıl yürütme, kod üretimi ve çok modlu analiz yetenekleriyle öne çıkar. Uzun bağlam penceresi sayesinde büyük projeleri ve karmaşık belgeleri sorunsuz işler. Profesyoneller için amiral gemisi model.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-crown"></i>Profesyonel</span>
+            <span class="model-detail"><i class="fa-solid fa-code"></i>Kod Üretimi</span>
+            <span class="model-detail"><i class="fa-solid fa-expand"></i>Geniş Bağlam</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><img src="https://cdn.simpleicons.org/qwen/FF6A00" alt="" style="width:20px;height:20px;"></div>
+            <div class="model-card-info">
+              <h3>Qwen 3.6 Flash</h3>
+              <div class="model-card-meta">
+                <span class="tag"><img src="https://cdn.simpleicons.org/qwen/FF6A00" alt="" style="width:12px;height:12px;">Alibaba</span>
+                <span class="tag">Hızlı</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Alibaba Cloud'un yeni nesil hızlı modeli Qwen 3.6 Flash, düşük gecikme süresi ve yüksek çıktı hızı ile öne çıkar. Özellikle Çince ve İngilizce dillerinde üstün performans sunar.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-bolt"></i>Düşük Gecikme</span>
+            <span class="model-detail"><i class="fa-solid fa-language"></i>Çince/İngilizce</span>
+            <span class="model-detail"><i class="fa-solid fa-gauge-high"></i>Yüksek Hız</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><img src="https://cdn.simpleicons.org/qwen/FF6A00" alt="" style="width:20px;height:20px;"></div>
+            <div class="model-card-info">
+              <h3>Qwen 3 Coder</h3>
+              <div class="model-card-meta">
+                <span class="tag"><img src="https://cdn.simpleicons.org/qwen/FF6A00" alt="" style="width:12px;height:12px;">Alibaba</span>
+                <span class="tag">Kod odaklı</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Qwen 3 Coder, yazılım geliştirme için özel olarak ince ayar yapılmış bir modeldir. Kod anlama, hata ayıklama, test yazma ve çoklu dosya analizi konularında uzmanlaşmıştır. Geliştiriciler için vazgeçilmez bir yardımcı.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-code"></i>Kod Uzmanı</span>
+            <span class="model-detail"><i class="fa-solid fa-bug"></i>Hata Ayıklama</span>
+            <span class="model-detail"><i class="fa-solid fa-vial"></i>Test Yazma</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><img src="https://cdn.simpleicons.org/qwen/FF6A00" alt="" style="width:20px;height:20px;"></div>
+            <div class="model-card-info">
+              <h3>Qwen 3.7 Max</h3>
+              <div class="model-card-meta">
+                <span class="tag"><img src="https://cdn.simpleicons.org/qwen/FF6A00" alt="" style="width:12px;height:12px;">Alibaba</span>
+                <span class="tag">En büyük</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Qwen serisinin en büyük ve en yetenekli modeli olan 3.7 Max, karmaşık mantıksal akıl yürütme, uzun belge analizi, çok dilli çeviri ve yaratıcı yazma görevlerinde üstün performans gösterir. En zorlu akademik ve profesyonel işler için tasarlanmıştır.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-crown"></i>Amiral Gemisi</span>
+            <span class="model-detail"><i class="fa-solid fa-language"></i>Çok Dilli Çeviri</span>
+            <span class="model-detail"><i class="fa-solid fa-pen-fancy"></i>Yaratıcı Yazma</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><img src="https://cdn.simpleicons.org/qwen/FF6A00" alt="" style="width:20px;height:20px;"></div>
+            <div class="model-card-info">
+              <h3>Qwen3 Next Free</h3>
+              <div class="model-card-meta">
+                <span class="tag"><img src="https://cdn.simpleicons.org/qwen/FF6A00" alt="" style="width:12px;height:12px;">Alibaba</span>
+                <span class="tag">Ücretsiz</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Qwen3 Next, 80B parametre ve 3B aktif parametre (MoE) mimarisi ile devasa bir model olup tamamen ücretsiz kullanım sunar. Büyük ölçekli akıl yürütme, karmaşık kod analizi ve yaratıcı yazma görevlerinde profesyonel düzeyde sonuç verir. Yüksek kaliteyi sıfır maliyetle deneyimlemek isteyenler için en iyi seçenek.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>80B-3B MoE</span>
+            <span class="model-detail"><i class="fa-solid fa-coins"></i>Ücretsiz</span>
+            <span class="model-detail"><i class="fa-solid fa-brain"></i>80B Kapasite</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><img src="https://cdn.simpleicons.org/deepseek/4FC3F7" alt="" style="width:20px;height:20px;"></div>
+            <div class="model-card-info">
+              <h3>DeepSeek R1</h3>
+              <div class="model-card-meta">
+                <span class="tag"><img src="https://cdn.simpleicons.org/deepseek/4FC3F7" alt="" style="width:12px;height:12px;">DeepSeek</span>
+                <span class="tag">Reasoning</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">DeepSeek R1, güçlü akıl yürütme (reasoning) yetenekleri ile öne çıkan bir modeldir. Matematik, mantık problemleri, kod analizi ve adım adım düşünme gerektiren karmaşık görevlerde mükemmel sonuçlar verir. Derinlemesine analiz için en iyi seçeneklerden biridir.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-brain"></i>Reasoning</span>
+            <span class="model-detail"><i class="fa-solid fa-calculator"></i>Matematik</span>
+            <span class="model-detail"><i class="fa-solid fa-list-ol"></i>Adım Adım</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><img src="https://cdn.simpleicons.org/deepseek/4FC3F7" alt="" style="width:20px;height:20px;"></div>
+            <div class="model-card-info">
+              <h3>DeepSeek V4 Pro</h3>
+              <div class="model-card-meta">
+                <span class="tag"><img src="https://cdn.simpleicons.org/deepseek/4FC3F7" alt="" style="width:12px;height:12px;">DeepSeek</span>
+                <span class="tag">Gelişmiş</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">DeepSeek V4 Pro, DeepSeek'in en gelişmiş modelidir. Geniş bilgi tabanı, yüksek doğruluk oranı ve çok yönlü yetenekleri ile hem akademik araştırma hem de profesyonel kullanım için idealdir. Dengeli ve güvenilir bir tercih.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>En Gelişmiş</span>
+            <span class="model-detail"><i class="fa-solid fa-circle-check"></i>Yüksek Doğruluk</span>
+            <span class="model-detail"><i class="fa-solid fa-briefcase"></i>Profesyonel</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><img src="https://cdn.simpleicons.org/deepseek/4FC3F7" alt="" style="width:20px;height:20px;"></div>
+            <div class="model-card-info">
+              <h3>DeepSeek V4 Flash Nitro</h3>
+              <div class="model-card-meta">
+                <span class="tag"><img src="https://cdn.simpleicons.org/deepseek/4FC3F7" alt="" style="width:12px;height:12px;">DeepSeek</span>
+                <span class="tag">Nitro</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">DeepSeek V4 Flash Nitro, hız odaklı olarak optimize edilmiş bir modeldir. Nitro donanımında çalışarak son derece düşük gecikme süresi ve yüksek hız sunar. Gerçek zamanlı uygulamalar ve hızlı yanıt gerektiren görevler için idealdir.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-bolt"></i>Nitro Hız</span>
+            <span class="model-detail"><i class="fa-solid fa-gauge-high"></i>Düşük Gecikme</span>
+            <span class="model-detail"><i class="fa-solid fa-clock"></i>Gerçek Zamanlı</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><img src="https://cdn.simpleicons.org/mistralai/6366F1" alt="" style="width:20px;height:20px;"></div>
+            <div class="model-card-info">
+              <h3>Mistral Small 4</h3>
+              <div class="model-card-meta">
+                <span class="tag"><img src="https://cdn.simpleicons.org/mistralai/6366F1" alt="" style="width:12px;height:12px;">Mistral AI</span>
+                <span class="tag">Hafif</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Mistral Small 4, Fransız yapay zeka şirketi Mistral AI'nin en yeni hafif modelidir. 2026 yılında yayınlanan bu model, düşük maliyet ve yüksek verimliliği bir araya getirir. Temel görevler ve hızlı sorgular için ekonomik bir çözümdür.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-feather"></i>Hafif</span>
+            <span class="model-detail"><i class="fa-solid fa-coins"></i>Düşük Maliyet</span>
+            <span class="model-detail"><i class="fa-solid fa-gauge"></i>Verimli</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><img src="https://cdn.simpleicons.org/moonshotai/EC4899" alt="" style="width:20px;height:20px;"></div>
+            <div class="model-card-info">
+              <h3>Kimi K2</h3>
+              <div class="model-card-meta">
+                <span class="tag"><img src="https://cdn.simpleicons.org/moonshotai/EC4899" alt="" style="width:12px;height:12px;">Moonshot AI</span>
+                <span class="tag">Thinking</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Moonshot AI tarafından geliştirilen Kimi K2, güçlü mantıksal akıl yürütme ve düşünme (thinking) yetenekleri ile öne çıkar. Karmaşık problem çözme, analiz ve araştırma görevlerinde derinlemesine düşünme kapasitesi sunar.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-brain"></i>Thinking</span>
+            <span class="model-detail"><i class="fa-solid fa-puzzle-piece"></i>Problem Çözme</span>
+            <span class="model-detail"><i class="fa-solid fa-magnifying-glass"></i>Araştırma</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><img src="https://cdn.simpleicons.org/moonshotai/EC4899" alt="" style="width:20px;height:20px;"></div>
+            <div class="model-card-info">
+              <h3>Kimi K2.6</h3>
+              <div class="model-card-meta">
+                <span class="tag"><img src="https://cdn.simpleicons.org/moonshotai/EC4899" alt="" style="width:12px;height:12px;">Moonshot AI</span>
+                <span class="tag">Güncel</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Kimi K2.6, Moonshot AI'nin en güncel modelidir. K2'nin tüm yeteneklerini geliştirilmiş hız ve doğrulukla sunar. Özellikle uzun metin işleme ve detaylı analiz görevlerinde üstün performans gösterir.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>Güncellenmiş</span>
+            <span class="model-detail"><i class="fa-solid fa-file-lines"></i>Uzun Metin</span>
+            <span class="model-detail"><i class="fa-solid fa-circle-check"></i>Yüksek Doğruluk</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><img src="https://cdn.simpleicons.org/anthropic/D97706" alt="" style="width:20px;height:20px;"></div>
+            <div class="model-card-info">
+              <h3>Claude Haiku 4.5</h3>
+              <div class="model-card-meta">
+                <span class="tag"><img src="https://cdn.simpleicons.org/anthropic/D97706" alt="" style="width:12px;height:12px;">Anthropic</span>
+                <span class="tag">Hızlı</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Anthropic'in en hızlı ve en ekonomik modeli olan Claude Haiku 4.5, düşük gecikme süresi ile hızlı yanıtlar üretir. Günlük sorular, metin özetleme ve basit analiz görevleri için idealdir. Güvenlik odaklı yapısıyla öne çıkar.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-bolt"></i>En Hızlı</span>
+            <span class="model-detail"><i class="fa-solid fa-shield-halved"></i>Güvenlik</span>
+            <span class="model-detail"><i class="fa-solid fa-coins"></i>Ekonomik</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><img src="https://cdn.simpleicons.org/anthropic/D97706" alt="" style="width:20px;height:20px;"></div>
+            <div class="model-card-info">
+              <h3>Claude Sonnet 4.6</h3>
+              <div class="model-card-meta">
+                <span class="tag"><img src="https://cdn.simpleicons.org/anthropic/D97706" alt="" style="width:12px;height:12px;">Anthropic</span>
+                <span class="tag">Dengeli</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Claude Sonnet 4.6, Anthropic'in dengeli ve güçlü modelidir. Hız ve kalite arasında mükemmel denge kurar. Yaratıcı yazma, kod üretimi, analiz ve uzun belge işleme gibi geniş bir yelpazede üstün performans sunar. En popüler Claude modellerinden biridir.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-scale-balanced"></i>Dengeli</span>
+            <span class="model-detail"><i class="fa-solid fa-star"></i>Popüler</span>
+            <span class="model-detail"><i class="fa-solid fa-pen-fancy"></i>Yaratıcı Yazma</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><svg width="20" height="20" viewBox="0 0 640 512" fill="currentColor" style="color:#10A37F;"><path d="M260.4 249.8L260.4 201.2C260.4 197.1 261.9 194 265.5 192L363.3 135.7C376.6 128 392.5 124.4 408.9 124.4C470.3 124.4 509.3 172 509.3 222.7C509.3 226.3 509.3 230.4 508.8 234.5L407.3 175.1C401.2 171.5 395 171.5 388.9 175.1L260.4 249.8zM488.7 439.2L488.7 323C488.7 315.8 485.6 310.7 479.5 307.1L351 232.4L393 208.3C396.6 206.3 399.7 206.3 403.2 208.3L501 264.7C529.2 281.1 548.1 315.9 548.1 349.7C548.1 388.6 525.1 424.5 488.7 439.3zM230.2 336.8L188.2 312.2C184.6 310.2 183.1 307.1 183.1 303L183.1 190.4C183.1 135.6 225.1 94.1 281.9 94.1C303.4 94.1 323.4 101.3 340.3 114.1L239.4 172.5C233.3 176.1 230.2 181.2 230.2 188.4L230.2 336.9zM320.6 389L260.4 355.2L260.4 283.5L320.6 249.7L380.8 283.5L380.8 355.2L320.6 389zM359.3 544.7C337.8 544.7 317.8 537.5 300.9 524.7L401.8 466.3C407.9 462.7 411 457.6 411 450.4L411 301.9L453.5 326.5C457.1 328.5 458.6 331.6 458.6 335.7L458.6 448.3C458.6 503.1 416.1 544.6 359.3 544.6zM237.8 430.5L140.1 374.2C111.9 357.8 93 323 93 289.2C93 249.8 116.6 214.4 152.9 199.6L152.9 316.3C152.9 323.5 156 328.6 162.1 332.2L290.1 406.4L248.1 430.5C244.5 432.5 241.4 432.5 237.9 430.5zM232.2 514.5C174.3 514.5 131.8 471 131.8 417.2C131.8 413.1 132.3 409 132.8 404.9L233.7 463.3C239.8 466.9 246 466.9 252.1 463.3L380.6 389.1L380.6 437.7C380.6 441.8 379.1 444.9 375.5 446.9L277.7 503.2C264.4 510.9 248.5 514.5 232.1 514.5zM359.2 575.4C421.2 575.4 472.9 531.4 484.6 473C541.9 458.1 578.8 404.4 578.8 349.6C578.8 313.8 563.4 278.9 535.8 253.9C538.4 243.1 539.9 232.4 539.9 221.6C539.9 148.4 480.5 93.6 411.9 93.6C398.1 93.6 384.8 95.6 371.5 100.3C348.5 77.8 316.7 63.4 281.9 63.4C219.9 63.4 168.2 107.4 156.5 165.8C99.2 180.6 62.3 234.4 62.3 289.2C62.3 325 77.7 359.9 105.3 384.9C102.7 395.7 101.2 406.4 101.2 417.2C101.2 490.4 160.6 545.2 229.2 545.2C243 545.2 256.3 543.2 269.6 538.5C292.6 561 324.4 575.4 359.2 575.4z"/></svg></div>
+            <div class="model-card-info">
+              <h3>ChatGPT 5 Mini</h3>
+              <div class="model-card-meta">
+                <span class="tag"><svg width="12" height="12" viewBox="0 0 640 512" fill="currentColor"><path d="M260.4 249.8L260.4 201.2C260.4 197.1 261.9 194 265.5 192L363.3 135.7C376.6 128 392.5 124.4 408.9 124.4C470.3 124.4 509.3 172 509.3 222.7C509.3 226.3 509.3 230.4 508.8 234.5L407.3 175.1C401.2 171.5 395 171.5 388.9 175.1L260.4 249.8zM488.7 439.2L488.7 323C488.7 315.8 485.6 310.7 479.5 307.1L351 232.4L393 208.3C396.6 206.3 399.7 206.3 403.2 208.3L501 264.7C529.2 281.1 548.1 315.9 548.1 349.7C548.1 388.6 525.1 424.5 488.7 439.3zM230.2 336.8L188.2 312.2C184.6 310.2 183.1 307.1 183.1 303L183.1 190.4C183.1 135.6 225.1 94.1 281.9 94.1C303.4 94.1 323.4 101.3 340.3 114.1L239.4 172.5C233.3 176.1 230.2 181.2 230.2 188.4L230.2 336.9zM320.6 389L260.4 355.2L260.4 283.5L320.6 249.7L380.8 283.5L380.8 355.2L320.6 389zM359.3 544.7C337.8 544.7 317.8 537.5 300.9 524.7L401.8 466.3C407.9 462.7 411 457.6 411 450.4L411 301.9L453.5 326.5C457.1 328.5 458.6 331.6 458.6 335.7L458.6 448.3C458.6 503.1 416.1 544.6 359.3 544.6zM237.8 430.5L140.1 374.2C111.9 357.8 93 323 93 289.2C93 249.8 116.6 214.4 152.9 199.6L152.9 316.3C152.9 323.5 156 328.6 162.1 332.2L290.1 406.4L248.1 430.5C244.5 432.5 241.4 432.5 237.9 430.5zM232.2 514.5C174.3 514.5 131.8 471 131.8 417.2C131.8 413.1 132.3 409 132.8 404.9L233.7 463.3C239.8 466.9 246 466.9 252.1 463.3L380.6 389.1L380.6 437.7C380.6 441.8 379.1 444.9 375.5 446.9L277.7 503.2C264.4 510.9 248.5 514.5 232.1 514.5zM359.2 575.4C421.2 575.4 472.9 531.4 484.6 473C541.9 458.1 578.8 404.4 578.8 349.6C578.8 313.8 563.4 278.9 535.8 253.9C538.4 243.1 539.9 232.4 539.9 221.6C539.9 148.4 480.5 93.6 411.9 93.6C398.1 93.6 384.8 95.6 371.5 100.3C348.5 77.8 316.7 63.4 281.9 63.4C219.9 63.4 168.2 107.4 156.5 165.8C99.2 180.6 62.3 234.4 62.3 289.2C62.3 325 77.7 359.9 105.3 384.9C102.7 395.7 101.2 406.4 101.2 417.2C101.2 490.4 160.6 545.2 229.2 545.2C243 545.2 256.3 543.2 269.6 538.5C292.6 561 324.4 575.4 359.2 575.4z"/></svg>OpenAI</span>
+                <span class="tag">Mini</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">OpenAI'nin en yeni nesil modeli GPT-5 Mini, 5. nesil teknolojisini kompakt bir pakette sunar. Hızlı, verimli ve düşük maliyetlidir. Günlük kullanım, hızlı sorgular ve basit görevler için mükemmel bir seçenektir.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>5. Nesil</span>
+            <span class="model-detail"><i class="fa-solid fa-bolt"></i>Hızlı</span>
+            <span class="model-detail"><i class="fa-solid fa-coins"></i>Düşük Maliyet</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><svg width="20" height="20" viewBox="0 0 640 512" fill="currentColor" style="color:#10A37F;"><path d="M260.4 249.8L260.4 201.2C260.4 197.1 261.9 194 265.5 192L363.3 135.7C376.6 128 392.5 124.4 408.9 124.4C470.3 124.4 509.3 172 509.3 222.7C509.3 226.3 509.3 230.4 508.8 234.5L407.3 175.1C401.2 171.5 395 171.5 388.9 175.1L260.4 249.8zM488.7 439.2L488.7 323C488.7 315.8 485.6 310.7 479.5 307.1L351 232.4L393 208.3C396.6 206.3 399.7 206.3 403.2 208.3L501 264.7C529.2 281.1 548.1 315.9 548.1 349.7C548.1 388.6 525.1 424.5 488.7 439.3zM230.2 336.8L188.2 312.2C184.6 310.2 183.1 307.1 183.1 303L183.1 190.4C183.1 135.6 225.1 94.1 281.9 94.1C303.4 94.1 323.4 101.3 340.3 114.1L239.4 172.5C233.3 176.1 230.2 181.2 230.2 188.4L230.2 336.9zM320.6 389L260.4 355.2L260.4 283.5L320.6 249.7L380.8 283.5L380.8 355.2L320.6 389zM359.3 544.7C337.8 544.7 317.8 537.5 300.9 524.7L401.8 466.3C407.9 462.7 411 457.6 411 450.4L411 301.9L453.5 326.5C457.1 328.5 458.6 331.6 458.6 335.7L458.6 448.3C458.6 503.1 416.1 544.6 359.3 544.6zM237.8 430.5L140.1 374.2C111.9 357.8 93 323 93 289.2C93 249.8 116.6 214.4 152.9 199.6L152.9 316.3C152.9 323.5 156 328.6 162.1 332.2L290.1 406.4L248.1 430.5C244.5 432.5 241.4 432.5 237.9 430.5zM232.2 514.5C174.3 514.5 131.8 471 131.8 417.2C131.8 413.1 132.3 409 132.8 404.9L233.7 463.3C239.8 466.9 246 466.9 252.1 463.3L380.6 389.1L380.6 437.7C380.6 441.8 379.1 444.9 375.5 446.9L277.7 503.2C264.4 510.9 248.5 514.5 232.1 514.5zM359.2 575.4C421.2 575.4 472.9 531.4 484.6 473C541.9 458.1 578.8 404.4 578.8 349.6C578.8 313.8 563.4 278.9 535.8 253.9C538.4 243.1 539.9 232.4 539.9 221.6C539.9 148.4 480.5 93.6 411.9 93.6C398.1 93.6 384.8 95.6 371.5 100.3C348.5 77.8 316.7 63.4 281.9 63.4C219.9 63.4 168.2 107.4 156.5 165.8C99.2 180.6 62.3 234.4 62.3 289.2C62.3 325 77.7 359.9 105.3 384.9C102.7 395.7 101.2 406.4 101.2 417.2C101.2 490.4 160.6 545.2 229.2 545.2C243 545.2 256.3 543.2 269.6 538.5C292.6 561 324.4 575.4 359.2 575.4z"/></svg></div>
+            <div class="model-card-info">
+              <h3>ChatGPT 4o Mini</h3>
+              <div class="model-card-meta">
+                <span class="tag"><svg width="12" height="12" viewBox="0 0 640 512" fill="currentColor"><path d="M260.4 249.8L260.4 201.2C260.4 197.1 261.9 194 265.5 192L363.3 135.7C376.6 128 392.5 124.4 408.9 124.4C470.3 124.4 509.3 172 509.3 222.7C509.3 226.3 509.3 230.4 508.8 234.5L407.3 175.1C401.2 171.5 395 171.5 388.9 175.1L260.4 249.8zM488.7 439.2L488.7 323C488.7 315.8 485.6 310.7 479.5 307.1L351 232.4L393 208.3C396.6 206.3 399.7 206.3 403.2 208.3L501 264.7C529.2 281.1 548.1 315.9 548.1 349.7C548.1 388.6 525.1 424.5 488.7 439.3zM230.2 336.8L188.2 312.2C184.6 310.2 183.1 307.1 183.1 303L183.1 190.4C183.1 135.6 225.1 94.1 281.9 94.1C303.4 94.1 323.4 101.3 340.3 114.1L239.4 172.5C233.3 176.1 230.2 181.2 230.2 188.4L230.2 336.9zM320.6 389L260.4 355.2L260.4 283.5L320.6 249.7L380.8 283.5L380.8 355.2L320.6 389zM359.3 544.7C337.8 544.7 317.8 537.5 300.9 524.7L401.8 466.3C407.9 462.7 411 457.6 411 450.4L411 301.9L453.5 326.5C457.1 328.5 458.6 331.6 458.6 335.7L458.6 448.3C458.6 503.1 416.1 544.6 359.3 544.6zM237.8 430.5L140.1 374.2C111.9 357.8 93 323 93 289.2C93 249.8 116.6 214.4 152.9 199.6L152.9 316.3C152.9 323.5 156 328.6 162.1 332.2L290.1 406.4L248.1 430.5C244.5 432.5 241.4 432.5 237.9 430.5zM232.2 514.5C174.3 514.5 131.8 471 131.8 417.2C131.8 413.1 132.3 409 132.8 404.9L233.7 463.3C239.8 466.9 246 466.9 252.1 463.3L380.6 389.1L380.6 437.7C380.6 441.8 379.1 444.9 375.5 446.9L277.7 503.2C264.4 510.9 248.5 514.5 232.1 514.5zM359.2 575.4C421.2 575.4 472.9 531.4 484.6 473C541.9 458.1 578.8 404.4 578.8 349.6C578.8 313.8 563.4 278.9 535.8 253.9C538.4 243.1 539.9 232.4 539.9 221.6C539.9 148.4 480.5 93.6 411.9 93.6C398.1 93.6 384.8 95.6 371.5 100.3C348.5 77.8 316.7 63.4 281.9 63.4C219.9 63.4 168.2 107.4 156.5 165.8C99.2 180.6 62.3 234.4 62.3 289.2C62.3 325 77.7 359.9 105.3 384.9C102.7 395.7 101.2 406.4 101.2 417.2C101.2 490.4 160.6 545.2 229.2 545.2C243 545.2 256.3 543.2 269.6 538.5C292.6 561 324.4 575.4 359.2 575.4z"/></svg>OpenAI</span>
+                <span class="tag">Çok modlu</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">OpenAI'nin en popüler küçük modeli olan GPT-4o Mini, yüksek hız ve düşük maliyeti bir araya getirir. Geniş bilgi tabanı ve çok modlu yetenekleri ile hem metin hem görsel görevlerde güçlü performans sunar.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>4o Nesil</span>
+            <span class="model-detail"><i class="fa-solid fa-image"></i>Çok Modlu</span>
+            <span class="model-detail"><i class="fa-solid fa-star"></i>Popüler</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><svg width="20" height="20" viewBox="0 0 640 512" fill="currentColor" style="color:#10A37F;"><path d="M260.4 249.8L260.4 201.2C260.4 197.1 261.9 194 265.5 192L363.3 135.7C376.6 128 392.5 124.4 408.9 124.4C470.3 124.4 509.3 172 509.3 222.7C509.3 226.3 509.3 230.4 508.8 234.5L407.3 175.1C401.2 171.5 395 171.5 388.9 175.1L260.4 249.8zM488.7 439.2L488.7 323C488.7 315.8 485.6 310.7 479.5 307.1L351 232.4L393 208.3C396.6 206.3 399.7 206.3 403.2 208.3L501 264.7C529.2 281.1 548.1 315.9 548.1 349.7C548.1 388.6 525.1 424.5 488.7 439.3zM230.2 336.8L188.2 312.2C184.6 310.2 183.1 307.1 183.1 303L183.1 190.4C183.1 135.6 225.1 94.1 281.9 94.1C303.4 94.1 323.4 101.3 340.3 114.1L239.4 172.5C233.3 176.1 230.2 181.2 230.2 188.4L230.2 336.9zM320.6 389L260.4 355.2L260.4 283.5L320.6 249.7L380.8 283.5L380.8 355.2L320.6 389zM359.3 544.7C337.8 544.7 317.8 537.5 300.9 524.7L401.8 466.3C407.9 462.7 411 457.6 411 450.4L411 301.9L453.5 326.5C457.1 328.5 458.6 331.6 458.6 335.7L458.6 448.3C458.6 503.1 416.1 544.6 359.3 544.6zM237.8 430.5L140.1 374.2C111.9 357.8 93 323 93 289.2C93 249.8 116.6 214.4 152.9 199.6L152.9 316.3C152.9 323.5 156 328.6 162.1 332.2L290.1 406.4L248.1 430.5C244.5 432.5 241.4 432.5 237.9 430.5zM232.2 514.5C174.3 514.5 131.8 471 131.8 417.2C131.8 413.1 132.3 409 132.8 404.9L233.7 463.3C239.8 466.9 246 466.9 252.1 463.3L380.6 389.1L380.6 437.7C380.6 441.8 379.1 444.9 375.5 446.9L277.7 503.2C264.4 510.9 248.5 514.5 232.1 514.5zM359.2 575.4C421.2 575.4 472.9 531.4 484.6 473C541.9 458.1 578.8 404.4 578.8 349.6C578.8 313.8 563.4 278.9 535.8 253.9C538.4 243.1 539.9 232.4 539.9 221.6C539.9 148.4 480.5 93.6 411.9 93.6C398.1 93.6 384.8 95.6 371.5 100.3C348.5 77.8 316.7 63.4 281.9 63.4C219.9 63.4 168.2 107.4 156.5 165.8C99.2 180.6 62.3 234.4 62.3 289.2C62.3 325 77.7 359.9 105.3 384.9C102.7 395.7 101.2 406.4 101.2 417.2C101.2 490.4 160.6 545.2 229.2 545.2C243 545.2 256.3 543.2 269.6 538.5C292.6 561 324.4 575.4 359.2 575.4z"/></svg></div>
+            <div class="model-card-info">
+              <h3>ChatGPT 4.1 Mini</h3>
+              <div class="model-card-meta">
+                <span class="tag"><svg width="12" height="12" viewBox="0 0 640 512" fill="currentColor"><path d="M260.4 249.8L260.4 201.2C260.4 197.1 261.9 194 265.5 192L363.3 135.7C376.6 128 392.5 124.4 408.9 124.4C470.3 124.4 509.3 172 509.3 222.7C509.3 226.3 509.3 230.4 508.8 234.5L407.3 175.1C401.2 171.5 395 171.5 388.9 175.1L260.4 249.8zM488.7 439.2L488.7 323C488.7 315.8 485.6 310.7 479.5 307.1L351 232.4L393 208.3C396.6 206.3 399.7 206.3 403.2 208.3L501 264.7C529.2 281.1 548.1 315.9 548.1 349.7C548.1 388.6 525.1 424.5 488.7 439.3zM230.2 336.8L188.2 312.2C184.6 310.2 183.1 307.1 183.1 303L183.1 190.4C183.1 135.6 225.1 94.1 281.9 94.1C303.4 94.1 323.4 101.3 340.3 114.1L239.4 172.5C233.3 176.1 230.2 181.2 230.2 188.4L230.2 336.9zM320.6 389L260.4 355.2L260.4 283.5L320.6 249.7L380.8 283.5L380.8 355.2L320.6 389zM359.3 544.7C337.8 544.7 317.8 537.5 300.9 524.7L401.8 466.3C407.9 462.7 411 457.6 411 450.4L411 301.9L453.5 326.5C457.1 328.5 458.6 331.6 458.6 335.7L458.6 448.3C458.6 503.1 416.1 544.6 359.3 544.6zM237.8 430.5L140.1 374.2C111.9 357.8 93 323 93 289.2C93 249.8 116.6 214.4 152.9 199.6L152.9 316.3C152.9 323.5 156 328.6 162.1 332.2L290.1 406.4L248.1 430.5C244.5 432.5 241.4 432.5 237.9 430.5zM232.2 514.5C174.3 514.5 131.8 471 131.8 417.2C131.8 413.1 132.3 409 132.8 404.9L233.7 463.3C239.8 466.9 246 466.9 252.1 463.3L380.6 389.1L380.6 437.7C380.6 441.8 379.1 444.9 375.5 446.9L277.7 503.2C264.4 510.9 248.5 514.5 232.1 514.5zM359.2 575.4C421.2 575.4 472.9 531.4 484.6 473C541.9 458.1 578.8 404.4 578.8 349.6C578.8 313.8 563.4 278.9 535.8 253.9C538.4 243.1 539.9 232.4 539.9 221.6C539.9 148.4 480.5 93.6 411.9 93.6C398.1 93.6 384.8 95.6 371.5 100.3C348.5 77.8 316.7 63.4 281.9 63.4C219.9 63.4 168.2 107.4 156.5 165.8C99.2 180.6 62.3 234.4 62.3 289.2C62.3 325 77.7 359.9 105.3 384.9C102.7 395.7 101.2 406.4 101.2 417.2C101.2 490.4 160.6 545.2 229.2 545.2C243 545.2 256.3 543.2 269.6 538.5C292.6 561 324.4 575.4 359.2 575.4z"/></svg>OpenAI</span>
+                <span class="tag">Kararlı</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">GPT-4.1 Mini, OpenAI'nin 4.1 nesil teknolojisiyle güçlendirilmiş hızlı ve stabil bir modeldir. Dengeli yapısı, uzun bağlam penceresi ve tutarlı çıktı kalitesi ile geniş bir kullanım yelpazesinde güvenilir bir tercihtir.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>4.1 Nesil</span>
+            <span class="model-detail"><i class="fa-solid fa-expand"></i>Uzun Bağlam</span>
+            <span class="model-detail"><i class="fa-solid fa-circle-check"></i>Tutarlı</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="models-provider">
+        <div class="provider-header">
+          <i class="fa-brands fa-google" style="color:#4285F4;font-size:1.3rem;opacity:.7;"></i>
+          <h2>Google Gemini</h2>
+          <span>Doğrudan Google AI API Üzerinden Modeller</span>
+          <span class="provider-count">7 model</span>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-google" style="color:#4285F4;"></i></div>
+            <div class="model-card-info">
+              <h3>Gemini 2.5 Flash Lite</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-google"></i>Google</span>
+                <span class="tag">Hafif</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Google'ın en hafif ve en hızlı modeli olan Gemini 2.5 Flash Lite, düşük maliyetli ve yüksek verimli bir seçenektir. Basit görevler ve hızlı yanıtlar için optimize edilmiştir.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-feather"></i>Hafif</span>
+            <span class="model-detail"><i class="fa-solid fa-coins"></i>Düşük Maliyet</span>
+            <span class="model-detail"><i class="fa-solid fa-bolt"></i>Hızlı</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-google" style="color:#4285F4;"></i></div>
+            <div class="model-card-info">
+              <h3>Gemini 3.1 Flash Lite</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-google"></i>Google</span>
+                <span class="tag">Güncel Hafif</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Gemini 3.1 Flash Lite, Google'ın en güncel hafif modelidir. 3.1 nesil teknolojisiyle hız ve verimlilikte çığır açar. Günlük kullanım ve yüksek hacimli API çağrıları için idealdir.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-microchip"></i>3.1 Nesil</span>
+            <span class="model-detail"><i class="fa-solid fa-coins"></i>Ekonomik</span>
+            <span class="model-detail"><i class="fa-solid fa-gauge-high"></i>Yüksek Hız</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-google" style="color:#4285F4;"></i></div>
+            <div class="model-card-info">
+              <h3>Gemini 2.5 Flash</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-google"></i>Google</span>
+                <span class="tag">Dengeli</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Gemini 2.5 Flash, Google'ın dengeli ve hızlı modelidir. Uzun belgeleri işleme, kod üretimi ve çok dilli görevlerde güçlüdür. Hız ve kaliteyi bir arada sunar.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-file-lines"></i>Uzun Belge</span>
+            <span class="model-detail"><i class="fa-solid fa-code"></i>Kod Üretimi</span>
+            <span class="model-detail"><i class="fa-solid fa-scale-balanced"></i>Dengeli</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-google" style="color:#4285F4;"></i></div>
+            <div class="model-card-info">
+              <h3>Gemini 3.5 Flash</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-google"></i>Google</span>
+                <span class="tag">Yeni Nesil</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Google'ın en yeni nesil Gemini modeli olan 3.5 Flash, hız ve doğruluk arasında mükemmel denge kurar. Çok modlu yetenekleri, geniş bağlam penceresi ve düşük gecikme süresi ile günlük kullanım için en ideal Google modelidir.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-bolt"></i>Hızlı</span>
+            <span class="model-detail"><i class="fa-solid fa-image"></i>Çok Modlu</span>
+            <span class="model-detail"><i class="fa-solid fa-expand"></i>Geniş Bağlam</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-google" style="color:#4285F4;"></i></div>
+            <div class="model-card-info">
+              <h3>Gemini 2.5 Pro</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-google"></i>Google</span>
+                <span class="tag">En Güçlü</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Google'ın en güçlü ve en yetenekli modeli. Karmaşık akıl yürütme, matematik, bilimsel analiz ve profesyonel düzeyde kod üretiminde çığır açar. En zorlu görevler için nihai çözüm.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-crown"></i>En Güçlü</span>
+            <span class="model-detail"><i class="fa-solid fa-flask"></i>Bilimsel</span>
+            <span class="model-detail"><i class="fa-solid fa-brain"></i>Derin Analiz</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-google" style="color:#4285F4;"></i></div>
+            <div class="model-card-info">
+              <h3>Gemini 3 Pro</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-google"></i>Google</span>
+                <span class="tag">Önizleme</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Gemini 3 Pro, Google'ın 3. nesil profesyonel modelinin önizleme sürümüdür. Gelişmiş akıl yürütme, kod anlama ve çok modlu analiz yetenekleriyle gelecek nesil teknolojisini şimdiden deneyimleme fırsatı sunar.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-flask"></i>Önizleme</span>
+            <span class="model-detail"><i class="fa-solid fa-code"></i>Kod Anlama</span>
+            <span class="model-detail"><i class="fa-solid fa-rocket"></i>Yeni Nesil</span>
+          </div>
+        </div>
+
+        <div class="model-card">
+          <div class="model-card-header">
+            <div class="model-card-icon"><i class="fa-brands fa-google" style="color:#4285F4;"></i></div>
+            <div class="model-card-info">
+              <h3>Gemini 3.1 Pro</h3>
+              <div class="model-card-meta">
+                <span class="tag"><i class="fa-brands fa-google"></i>Google</span>
+                <span class="tag">Profesyonel</span>
+              </div>
+            </div>
+          </div>
+          <div class="model-card-desc">Google'ın en yeni profesyonel seviye modeli olan Gemini 3.1 Pro, gelişmiş akıl yürütme, kod üretimi ve çok modlu analiz yetenekleriyle öne çıkar. Uzun bağlam penceresi sayesinde büyük projeleri ve karmaşık belgeleri sorunsuz işler.</div>
+          <div class="model-card-details">
+            <span class="model-detail"><i class="fa-solid fa-crown"></i>Profesyonel</span>
+            <span class="model-detail"><i class="fa-solid fa-code"></i>Kod Üretimi</span>
+            <span class="model-detail"><i class="fa-solid fa-expand"></i>Geniş Bağlam</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="footer-container">
+      <div class="footer-brand">
+        <img src="img/pardus.png" alt="Pardus" class="footer-logo-img">
+        <span>PardusEdu</span>
+      </div>
+      <p class="footer-desc">TEKNOFEST Pardus Öneri ve Geliştirme Kategorisi — Açık Kaynak GTK4 Uygulaması</p>
+      <div class="footer-links">
+        <a href="https://github.com/coderianx/pardusedu" target="_blank"><i class="fa-brands fa-github"></i> GitHub</a>
+        <a href="LICENCE" target="_blank">Lisans (GPL v3)</a>
+        <a href="https://teknofest.org" target="_blank">TEKNOFEST</a>
+      </div>
+      <p class="footer-copy">Geliştirici: Ali Eymen İçli &middot; &copy; 2026</p>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>

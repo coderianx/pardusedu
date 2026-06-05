@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>{{ title }} — Paylaşılan Not | PardusEdu</title>
+<!-- Font Awesome 6 (ücretsiz CDN) -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: system-ui, -apple-system, 'Segoe UI', 'Inter', 'Roboto', Helvetica, sans-serif;
+    background: #f1f5f9;
+    color: #0f172a;
+    padding: 2rem 1rem;
+    line-height: 1.5;
+    transition: background 0.3s ease, color 0.2s ease;
+    min-height: 100vh;
+  }
+
+  /* ana konteyner */
+  .container {
+    max-width: 980px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  /* kart tasarımı — yumuşak, modern gölge */
+  .card {
+    background: rgba(255, 255, 255, 0.98);
+    border-radius: 2rem;
+    padding: 2rem 2rem 2rem 2rem;
+    box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.02);
+    transition: background 0.3s ease, box-shadow 0.2s ease, transform 0.1s ease;
+    backdrop-filter: blur(0px);
+    border: 1px solid rgba(148, 163, 184, 0.12);
+  }
+
+  /* başlık satırı – butonlar ve başlık */
+  .title-bar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  h1 {
+    font-size: 1.9rem;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    background: linear-gradient(145deg, #0c4a6e, #1e3a8a);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+    margin: 0;
+    line-height: 1.2;
+    word-break: break-word;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  h1 i {
+    font-size: 1.8rem;
+    color: #3b82f6;
+    background: none;
+    -webkit-background-clip: unset;
+  }
+
+  /* aksiyon butonları (kopyala + tema) */
+  .action-buttons {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+  }
+
+  .icon-btn {
+    background: rgba(0, 0, 0, 0.05);
+    border: none;
+    border-radius: 3rem;
+    width: 44px;
+    height: 44px;
+    font-size: 1.3rem;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+    color: #1e293b;
+    backdrop-filter: blur(4px);
+    box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+  }
+
+  .icon-btn:hover {
+    background: rgba(0, 0, 0, 0.12);
+    transform: scale(0.96);
+  }
+
+  .icon-btn:active {
+    transform: scale(0.93);
+  }
+
+  /* meta bilgi satırı */
+  .meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.8rem 1.5rem;
+    font-size: 0.85rem;
+    color: #475569;
+    margin: 1rem 0 1.8rem 0;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid #e2edf7;
+  }
+
+  .meta i {
+    width: 1.25rem;
+    color: #3b82f6;
+  }
+
+  .badge-icon {
+    background: #eef2ff;
+    border-radius: 40px;
+    padding: 0.3rem 0.9rem;
+    font-size: 0.7rem;
+    font-weight: 550;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #1e40af;
+    letter-spacing: 0.2px;
+    backdrop-filter: blur(2px);
+  }
+
+  /* içerik alanı — kod / yazı için mükemmel */
+  .content {
+    white-space: pre-wrap;
+    word-break: break-word;
+    font-family: 'SF Mono', 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Roboto Mono', monospace;
+    font-size: 0.94rem;
+    background: #fafdff;
+    border: 1px solid #eef3fc;
+    border-radius: 1.5rem;
+    padding: 1.6rem;
+    overflow-x: auto;
+    line-height: 1.6;
+    transition: background 0.2s ease, border 0.2s ease, box-shadow 0.2s;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.02), 0 2px 4px rgba(0,0,0,0.02);
+  }
+
+  /* güzel scroll bar */
+  .content::-webkit-scrollbar {
+    height: 8px;
+    width: 6px;
+  }
+  .content::-webkit-scrollbar-track {
+    background: #eef3fc;
+    border-radius: 12px;
+  }
+  .content::-webkit-scrollbar-thumb {
+    background: #b9c8e8;
+    border-radius: 12px;
+  }
+
+  /* footer – hafif ve şeffaf */
+  .footer {
+    text-align: center;
+    margin-top: 2rem;
+    font-size: 0.72rem;
+    color: #6c86a3;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.65rem;
+    flex-wrap: wrap;
+    letter-spacing: 0.2px;
+  }
+
+  /* ========= DARK MODE ========= */
+  body.dark {
+    background: #0a0f1c;
+    color: #eef2ff;
+  }
+
+  body.dark .card {
+    background: #101826;
+    box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.6);
+    border-color: rgba(71, 85, 105, 0.3);
+  }
+
+  body.dark h1 {
+    background: linear-gradient(135deg, #bae6fd, #7aa9f0);
+    background-clip: text;
+    -webkit-background-clip: text;
+    color: transparent;
+  }
+
+  body.dark .icon-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #ccddf8;
+  }
+
+  body.dark .icon-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    color: white;
+  }
+
+  body.dark .meta {
+    color: #97adcf;
+    border-bottom-color: #1e2a3e;
+  }
+
+  body.dark .meta i {
+    color: #6ea8fe;
+  }
+
+  body.dark .badge-icon {
+    background: #1e2a44;
+    color: #b9d0ff;
+  }
+
+  body.dark .content {
+    background: #0a0f1a;
+    border-color: #1f2c40;
+    color: #eef3ff;
+    box-shadow: inset 0 1px 1px rgba(0,0,0,0.3);
+  }
+
+  body.dark .content::-webkit-scrollbar-track {
+    background: #141e2c;
+  }
+  body.dark .content::-webkit-scrollbar-thumb {
+    background: #2d3f5a;
+  }
+
+  body.dark .footer {
+    color: #6d85af;
+  }
+
+  /* TOAST mesajı – şık bildirim */
+  .toast-message {
+    position: fixed;
+    bottom: 28px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: #1e293b;
+    color: white;
+    padding: 0.7rem 1.5rem;
+    border-radius: 60px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 1000;
+    box-shadow: 0 10px 20px -5px rgba(0,0,0,0.2);
+    backdrop-filter: blur(8px);
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid rgba(255,255,255,0.15);
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.2s, transform 0.2s ease;
+    font-family: system-ui, sans-serif;
+  }
+  body.dark .toast-message {
+    background: rgba(30, 41, 59, 0.95);
+    color: #e2e8ff;
+    border-color: #334155;
+  }
+  .toast-message.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+
+  /* responsive iyileştirmeler */
+  @media (max-width: 680px) {
+    body {
+      padding: 1rem;
+    }
+    .card {
+      padding: 1.4rem;
+      border-radius: 1.6rem;
+    }
+    h1 {
+      font-size: 1.5rem;
+    }
+    h1 i {
+      font-size: 1.4rem;
+    }
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      font-size: 1.2rem;
+    }
+    .meta {
+      font-size: 0.75rem;
+      gap: 0.5rem 1rem;
+      margin: 0.5rem 0 1.4rem;
+    }
+    .content {
+      padding: 1.2rem;
+      font-size: 0.87rem;
+      border-radius: 1.2rem;
+    }
+    .badge-icon {
+      padding: 0.2rem 0.7rem;
+      font-size: 0.65rem;
+    }
+  }
+
+  /* küçük telefonlar için ekstra ince ayar */
+  @media (max-width: 480px) {
+    .title-bar {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    .action-buttons {
+      align-self: flex-end;
+      margin-top: -0.2rem;
+    }
+    h1 {
+      font-size: 1.4rem;
+    }
+  }
+
+  /* focus görünürlük */
+  .icon-btn:focus-visible {
+    outline: 3px solid #3b82f6;
+    outline-offset: 2px;
+    transform: scale(0.97);
+  }
+
+  /* metin seçimi rengi zarif */
+  ::selection {
+    background: #bfdbfe;
+    color: #0f172a;
+  }
+  body.dark ::selection {
+    background: #2d3f66;
+    color: #f1f5f9;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="card">
+    <!-- Başlık ve butonlar (kopyala + tema) -->
+    <div class="title-bar">
+      <h1>
+        <i class="fas fa-pen-nib"></i> 
+        {{ title }}
+      </h1>
+      <div class="action-buttons">
+        <button class="icon-btn" id="copyNoteBtn" aria-label="Notu kopyala" title="Panoya kopyala">
+          <i class="far fa-copy"></i>
+        </button>
+        <button class="icon-btn" id="darkModeToggle" aria-label="Temayı değiştir" title="Açık / koyu tema">
+          <i class="fas fa-moon" id="themeIcon"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- meta bilgisi + geçerlilik etiketi -->
+    <div class="meta">
+      <span><i class="fas fa-hourglass-half"></i> Son geçerlilik: {{ expires_at }}</span>
+      <span class="badge-icon"><i class="fas fa-shield-alt"></i> PardusEdu · Paylaşılan not</span>
+    </div>
+
+    <!-- not içeriği (monospace, okunabilir) -->
+    <div class="content" id="noteContent">
+      {{ content }}
+    </div>
+  </div>
+  <div class="footer">
+    <i class="fas fa-share-alt"></i> 
+    <span>PardusEdu ile güvenle paylaşıldı</span>
+    <i class="fas fa-laptop-code"></i>
+  </div>
+</div>
+
+<!-- Toast bildirimi (kopyalama geri bildirimi) -->
+<div id="copyToast" class="toast-message">
+  <i class="fas fa-check-circle"></i> Not panoya kopyalandı
+</div>
+
+<script>
+  (function() {
+    // -------------------- KOPYALAMA FONKSİYONU (modern + şık) --------------------
+    const copyButton = document.getElementById('copyNoteBtn');
+    const contentDiv = document.getElementById('noteContent');
+    const toastEl = document.getElementById('copyToast');
+    
+    let toastTimeout = null;
+    
+    function showToast(message, isError = false) {
+      if (!toastEl) return;
+      // mesaj içeriğini değiştirelim (başarılı/ hata)
+      const iconSpan = toastEl.querySelector('i');
+      const textSpan = toastEl.childNodes[2]; // text node'u hedeflemek riskli, daha temiz yöntem:
+      // İçeriği komple güncelleyelim:
+      if (isError) {
+        toastEl.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+      } else {
+        toastEl.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+      }
+      toastEl.classList.add('show');
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toastEl.classList.remove('show');
+      }, 2200);
+    }
+    
+    async function copyNoteToClipboard() {
+      if (!contentDiv) return;
+      // content div içindeki düz metni al (pre-wrap koruyarak)
+      let textToCopy = '';
+      // .content içinde html etiketi yok, düz metin. innerText en doğrusu.
+      textToCopy = contentDiv.innerText || contentDiv.textContent;
+      if (!textToCopy || textToCopy.trim() === '') {
+        showToast('Not içeriği boş, kopyalanacak bir şey yok', true);
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(textToCopy);
+        showToast('Not panoya kopyalandı ✨', false);
+        // butona hafif geri bildirim animasyonu (opsiyonel)
+        copyButton.style.transform = 'scale(0.94)';
+        setTimeout(() => { if(copyButton) copyButton.style.transform = ''; }, 150);
+      } catch (err) {
+        console.warn('Kopyalama hatası:', err);
+        // fallback: eski yöntem
+        try {
+          const textarea = document.createElement('textarea');
+          textarea.value = textToCopy;
+          document.body.appendChild(textarea);
+          textarea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textarea);
+          showToast('Not kopyalandı (yedek yöntem)', false);
+        } catch (fallbackErr) {
+          showToast('Kopyalanamadı, lütfen manuel seçin', true);
+        }
+      }
+    }
+    
+    if (copyButton) {
+      copyButton.addEventListener('click', copyNoteToClipboard);
+    }
+    
+    // -------------------- TEMA (Koyu / Açık) + Sistem Uyumu --------------------
+    const toggleBtn = document.getElementById('darkModeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+    
+    function setTheme(theme) {
+      if (theme === 'dark') {
+        document.body.classList.add('dark');
+        if (themeIcon) themeIcon.className = 'fas fa-sun';  // güneş = açık temaya dönmek için
+        localStorage.setItem('pardus-note-theme', 'dark');
+      } else {
+        document.body.classList.remove('dark');
+        if (themeIcon) themeIcon.className = 'fas fa-moon';
+        localStorage.setItem('pardus-note-theme', 'light');
+      }
+    }
+    
+    function toggleTheme() {
+      const isDark = document.body.classList.contains('dark');
+      if (isDark) {
+        setTheme('light');
+      } else {
+        setTheme('dark');
+      }
+    }
+    
+    // sayfa yüklendiğinde tema tercihi kontrolü
+    const storedTheme = localStorage.getItem('pardus-note-theme');
+    if (storedTheme === 'dark') {
+      setTheme('dark');
+    } else if (storedTheme === 'light') {
+      setTheme('light');
+    } else {
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+      if (prefersDark) {
+        setTheme('dark');
+      } else {
+        setTheme('light');
+      }
+    }
+    
+    if (toggleBtn) {
+      toggleBtn.addEventListener('click', toggleTheme);
+    }
+    
+    // Sistem teması değiştiğinde eğer kullanıcı manuel tercih yapmamışsa otomatik uyum
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+      const manualTheme = localStorage.getItem('pardus-note-theme');
+      if (!manualTheme) {
+        if (e.matches) {
+          setTheme('dark');
+        } else {
+          setTheme('light');
+        }
+      }
+    });
+    
+    // -------------------- Ekstra iyileştirme: içerik uzunluğuna göre scroll göstergesi (opsiyonel stil) --------------------
+    // Tema butonuna da hoş geldin dokunmatiği
+    // content alanında tab tuşu ile dolaşılabilirlik
+    if (contentDiv) {
+      contentDiv.setAttribute('tabindex', '0');
+    }
+    
+    // küçük ekranlarda dokunmatik geri bildirim (vibratör yok)
+    // butonlara tıklama sesi veya ekstra yok ama smooth
+
+    // not: eğer content içinde <br> gibi biçimlendirme varsa (ki yok, düz metin) yine doğru kopyalanır.
+    // harika!
+  })();
+</script>
+</body>
+</html>

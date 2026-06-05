@@ -270,43 +270,28 @@ Her komut için:
 
 Canlı arama filtresi ile komut bulma.
 
+
 ### 08 — Yapay Zeka Asistanı
 
-Groq Cloud ve OpenRouter API üzerinden çalışan yapay zeka sohbet asistanı.
+Uygulamanın dahili `ai_client` bileşeni, yerel arayüzden seçilebilen birden fazla sağlayıcıyı destekler: Groq Cloud, OpenRouter üzerinden OpenAI-uyumlu modeller ve Google Gemini (kullanıcı tercihlerine bağlı olarak OpenRouter veya doğrudan Google API entegrasyonu ile). Bu bölümde desteklenen model örnekleri, entegrasyon ve önemli güvenlik/performans notları özetlenmiştir.
 
-**Groq Modelleri:**
-
-| Model | Parametre | Kullanım |
-|-------|-----------|----------|
-| Llama 3.3 70B | 70B | Genel amaçlı, kaliteli cevap |
-| Llama 3.1 8B | 8B | Basit sorular, günlük sohbet |
-| Llama 4 Scout 17B-16E | 17B | Planlama, araştırma |
-| GPT OSS 20B | 20B | Günlük ders çalışma |
-| GPT OSS 120B | 120B | Karmaşık problemler, kod analizi |
-| GPT OSS SafeGuard 20B | 20B | Güvenli sohbet, kontrollü kullanım |
-| Qwen 3 32B | 32B | Kodlama, matematik, teknik konular |
-| Groq Compound | — | Gerçek zamanlı, akıcı sohbet |
-
-**OpenRouter Modelleri:**
-
-| Model | Kullanım |
-|-------|----------|
-| Google Gemma 4 31B / Gemini 3.5 Flash / 2.5 Flash / 2.5 Pro / 3.1 Flash Lite | Genel amaçlı, multimodal |
-| Qwen 3.6 Flash / 3 Coder / 3.7 Max | Kodlama, teknik konular |
-| Deepseek R1 / V4 Pro / V4 Flash Nitro | Mantık, kod, hız |
-| Mistral Small 4 | Hafif, hızlı |
-| Kimi K2 / K2.6 | Uzun bağlam, düşünme |
-| Claude Haiku 4.5 / Sonnet 4.6 / Opus 4.8 | Analiz, güvenlik |
-| ChatGPT 5 Mini / 4o Mini / 4.1 Mini | Genel amaçlı |
+**Desteklenen sağlayıcılar (örnek):**
+- Groq Cloud
+- OpenRouter (çok sayıda üçüncü taraf modeli — ChatGPT 5 Mini, Qwen, Claude vb.)
+- Google Gemini (OpenRouter veya Google Cloud üzerinden erişim)
 
 **Özellikler:**
-- İki sağlayıcı (Groq / OpenRouter) arasında geçiş
-- Wikipedia arama entegrasyonu (Türkçe → İngilizce fallback)
-- Konuşma geçmişi (son 6 mesaj)
-- API anahtarını kendiniz belirleyin
-- Not düzenleme komutları (AI ile not ekleme/güncelleme/silme)
-- Markdown temizleme
-- Önbellekli Wikipedia yanıtları
+- Sağlayıcılar arasında geçiş ve model seçimi
+- Wikipedia entegrasyonu (yerel dil → İngilizce fallback)
+- Konuşma geçmişi (varsayılan kısa pencere; UI üzerinden ayarlanabilir)
+- AI ile not ekleme/güncelleme/silme, Markdown temizleme
+
+Örnek modeller README'de listelenmiştir; arayüzden ek model desteği sağlanabilir.
+
+**Güvenlik & Performans Notları:**
+- `ai_client.cpp` şu anda eşzamanlı (synchronous) HTTP istekleri kullanır; ana UI iş parçacığını bloklayabilir. Daha iyi kullanıcı deneyimi için asenkron çağrılar önerilir.
+- Mevcut uygulama yapılandırmasında API anahtarları kullanıcı veri dizininde `.dat` biçiminde düz metin olarak saklanmaktadır. Bu, güvenlik riski oluşturur; mümkünse ortam değişkenleri veya şifreli anahtar deposu kullanılması önerilir.
+- `conversation_history` yapılandırması sınırlı tutulmalıdır; uygulamadaki sabit vektörün sınırsız büyümesi bellek sızıntısına yol açabilir.
 
 ### 09 — Python Öğren
 

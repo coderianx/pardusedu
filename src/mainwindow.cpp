@@ -182,11 +182,8 @@ void MainWindow::setup_ui() {
     header->set_margin_top(8);
     header->set_margin_bottom(8);
 
-    header_logo.set_resource("/org/ogrenci/merkezi/assets/pardus_symbol.svg");
-    header_logo.set_content_fit(Gtk::ContentFit::SCALE_DOWN);
-    header_logo.set_size_request(22, 22);
-    header_logo.set_halign(Gtk::Align::START);
-    header_logo.set_valign(Gtk::Align::CENTER);
+    header_logo.set_from_resource("/org/ogrenci/merkezi/assets/pardus.png");
+    header_logo.set_pixel_size(64);
 
     auto* title = Gtk::make_managed<Gtk::Label>("Pardus Öğrenci Merkezi");
     title->add_css_class("app-title");
@@ -230,6 +227,15 @@ void MainWindow::toggle_theme() {
             ? "/org/ogrenci/merkezi/assets/moon.svg"
             : "/org/ogrenci/merkezi/assets/sun.svg");
     }
+
+    btn_ai_key.unset_child();
+    auto* key_icon = Gtk::make_managed<Gtk::Image>();
+    key_icon->set_from_resource(dark_mode
+        ? "/org/ogrenci/merkezi/assets/settings.svg"
+        : "/org/ogrenci/merkezi/assets/settings_dark.svg");
+    key_icon->set_pixel_size(20);
+    key_icon->set_visible(true);
+    btn_ai_key.set_child(*key_icon);
 }
 
 void MainWindow::apply_theme() {
@@ -256,22 +262,21 @@ void MainWindow::apply_theme() {
     std::map<std::string, std::string> colors;
     if (dark_mode) {
         colors = {
-            {"__bg_color", "#2e2e2e"},
-            {"__sidebar_bg", "#383838"},
-            {"__card_bg", "#383838"},
-            {"__border", "#484848"},
-            {"__text_color", "#cccccc"},
-            {"__muted", "#999999"},
-            {"__hover_bg", "#484848"},
+            {"__bg_color", "#121212"},
+            {"__sidebar_bg", "#1a1a1a"},
+            {"__card_bg", "#1e1e1e"},
+            {"__border", "#2e2e2e"},
+            {"__text_color", "#e0e0e0"},
+            {"__muted", "#aaaaaa"},
+            {"__hover_bg", "#2a2a2a"},
             {"__accent", "#0076a8"},
-            {"__blue", "#38BDF8"},
             {"__accent_dark", "#005f8a"},
             {"__accent_light", "#00a8e8"},
             {"__danger", "#e74c3c"},
             {"__success", "#2ecc71"},
-            {"__btn_bg", "#555555"},
+            {"__btn_bg", "#333333"},
             {"__btn_text", "#ffffff"},
-            {"__btn_hover", "#666666"}
+            {"__btn_hover", "#444444"}
         };
     } else {
         colors = {

@@ -4,6 +4,9 @@
 #include <fstream>
 #include <filesystem>
 #include <cstdlib>
+#include <ctime>
+#include <sstream>
+#include <iomanip>
 
 namespace fs = std::filesystem;
 
@@ -50,7 +53,15 @@ void MainWindow::setup_data() {
     if (fs::exists(sf)) {
         std::ifstream f(sf);
         std::string line;
-        if (std::getline(f, line)) study_streak = std::stoi(line);
+        if (std::getline(f, line)) {
+            auto p = line.find('|');
+            if (p != std::string::npos) {
+                study_streak = std::stoi(line.substr(0, p));
+                last_streak_date = line.substr(p + 1);
+            } else {
+                study_streak = std::stoi(line);
+            }
+        }
     }
 
     auto nf = dir + "/notes.dat";
@@ -127,7 +138,8 @@ void MainWindow::setup_data() {
         std::ifstream f(pf_);
         std::string line;
         if (std::getline(f, line) && !line.empty()) {
-            ai_provider = (line == "openrouter") ? AIProvider::OPENROUTER : AIProvider::GROQ;
+            if (line == "gemini") ai_provider = AIProvider::GEMINI;
+            else ai_provider = (line == "openrouter") ? AIProvider::OPENROUTER : AIProvider::GROQ;
             set_provider(ai_provider);
         }
     }
@@ -152,6 +164,16 @@ void MainWindow::setup_data() {
         }
     }
 
+    auto akf_gm = dir + "/apikey_gemini.dat";
+    if (fs::exists(akf_gm)) {
+        std::ifstream f(akf_gm);
+        std::string line;
+        if (std::getline(f, line) && !line.empty()) {
+            ai_api_key_gemini = line;
+            set_gemini_api_key(line);
+        }
+    }
+
     auto mf_g = dir + "/model_groq.dat";
     if (fs::exists(mf_g)) {
         std::ifstream f(mf_g);
@@ -170,8 +192,22 @@ void MainWindow::setup_data() {
         }
     }
 
+    auto mf_gm = dir + "/model_gemini.dat";
+    if (fs::exists(mf_gm)) {
+        std::ifstream f(mf_gm);
+        std::string line;
+        if (std::getline(f, line) && !line.empty()) {
+            ai_model_gemini = line;
+        }
+    }
+
     // Apply the active provider's model
-    set_model(ai_provider == AIProvider::GROQ ? ai_model_groq : ai_model_openrouter);
+    if (ai_provider == AIProvider::GROQ)
+        set_model(ai_model_groq);
+    else if (ai_provider == AIProvider::OPENROUTER)
+        set_model(ai_model_openrouter);
+    else
+        set_model(ai_model_gemini);
 }
 
 void MainWindow::save_data() {
@@ -180,7 +216,7 @@ void MainWindow::save_data() {
 
     { std::ofstream f(dir + "/tasks.dat"); for (auto& t : tasks) f << t.title << "|" << t.category << "|" << t.due_date << "|" << (t.done?"1":"0") << "|" << t.priority << "\n"; }
     { std::ofstream f(dir + "/pomodoro.dat"); f << pomodoro_completed << "|" << pomodoro_minutes << "\n"; }
-    { std::ofstream f(dir + "/streak.dat"); f << study_streak << "\n"; }
+    { std::ofstream f(dir + "/streak.dat"); f << study_streak << "|" << last_streak_date << "\n"; }
     { std::ofstream f(dir + "/notes.dat"); for (auto& n : course_notes) f << n.course << "|\n"; }
     for (size_t i = 0; i < course_notes.size(); i++) {
         std::ofstream f(dir + "/note_" + std::to_string(i) + ".txt");
@@ -189,10 +225,44 @@ void MainWindow::save_data() {
     { std::ofstream f(dir + "/grades.dat"); for (auto& g : grades) f << g.course << "|" << g.midterm << "|" << g.final << "|\n"; }
     { std::ofstream f(dir + "/schedule.dat"); for (auto& s : schedule) f << s.day << "|" << s.time << "|" << s.course << "|" << s.location << "\n"; }
     { std::ofstream f(dir + "/schedule_times.dat"); for (auto& t : schedule_times) f << t << "\n"; }
-    { std::ofstream f(dir + "/provider.dat"); f << (ai_provider == AIProvider::OPENROUTER ? "openrouter" : "groq") << "\n"; }
+    { std::ofstream f(dir + "/provider.dat"); f << (ai_provider == AIProvider::GROQ ? "groq" : ai_provider == AIProvider::OPENROUTER ? "openrouter" : "gemini") << "\n"; }
     { std::ofstream f(dir + "/apikey_groq.dat"); f << ai_api_key_groq << "\n"; }
     { std::ofstream f(dir + "/apikey_openrouter.dat"); f << ai_api_key_openrouter << "\n"; }
+    { std::ofstream f(dir + "/apikey_gemini.dat"); f << ai_api_key_gemini << "\n"; }
     { std::ofstream f(dir + "/model_groq.dat"); f << ai_model_groq << "\n"; }
     { std::ofstream f(dir + "/model_openrouter.dat"); f << ai_model_openrouter << "\n"; }
+    { std::ofstream f(dir + "/model_gemini.dat"); f << ai_model_gemini << "\n"; }
+}
+
+static std::string today_str() {
+    auto t = std::time(nullptr);
+    auto* tm = std::localtime(&t);
+    std::ostringstream oss;
+    oss << std::put_time(tm, "%Y-%m-%d");
+    return oss.str();
+}
+
+static bool is_next_day(const std::string& prev, const std::string& today) {
+    std::tm tm = {};
+    std::istringstream ss(prev);
+    ss >> std::get_time(&tm, "%Y-%m-%d");
+    if (ss.fail()) return false;
+    tm.tm_mday += 1;
+    std::mktime(&tm);
+    std::ostringstream oss;
+    oss << std::put_time(&tm, "%Y-%m-%d");
+    return oss.str() == today;
+}
+
+void MainWindow::update_streak() {
+    auto today = today_str();
+    if (last_streak_date == today) return;
+    if (last_streak_date.empty() || !is_next_day(last_streak_date, today)) {
+        study_streak = 1;
+    } else {
+        study_streak++;
+    }
+    last_streak_date = today;
+    save_data();
 }
 

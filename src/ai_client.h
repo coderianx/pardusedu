@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-enum class AIProvider { GROQ, OPENROUTER };
+enum class AIProvider { GROQ, OPENROUTER, GEMINI };
 
 std::string call_ai(const std::string& user_text, const std::string& app_context = "");
 std::string extract_ai_reply(const std::string& json);
@@ -11,6 +11,8 @@ void set_groq_api_key(const std::string& key);
 std::string get_groq_api_key();
 void set_openrouter_api_key(const std::string& key);
 std::string get_openrouter_api_key();
+void set_gemini_api_key(const std::string& key);
+std::string get_gemini_api_key();
 void set_provider(AIProvider provider);
 AIProvider get_provider();
 std::string get_provider_name();

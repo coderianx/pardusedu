@@ -13,6 +13,7 @@ MainWindow::MainWindow() {
 
     detect_theme();
     setup_data();
+    update_streak();
     setup_ui();
     apply_theme();
 }
@@ -39,11 +40,8 @@ void MainWindow::setup_ui() {
     header->set_margin_top(8);
     header->set_margin_bottom(8);
 
-    header_logo.set_resource("/org/ogrenci/merkezi/assets/pardus_symbol.svg");
-    header_logo.set_content_fit(Gtk::ContentFit::SCALE_DOWN);
-    header_logo.set_size_request(22, 22);
-    header_logo.set_halign(Gtk::Align::START);
-    header_logo.set_valign(Gtk::Align::CENTER);
+    header_logo.set_from_resource("/org/ogrenci/merkezi/assets/pardus.png");
+    header_logo.set_pixel_size(64);
 
     auto* title = Gtk::make_managed<Gtk::Label>("PardusEdu");
     title->add_css_class("app-title");
@@ -58,10 +56,12 @@ void MainWindow::setup_ui() {
     btn_theme.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::toggle_theme));
 
     auto* save_btn = Gtk::make_managed<Gtk::Button>();
-    auto* save_icon = Gtk::make_managed<Gtk::Image>();
-    save_icon->set_from_resource("/org/ogrenci/merkezi/assets/save.svg");
-    save_icon->set_pixel_size(20);
-    save_btn->set_child(*save_icon);
+    save_icon_ptr = Gtk::make_managed<Gtk::Image>();
+    save_icon_ptr->set_from_resource(dark_mode
+        ? "/org/ogrenci/merkezi/assets/save.svg"
+        : "/org/ogrenci/merkezi/assets/save_dark.svg");
+    save_icon_ptr->set_pixel_size(20);
+    save_btn->set_child(*save_icon_ptr);
     save_btn->add_css_class("save-btn");
     save_btn->signal_clicked().connect([this]() { save_data(); });
 
@@ -87,6 +87,31 @@ void MainWindow::toggle_theme() {
             ? "/org/ogrenci/merkezi/assets/moon.svg"
             : "/org/ogrenci/merkezi/assets/sun.svg");
     }
+
+    auto* key_icon = Gtk::make_managed<Gtk::Image>();
+    key_icon->set_from_resource(dark_mode
+        ? "/org/ogrenci/merkezi/assets/settings.svg"
+        : "/org/ogrenci/merkezi/assets/settings_dark.svg");
+    key_icon->set_pixel_size(20);
+    key_icon->set_visible(true);
+    btn_ai_key.set_child(*key_icon);
+
+    if (save_icon_ptr) {
+        save_icon_ptr->set_from_resource(dark_mode
+            ? "/org/ogrenci/merkezi/assets/save.svg"
+            : "/org/ogrenci/merkezi/assets/save_dark.svg");
+    }
+
+    if (share_icon_ptr) {
+        share_icon_ptr->set_from_resource(dark_mode
+            ? "/org/ogrenci/merkezi/assets/share.svg"
+            : "/org/ogrenci/merkezi/assets/share_dark.svg");
+    }
+
+    auto reload = [](Gtk::Image* img, const char* path) { if (img) img->set_from_resource(path); };
+    if (dash_icon_streak) reload(dash_icon_streak, "/org/ogrenci/merkezi/assets/streak.svg");
+    if (dash_icon_pomo) reload(dash_icon_pomo, "/org/ogrenci/merkezi/assets/pomo.svg");
+    if (dash_icon_timer) reload(dash_icon_timer, "/org/ogrenci/merkezi/assets/timer.svg");
 }
 
 void MainWindow::apply_theme() {
@@ -113,21 +138,21 @@ void MainWindow::apply_theme() {
     std::map<std::string, std::string> colors;
     if (dark_mode) {
         colors = {
-            {"__bg_color", "#2e2e2e"},
-            {"__sidebar_bg", "#383838"},
-            {"__card_bg", "#383838"},
-            {"__border", "#484848"},
-            {"__text_color", "#cccccc"},
-            {"__muted", "#999999"},
-            {"__hover_bg", "#484848"},
+            {"__bg_color", "#121212"},
+            {"__sidebar_bg", "#1a1a1a"},
+            {"__card_bg", "#1e1e1e"},
+            {"__border", "#2e2e2e"},
+            {"__text_color", "#e0e0e0"},
+            {"__muted", "#aaaaaa"},
+            {"__hover_bg", "#2a2a2a"},
             {"__accent", "#0076a8"},
             {"__accent_dark", "#005f8a"},
             {"__accent_light", "#00a8e8"},
             {"__danger", "#e74c3c"},
             {"__success", "#2ecc71"},
-            {"__btn_bg", "#555555"},
+            {"__btn_bg", "#333333"},
             {"__btn_text", "#ffffff"},
-            {"__btn_hover", "#666666"}
+            {"__btn_hover", "#444444"}
         };
     } else {
         colors = {
@@ -245,12 +270,13 @@ void MainWindow::setup_dashboard() {
 
     auto* box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
     box->set_halign(Gtk::Align::CENTER);
-    box->set_valign(Gtk::Align::CENTER);
 
+    // --- Welcome ---
     dash_logo.set_resource("/org/ogrenci/merkezi/assets/pardus.svg");
     dash_logo.set_content_fit(Gtk::ContentFit::SCALE_DOWN);
     dash_logo.set_size_request(30, 30);
     dash_logo.set_margin_bottom(12);
+    dash_logo.set_margin_top(60);
 
     std::string user = get_username();
     dash_welcome.set_markup("Hoş geldin, <b>" + user + "</b>!");
@@ -263,13 +289,56 @@ void MainWindow::setup_dashboard() {
     sub->set_halign(Gtk::Align::CENTER);
     sub->add_css_class("dash-sub");
 
-    auto* pardusedu = Gtk::make_managed<Gtk::Label>("©PardusEdu");
-    pardusedu->set_halign(Gtk::Align::CENTER);
-    pardusedu->add_css_class("pardusedu");
-
     box->append(dash_logo);
     box->append(dash_welcome);
     box->append(*sub);
+
+    // --- Stats Cards ---
+    auto* stats_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 20);
+    stats_box->set_halign(Gtk::Align::CENTER);
+    stats_box->set_margin_top(48);
+    stats_box->set_margin_bottom(32);
+
+    auto make_stat = [this](const std::string& icon_path, const std::string& val, const std::string& desc, Gtk::Image*& out_icon) -> Gtk::Frame* {
+        auto* vb = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 4);
+        vb->set_halign(Gtk::Align::CENTER);
+        vb->set_margin_start(28);
+        vb->set_margin_end(28);
+        vb->set_margin_top(16);
+        vb->set_margin_bottom(16);
+
+        auto* ic = Gtk::make_managed<Gtk::Image>();
+        ic->set_from_resource(icon_path);
+        ic->set_pixel_size(34);
+        ic->add_css_class("stat-icon");
+        vb->append(*ic);
+        out_icon = ic;
+
+        auto* vl = Gtk::make_managed<Gtk::Label>(val);
+        vl->add_css_class("stat-value");
+        vb->append(*vl);
+
+        auto* dl = Gtk::make_managed<Gtk::Label>(desc);
+        dl->add_css_class("stat-label");
+        vb->append(*dl);
+
+        auto* fr = Gtk::make_managed<Gtk::Frame>();
+        fr->add_css_class("stat-card");
+        fr->set_child(*vb);
+        return fr;
+    };
+
+    stats_box->append(*make_stat("/org/ogrenci/merkezi/assets/streak.svg", std::to_string(study_streak), "Günlük Seri", dash_icon_streak));
+    stats_box->append(*make_stat("/org/ogrenci/merkezi/assets/pomo.svg", std::to_string(pomodoro_completed), "Pomodoro", dash_icon_pomo));
+    stats_box->append(*make_stat("/org/ogrenci/merkezi/assets/timer.svg", std::to_string(pomodoro_minutes) + "dk", "Çalışma Süresi", dash_icon_timer));
+
+    box->append(*stats_box);
+
+    // --- Copyright ---
+    auto* pardusedu = Gtk::make_managed<Gtk::Label>("©PardusEdu");
+    pardusedu->set_halign(Gtk::Align::CENTER);
+    pardusedu->add_css_class("pardusedu");
+    pardusedu->set_margin_bottom(40);
     box->append(*pardusedu);
 
     sw->set_child(*box);

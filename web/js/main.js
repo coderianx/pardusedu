@@ -146,9 +146,13 @@ const modelData = {
     title: 'Claude Sonnet 4.6',
     desc: 'Claude Sonnet 4.6, Anthropic\'in dengeli ve güçlü modelidir. Hız ve kalite arasında mükemmel denge kurar. Yaratıcı yazma, kod üretimi, analiz ve uzun belge işleme gibi geniş bir yelpazede üstün performans sunar. En popüler Claude modellerinden biridir.'
   },
-  claudeopus48: {
-    title: 'Claude Opus 4.8',
-    desc: 'Claude Opus 4.8, Anthropic\'in en güçlü ve en yetenekli modelidir. Karmaşık akıl yürütme, profesyonel düzeyde yazma, bilimsel analiz ve en zorlu görevler için nihai çözümdür. En yüksek doğruluk ve derinlik gerektiren işlerde rakipsizdir.'
+  gemini31pro: {
+    title: 'Gemini 3.1 Pro',
+    desc: 'Google\'ın en yeni profesyonel seviye modeli olan Gemini 3.1 Pro, gelişmiş akıl yürütme, kod üretimi ve çok modlu analiz yetenekleriyle öne çıkar. Uzun bağlam penceresi sayesinde büyük projeleri ve karmaşık belgeleri sorunsuz işler.'
+  },
+  qwen3nextfree: {
+    title: 'Qwen3 Next Free',
+    desc: 'Qwen3 Next, 80B parametre ve 3B aktif parametre (MoE) mimarisi ile devasa bir model olup tamamen ücretsiz kullanım sunar. Büyük ölçekli akıl yürütme, karmaşık kod analizi ve yaratıcı yazma görevlerinde profesyonel düzeyde sonuç verir.'
   },
   gpt5mini: {
     title: 'ChatGPT 5 Mini',
@@ -161,6 +165,34 @@ const modelData = {
   gpt41mini: {
     title: 'ChatGPT 4.1 Mini',
     desc: 'GPT-4.1 Mini, OpenAI\'nin 4.1 nesil teknolojisiyle güçlendirilmiş hızlı ve stabil bir modeldir. Dengeli yapısı, uzun bağlam penceresi ve tutarlı çıktı kalitesi ile geniş bir kullanım yelpazesinde güvenilir bir tercihtir.'
+  },
+  gemini25flashlite: {
+    title: 'Gemini 2.5 Flash Lite',
+    desc: 'Google\'ın en hafif ve en hızlı modeli olan Gemini 2.5 Flash Lite, düşük maliyetli ve yüksek verimli bir seçenektir. Basit görevler ve hızlı yanıtlar için optimize edilmiştir.'
+  },
+  gemini31flashlite_g: {
+    title: 'Gemini 3.1 Flash Lite',
+    desc: 'Gemini 3.1 Flash Lite, Google\'ın en güncel hafif modelidir. 3.1 nesil teknolojisiyle hız ve verimlilikte çığır açar. Günlük kullanım ve yüksek hacimli API çağrıları için idealdir.'
+  },
+  gemini25flash_g: {
+    title: 'Gemini 2.5 Flash',
+    desc: 'Gemini 2.5 Flash, Google\'ın dengeli ve hızlı modelidir. Uzun belgeleri işleme, kod üretimi ve çok dilli görevlerde güçlüdür. Hız ve kaliteyi bir arada sunar.'
+  },
+  gemini35flash_g: {
+    title: 'Gemini 3.5 Flash',
+    desc: 'Google\'ın en yeni nesil Gemini modeli olan 3.5 Flash, hız ve doğruluk arasında mükemmel denge kurar. Çok modlu yetenekleri, geniş bağlam penceresi ve düşük gecikme süresi ile günlük kullanım için en ideal Google modelidir.'
+  },
+  gemini25pro_g: {
+    title: 'Gemini 2.5 Pro',
+    desc: 'Google\'ın en güçlü ve en yetenekli modeli. Karmaşık akıl yürütme, matematik, bilimsel analiz ve profesyonel düzeyde kod üretiminde çığır açar. En zorlu görevler için nihai çözüm.'
+  },
+  gemini3pro: {
+    title: 'Gemini 3 Pro',
+    desc: 'Gemini 3 Pro, Google\'ın 3. nesil profesyonel modelinin önizleme sürümüdür. Gelişmiş akıl yürütme, kod anlama ve çok modlu analiz yetenekleriyle gelecek nesil teknolojisini şimdiden deneyimleme fırsatı sunar.'
+  },
+  gemini31pro_g: {
+    title: 'Gemini 3.1 Pro',
+    desc: 'Google\'ın en yeni profesyonel seviye modeli olan Gemini 3.1 Pro, gelişmiş akıl yürütme, kod üretimi ve çok modlu analiz yetenekleriyle öne çıkar. Uzun bağlam penceresi sayesinde büyük projeleri ve karmaşık belgeleri sorunsuz işler.'
   }
 };
 

@@ -8,9 +8,15 @@
 #include <cstdlib>
 #include <fstream>
 #include <regex>
+#include <thread>
+#include <curl/curl.h>
 #include <webkit/webkit.h>
 #include <gdk/gdk.h>
 #include <md4c-html.h>
+#include <nlohmann/json.hpp>
+#include <qrencode.h>
+
+using json = nlohmann::json;
 
 void MainWindow::setup_pomodoro() {
     auto* sw = Gtk::make_managed<Gtk::ScrolledWindow>();
@@ -284,8 +290,8 @@ Gtk::Box* MainWindow::make_task_row(size_t index) {
     auto* info = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 2);
     info->set_hexpand(true);
 
-    std::string markup = task.done ? "<s>" + task.title + "</s>" : task.title;
-    auto* title = Gtk::make_managed<Gtk::Label>(markup);
+    auto* title = Gtk::make_managed<Gtk::Label>();
+    title->set_markup(task.done ? "<s>" + task.title + "</s>" : task.title);
     title->set_halign(Gtk::Align::START);
     title->set_wrap(true);
 
@@ -336,9 +342,18 @@ void MainWindow::setup_notes() {
     course_sw->set_vexpand(true);
     left_box->append(*course_sw);
 
+    auto* course_btn_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
     btn_add_course.add_css_class("action-btn");
+    btn_add_course.set_hexpand(true);
     btn_add_course.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_add_course));
-    left_box->append(btn_add_course);
+    course_btn_box->append(btn_add_course);
+
+    btn_add_link_note.add_css_class("action-btn");
+    btn_add_link_note.set_tooltip_text("Link notu ekle");
+    btn_add_link_note.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_add_link_note));
+    course_btn_box->append(btn_add_link_note);
+
+    left_box->append(*course_btn_box);
 
     paned->set_start_child(*left_box);
 
@@ -386,10 +401,21 @@ void MainWindow::setup_notes() {
     btn_save_note.add_css_class("action-btn");
     btn_save_note.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_save_note));
 
+    btn_share_note.add_css_class("action-btn");
+    share_icon_ptr = Gtk::make_managed<Gtk::Image>();
+    share_icon_ptr->set_from_resource(dark_mode
+        ? "/org/ogrenci/merkezi/assets/share.svg"
+        : "/org/ogrenci/merkezi/assets/share_dark.svg");
+    share_icon_ptr->set_pixel_size(18);
+    btn_share_note.set_child(*share_icon_ptr);
+    btn_share_note.set_tooltip_text("Notu paylaş");
+    btn_share_note.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_share_note));
+
     btn_delete_course.add_css_class("delete-btn");
     btn_delete_course.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::on_delete_course));
 
     btn_box->append(btn_save_note);
+    btn_box->append(btn_share_note);
     btn_box->append(btn_delete_course);
     note_editor_box.append(*btn_box);
 
@@ -465,6 +491,141 @@ void MainWindow::on_add_course() {
     dialog->show();
 }
 
+static std::string json_escape(const std::string& s) {
+    std::string out;
+    for (char c : s) {
+        switch (c) {
+            case '"': out += "\\\""; break;
+            case '\\': out += "\\\\"; break;
+            case '\n': out += "\\n"; break;
+            case '\t': out += "\\t"; break;
+            case '\r': out += "\\r"; break;
+            default: out += c;
+        }
+    }
+    return out;
+}
+
+static size_t share_WriteCallback(void* contents, size_t size, size_t nmemb, std::string* s) {
+    s->append((char*)contents, size * nmemb);
+    return size * nmemb;
+}
+
+void MainWindow::on_add_link_note() {
+    auto dialog = Gtk::make_managed<Gtk::Dialog>();
+    dialog->set_title("Link Notu Ekle");
+    dialog->set_transient_for(*this);
+    dialog->set_modal(true);
+    dialog->set_default_size(400, 200);
+
+    dialog->add_button("İptal", Gtk::ResponseType::CANCEL);
+    dialog->add_button("Ekle", Gtk::ResponseType::OK);
+
+    auto* content = dialog->get_content_area();
+    content->set_margin_start(16);
+    content->set_margin_end(16);
+    content->set_margin_top(16);
+    content->set_margin_bottom(16);
+    content->set_spacing(12);
+
+    auto* title_entry = Gtk::make_managed<Gtk::Entry>();
+    title_entry->set_placeholder_text("Not başlığı");
+    title_entry->set_hexpand(true);
+    content->append(*title_entry);
+
+    auto* link_entry = Gtk::make_managed<Gtk::Entry>();
+    link_entry->set_placeholder_text("Link (URL)");
+    link_entry->set_hexpand(true);
+    content->append(*link_entry);
+
+    auto* status_label = Gtk::make_managed<Gtk::Label>("");
+    status_label->set_halign(Gtk::Align::START);
+    status_label->set_visible(false);
+    content->append(*status_label);
+
+    dialog->signal_response().connect([this, dialog, title_entry, link_entry, status_label](int response_id) {
+        if (response_id == Gtk::ResponseType::OK) {
+            auto title = title_entry->get_text();
+            auto link = link_entry->get_text();
+            if (!title.empty() && !link.empty()) {
+                status_label->set_text("Sunucudan getiriliyor...");
+                status_label->set_visible(true);
+
+                dialog->set_sensitive(false);
+
+                std::thread([this, dialog, title, link]() {
+                    CURL* curl = curl_easy_init();
+                    std::string response;
+
+                    if (curl) {
+                        curl_easy_setopt(curl, CURLOPT_URL, link.c_str());
+                        curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+                        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, share_WriteCallback);
+                        curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+                        curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
+                        curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5L);
+                        curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+
+                        CURLcode res = curl_easy_perform(curl);
+                        curl_easy_cleanup(curl);
+
+                        if (res != CURLE_OK) {
+                            response = "ERROR: " + std::string(curl_easy_strerror(res));
+                        }
+                    } else {
+                        response = "ERROR: Failed to initialize curl";
+                    }
+
+                    Glib::signal_idle().connect_once([this, dialog, title, link, response]() {
+                        dialog->set_sensitive(true);
+
+                        if (response.rfind("ERROR:", 0) == 0) {
+                            auto* err_dialog = Gtk::make_managed<Gtk::MessageDialog>(*this,
+                                "Hata", false, Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);
+                            err_dialog->set_secondary_text("Not getirilemedi:\n" + response.substr(6));
+                            err_dialog->signal_response().connect([err_dialog](int) { err_dialog->hide(); });
+                            err_dialog->show();
+                            return;
+                        }
+
+                        std::string saved_content;
+                        try {
+                            auto j = json::parse(response);
+                            saved_content = j.value("content", "");
+                        } catch (const json::parse_error&) {}
+
+                        if (saved_content.empty()) {
+                            auto* err_dialog = Gtk::make_managed<Gtk::MessageDialog>(*this,
+                                "Hata", false, Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);
+                            err_dialog->set_secondary_text("Geçersiz yanıt: content bulunamadı.");
+                            err_dialog->signal_response().connect([err_dialog](int) { err_dialog->hide(); });
+                            err_dialog->show();
+                            return;
+                        }
+
+                        course_notes.push_back({title, saved_content});
+                        refresh_course_list();
+                        save_data();
+
+                        int new_idx = (int)course_notes.size() - 1;
+                        selected_note_index = new_idx;
+                        note_title.set_text(course_notes[new_idx].course);
+                        note_view.get_buffer()->set_text(course_notes[new_idx].content);
+                        auto* last_row = course_list.get_row_at_index(new_idx);
+                        if (last_row) course_list.select_row(*last_row);
+
+                        dialog->hide();
+                    });
+                }).detach();
+                return;
+            }
+        }
+        dialog->hide();
+    });
+
+    dialog->show();
+}
+
 void MainWindow::on_save_note() {
     if (selected_note_index >= 0 && selected_note_index < (int)course_notes.size()) {
         auto buf = note_view.get_buffer();
@@ -484,6 +645,185 @@ void MainWindow::on_delete_course() {
         refresh_course_list();
         save_data();
     }
+}
+
+void MainWindow::on_share_note() {
+    if (selected_note_index < 0 || selected_note_index >= (int)course_notes.size()) {
+        auto msg = Gtk::make_managed<Gtk::MessageDialog>(*this, "Uyarı", false, Gtk::MessageType::INFO, Gtk::ButtonsType::OK);
+        msg->set_secondary_text("Lütfen önce bir not seçin.");
+        msg->signal_response().connect([msg](int) { msg->hide(); });
+        msg->show();
+        return;
+    }
+
+    auto buf = note_view.get_buffer();
+    Gtk::TextIter start, end;
+    buf->get_bounds(start, end);
+    std::string content = buf->get_text(start, end, false);
+    if (content.empty()) {
+        auto msg = Gtk::make_managed<Gtk::MessageDialog>(*this, "Uyarı", false, Gtk::MessageType::INFO, Gtk::ButtonsType::OK);
+        msg->set_secondary_text("Not içeriği boş, paylaşılacak bir şey yok.");
+        msg->signal_response().connect([msg](int) { msg->hide(); });
+        msg->show();
+        return;
+    }
+
+    auto* loading = Gtk::make_managed<Gtk::MessageDialog>(*this, "Paylaşılıyor...", false, Gtk::MessageType::INFO, Gtk::ButtonsType::NONE);
+    loading->show();
+
+    std::thread([this, content, loading]() {
+        CURL* curl = curl_easy_init();
+        std::string response;
+
+        if (curl) {
+            std::string note_title_text = course_notes[selected_note_index].course;
+            std::string json = "{\"title\":\"" + json_escape(note_title_text) + "\",\"content\":\"" + json_escape(content) + "\"}";
+
+            struct curl_slist* headers = nullptr;
+            headers = curl_slist_append(headers, "Content-Type: application/json");
+
+            curl_easy_setopt(curl, CURLOPT_URL, "http://192.168.1.214:8000/notes");
+            curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+            curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json.c_str());
+            curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, share_WriteCallback);
+            curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+            curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
+            curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 5L);
+
+            CURLcode res = curl_easy_perform(curl);
+
+            curl_slist_free_all(headers);
+            curl_easy_cleanup(curl);
+
+            if (res != CURLE_OK) {
+                response = "ERROR: " + std::string(curl_easy_strerror(res));
+            }
+        } else {
+            response = "ERROR: Failed to initialize curl";
+        }
+
+        Glib::signal_idle().connect_once([this, response, loading]() {
+            loading->hide();
+
+            if (response.rfind("ERROR:", 0) == 0) {
+                auto err_msg = Gtk::make_managed<Gtk::MessageDialog>(*this, "Hata", false, Gtk::MessageType::ERROR, Gtk::ButtonsType::OK);
+                err_msg->set_secondary_text(response.substr(6));
+                err_msg->signal_response().connect([err_msg](int) { err_msg->hide(); });
+                err_msg->show();
+                return;
+            }
+
+            std::string api_link, web_link;
+            try {
+                auto j = json::parse(response);
+                api_link = j["data"].value("link", "");
+                web_link = j["data"].value("web_viewer_link", "");
+            } catch (const json::parse_error&) {}
+
+            if (api_link.empty()) api_link = "http://192.168.1.214:8000";
+            if (web_link.empty()) web_link = api_link;
+
+            auto* result_dialog = Gtk::make_managed<Gtk::Dialog>();
+            result_dialog->set_title("Not Paylaşıldı");
+            result_dialog->set_transient_for(*this);
+            result_dialog->set_modal(true);
+            result_dialog->set_default_size(480, 260);
+
+            result_dialog->add_button("Kapat", Gtk::ResponseType::CLOSE);
+
+            auto* vbox = result_dialog->get_content_area();
+            vbox->set_margin_start(16);
+            vbox->set_margin_end(16);
+            vbox->set_margin_top(16);
+            vbox->set_margin_bottom(16);
+            vbox->set_spacing(12);
+
+            auto* lbl = Gtk::make_managed<Gtk::Label>();
+            lbl->set_markup("<b>Notunuz paylaşıldı! Aşağıdaki linklerden kopyalayabilirsiniz:</b>");
+            lbl->set_wrap(true);
+            vbox->append(*lbl);
+
+            auto make_link_row = [vbox](const std::string& label, const std::string& url) {
+                auto* row = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
+
+                auto* lbl = Gtk::make_managed<Gtk::Label>();
+                lbl->set_markup("<b>" + label + ":</b>");
+                lbl->set_size_request(20, -1);
+                row->append(*lbl);
+
+                auto* entry = Gtk::make_managed<Gtk::Entry>();
+                entry->set_text(url);
+                entry->set_hexpand(true);
+                entry->set_editable(false);
+                row->append(*entry);
+
+                auto* btn = Gtk::make_managed<Gtk::Button>("Kopyala");
+                btn->add_css_class("action-btn");
+                btn->signal_clicked().connect([entry]() {
+                    auto display = Gdk::Display::get_default();
+                    if (display) {
+                        auto clipboard = display->get_clipboard();
+                        clipboard->set_text(entry->get_text());
+                    }
+                });
+                row->append(*btn);
+
+                vbox->append(*row);
+            };
+
+            make_link_row("API", api_link);
+            make_link_row("Web", web_link);
+
+            {
+                auto* qr = QRcode_encodeString(web_link.c_str(), 0, QR_ECLEVEL_M, QR_MODE_8, 1);
+                if (qr) {
+                    int border = 2;
+                    int dim = qr->width + 2 * border;
+                    int pixel_size = 4;
+                    int img_size = dim * pixel_size;
+
+                    auto* pixbuf = gdk_pixbuf_new(GDK_COLORSPACE_RGB, false, 8, img_size, img_size);
+                    gdk_pixbuf_fill(pixbuf, 0xffffffff);
+
+                    int stride = gdk_pixbuf_get_rowstride(pixbuf);
+                    auto* pixels = gdk_pixbuf_get_pixels(pixbuf);
+
+                    for (int y = 0; y < qr->width; y++) {
+                        for (int x = 0; x < qr->width; x++) {
+                            if (qr->data[y * qr->width + x] & 0x01) {
+                                for (int py = 0; py < pixel_size; py++) {
+                                    for (int px = 0; px < pixel_size; px++) {
+                                        int ix = (x + border) * pixel_size + px;
+                                        int iy = (y + border) * pixel_size + py;
+                                        auto* p = pixels + iy * stride + ix * 3;
+                                        p[0] = 0; p[1] = 0; p[2] = 0;
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    auto ref = Glib::wrap(pixbuf, false);
+                    QRcode_free(qr);
+
+                    auto* qr_pic = Gtk::make_managed<Gtk::Picture>();
+                    qr_pic->set_pixbuf(ref);
+                    qr_pic->set_size_request(img_size, img_size);
+                    auto* qr_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
+                    qr_box->set_halign(Gtk::Align::CENTER);
+                    qr_box->set_margin_top(8);
+                    qr_box->append(*qr_pic);
+                    vbox->append(*qr_box);
+                }
+            }
+
+            result_dialog->signal_response().connect([result_dialog](int) {
+                result_dialog->hide();
+            });
+
+            result_dialog->show();
+        });
+    }).detach();
 }
 
 void MainWindow::setup_schedule() {
@@ -1995,6 +2335,7 @@ void MainWindow::on_ai_response() {
         if (display_text.empty())
             display_text = "API cevap veremedi. Daha sonra dene.";
         pending_ai_label->set_text(display_text);
+        pending_ai_label->remove_css_class("ai-loading");
         pending_ai_label = nullptr;
     }
 
@@ -2005,84 +2346,122 @@ void MainWindow::on_ai_response() {
 void MainWindow::setup_ai_chat() {
     ai_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_ai_response));
 
+    // Ana sayfa (dış scroll sadece sayfa taşarsa diye)
     auto* sw = Gtk::make_managed<Gtk::ScrolledWindow>();
-    sw->set_policy(Gtk::PolicyType::AUTOMATIC,
-                   Gtk::PolicyType::AUTOMATIC);
+    sw->set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
     sw->set_vexpand(true);
 
-    auto* page = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 12);
+    auto* page = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
     page->set_margin_start(20);
     page->set_margin_end(20);
     page->set_margin_top(20);
     page->set_margin_bottom(20);
 
-    auto* title_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
-    title_box->set_hexpand(true);
+    // ─── Header: Başlık + Model rozeti + Ayarlar ───────────────────────
+    auto* header_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
+    header_box->add_css_class("ai-header-box");
 
-    auto* title = Gtk::make_managed<Gtk::Label>("PardusEdu Yapay Zeka Asistanı");
+    auto* title = Gtk::make_managed<Gtk::Label>("Yapay Zeka Asistanı");
     title->add_css_class("ai-page-title");
-    title->set_hexpand(true);
-    title->set_halign(Gtk::Align::CENTER);
+    title->set_halign(Gtk::Align::START);
+    title->set_hexpand(false);
 
-    btn_ai_key.set_label("+");
-    btn_ai_key.set_size_request(36, 36);
+    // Model rozeti - model ID'yi okunabilir hale getir
+    auto format_model_name = [](const std::string& id) -> std::string {
+        std::string name = id;
+        auto slash = name.find('/');
+        if (slash != std::string::npos) name = name.substr(slash + 1);
+        for (auto& c : name) {
+            if (c == '-' || c == '_') c = ' ';
+        }
+        if (!name.empty()) name[0] = std::toupper(name[0]);
+        return name;
+    };
+
+    ai_model_badge = Gtk::make_managed<Gtk::Label>(format_model_name(get_model()));
+    ai_model_badge->add_css_class("ai-model-badge");
+    ai_model_badge->set_halign(Gtk::Align::START);
+
+    auto* spacer = Gtk::make_managed<Gtk::Label>();
+    spacer->set_hexpand(true);
+
+    auto* set_icon = Gtk::make_managed<Gtk::Image>();
+    set_icon->set_from_resource(dark_mode
+        ? "/org/ogrenci/merkezi/assets/settings.svg"
+        : "/org/ogrenci/merkezi/assets/settings_dark.svg");
+    set_icon->set_pixel_size(20);
+    btn_ai_key.set_child(*set_icon);
+    btn_ai_key.set_size_request(38, 38);
     btn_ai_key.add_css_class("ai-key-btn");
     btn_ai_key.set_halign(Gtk::Align::END);
     btn_ai_key.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::show_ai_key_dialog));
 
-    title_box->append(*title);
-    title_box->append(btn_ai_key);
+    header_box->append(*title);
+    header_box->append(*ai_model_badge);
+    header_box->append(*spacer);
+    header_box->append(btn_ai_key);
 
+    // ─── Chat mesaj alanı ──────────────────────────────────────────
     ai_chat_box.set_orientation(Gtk::Orientation::VERTICAL);
-    ai_chat_box.set_spacing(8);
+    ai_chat_box.set_spacing(6);
     ai_chat_box.set_vexpand(true);
     ai_chat_box.set_hexpand(true);
 
-    ai_scroll.set_policy(Gtk::PolicyType::AUTOMATIC,
-                         Gtk::PolicyType::AUTOMATIC);
+    ai_scroll.set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
     ai_scroll.set_vexpand(true);
     ai_scroll.set_child(ai_chat_box);
 
+    // ─── Input alanı (ChatGPT tarzı bileşik) ──────────────────────
     ai_input.set_placeholder_text("PardusEdu Asistana soru sor...");
 
     auto* send_icon = Gtk::make_managed<Gtk::Image>();
     send_icon->set_from_resource("/org/ogrenci/merkezi/assets/send.svg");
+    send_icon->set_pixel_size(20);
 
     btn_ai_send.set_child(*send_icon);
-    btn_ai_send.set_size_request(40, 40);
-    btn_ai_send.set_hexpand(false);
+    btn_ai_send.set_size_request(44, 44);
     btn_ai_send.add_css_class("ai-send-btn");
 
-    auto* input_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
-    input_box->set_halign(Gtk::Align::FILL);
+    auto* input_container = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
+    input_container->add_css_class("ai-input-container");
 
     ai_input.set_hexpand(true);
+    input_container->append(ai_input);
+    input_container->append(btn_ai_send);
 
-    btn_ai_send.set_hexpand(false);
-    btn_ai_send.set_size_request(90, -1);
-    btn_ai_send.set_halign(Gtk::Align::END);
-    input_box->append(ai_input);
-    input_box->append(btn_ai_send);
+    // Focus - container'ın border'ı tüm genişliği kaplasın
+    auto fc = Gtk::EventControllerFocus::create();
+    fc->signal_enter().connect([input_container]() {
+        input_container->add_css_class("focused");
+    });
+    fc->signal_leave().connect([input_container]() {
+        input_container->remove_css_class("focused");
+    });
+    ai_input.add_controller(fc);
 
-    auto send_message = [this]() {
+    // ─── Send mesaj ───────────────────────────────────────────────
+    auto send_message = [this, format_model_name]() {
         if (ai_waiting) return;
         std::string text = ai_input.get_text();
-        if(text.empty()) return;
+        if (text.empty()) return;
 
+        // Kullanıcı balonu
         auto* user_msg = Gtk::make_managed<Gtk::Frame>();
         auto* user_lbl = Gtk::make_managed<Gtk::Label>(text);
         user_msg->add_css_class("user-msg");
         user_lbl->set_wrap(true);
-        user_lbl->set_margin(8);
+        user_lbl->set_margin(4);
         user_msg->set_child(*user_lbl);
         user_msg->set_halign(Gtk::Align::END);
         ai_chat_box.append(*user_msg);
 
+        // Yükleniyor balonu
         auto* ai_msg = Gtk::make_managed<Gtk::Frame>();
         auto* ai_lbl = Gtk::make_managed<Gtk::Label>("Cevap alınıyor...");
+        ai_lbl->add_css_class("ai-loading");
         ai_msg->add_css_class("ai-msg");
         ai_lbl->set_wrap(true);
-        ai_lbl->set_margin(8);
+        ai_lbl->set_margin(4);
         ai_lbl->set_selectable(true);
 
         auto gesture = Gtk::GestureClick::create();
@@ -2096,8 +2475,14 @@ void MainWindow::setup_ai_chat() {
         ai_msg->set_child(*ai_lbl);
         ai_msg->set_halign(Gtk::Align::START);
         ai_chat_box.append(*ai_msg);
+
+        // Otomatik kaydır
+        auto adj = ai_scroll.get_vadjustment();
+        adj->set_value(adj->get_upper());
+
         ai_input.set_text("");
 
+        // Bağlam oluştur
         std::string app_context;
         {
             std::string lower = text;
@@ -2139,9 +2524,10 @@ void MainWindow::setup_ai_chat() {
     ai_input.signal_activate().connect(send_message);
     btn_ai_send.signal_clicked().connect(send_message);
 
-    page->append(*title_box);
+    // ─── Sayfayı birleştir ────────────────────────────────────────
+    page->append(*header_box);
     page->append(ai_scroll);
-    page->append(*input_box);
+    page->append(*input_container);
 
     sw->set_child(*page);
     stack.add(*sw, "ai");
@@ -2152,7 +2538,7 @@ void MainWindow::show_ai_key_dialog() {
     dialog->set_title("Yapay Zeka Ayarları");
     dialog->set_transient_for(*this);
     dialog->set_modal(true);
-    dialog->set_default_size(500, 420);
+    dialog->set_default_size(540, 520);
 
     auto* content = dialog->get_content_area();
     content->set_margin(16);
@@ -2165,7 +2551,9 @@ void MainWindow::show_ai_key_dialog() {
     auto* provider_combo = Gtk::make_managed<Gtk::ComboBoxText>();
     provider_combo->append("groq", "Groq Cloud");
     provider_combo->append("openrouter", "OpenRouter");
-    provider_combo->set_active_id(ai_provider == AIProvider::OPENROUTER ? "openrouter" : "groq");
+    provider_combo->append("gemini", "Google Gemini");
+    std::string active_provider = ai_provider == AIProvider::GEMINI ? "gemini" : ai_provider == AIProvider::OPENROUTER ? "openrouter" : "groq";
+    provider_combo->set_active_id(active_provider);
 
     content->append(*provider_lbl);
     content->append(*provider_combo);
@@ -2240,10 +2628,12 @@ void MainWindow::show_ai_key_dialog() {
     or_model_combo->append("google/gemini-2.5-flash", "Gemini 2.5 Flash");
     or_model_combo->append("google/gemini-3.1-flash-lite", "Gemini 3.1 Flash Lite");
     or_model_combo->append("google/gemini-2.5-pro", "Gemini 2.5 Pro");
+    or_model_combo->append("google/gemini-3.1-pro-preview", "Gemini 3.1 Pro");
     // Qwen
     or_model_combo->append("qwen/qwen3.6-flash", "Qwen 3.6 Flash");
     or_model_combo->append("qwen/qwen3-coder", "Qwen 3 Coder");
     or_model_combo->append("qwen/qwen3.7-max", "Qwen 3.7 Max");
+    or_model_combo->append("qwen/qwen3-next-80b-a3b-instruct:free", "Qwen3 Next Free");
     // Deepseek
     or_model_combo->append("deepseek/deepseek-r1", "Deepseek R1");
     or_model_combo->append("deepseek/deepseek-v4-pro", "Deepseek V4 Pro");
@@ -2256,7 +2646,6 @@ void MainWindow::show_ai_key_dialog() {
     // Claude
     or_model_combo->append("anthropic/claude-haiku-4.5", "Claude Haiku 4.5");
     or_model_combo->append("anthropic/claude-sonnet-4.6", "Claude Sonnet 4.6");
-    or_model_combo->append("anthropic/claude-opus-4.8", "Claude Opus 4.8");
     // GPT
     or_model_combo->append("openai/gpt-5-mini", "ChatGPT 5 Mini");
     or_model_combo->append("openai/gpt-4o-mini", "ChatGPT 4o Mini");
@@ -2272,14 +2661,58 @@ void MainWindow::show_ai_key_dialog() {
     or_box->append(*or_model_lbl);
     or_box->append(*or_model_combo);
 
+    // Google Gemini bölümü
+    auto* gemini_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 8);
+
+    auto* gemini_header = Gtk::make_managed<Gtk::Label>("");
+    gemini_header->set_markup("<b>Google Gemini</b>");
+    gemini_header->set_halign(Gtk::Align::START);
+
+    auto* gemini_key_lbl = Gtk::make_managed<Gtk::Label>(
+        "API Anahtarı:\n(https://aistudio.google.com/apikey adresinden alabilirsiniz)");
+    gemini_key_lbl->set_wrap(true);
+    gemini_key_lbl->set_halign(Gtk::Align::START);
+
+    auto* gemini_key_entry = Gtk::make_managed<Gtk::Entry>();
+    gemini_key_entry->set_placeholder_text("AI...");
+    gemini_key_entry->set_text(ai_api_key_gemini);
+    gemini_key_entry->set_hexpand(true);
+
+    auto* gemini_model_lbl = Gtk::make_managed<Gtk::Label>("Model:");
+    gemini_model_lbl->set_halign(Gtk::Align::START);
+
+    auto* gemini_model_combo = Gtk::make_managed<Gtk::ComboBoxText>();  
+        
+    // Gemini Flash Lite Models
+    gemini_model_combo->append("gemini-2.5-flash-lite", "Gemini 2.5 Flash Lite");
+    gemini_model_combo->append("gemini-3.1-flash-lite", "Gemini 3.1 Flash Lite");
+    // Gemini Flash Models
+    gemini_model_combo->append("gemini-2.5-flash", "Gemini 2.5 Flash");
+    gemini_model_combo->append("gemini-3.5-flash", "Gemini 3.5 Flash");
+    // Gemini Pro Models
+    gemini_model_combo->append("gemini-2.5-pro", "Gemini 2.5 Pro");
+    gemini_model_combo->append("gemini-3-pro-preview", "Gemini 3 Pro");
+    gemini_model_combo->append("gemini-3.1-pro-preview", "Gemini 3.1 Pro");
+    
+
+    gemini_model_combo->set_active_id(ai_model_gemini);
+
+    gemini_box->append(*gemini_header);
+    gemini_box->append(*gemini_key_lbl);
+    gemini_box->append(*gemini_key_entry);
+    gemini_box->append(*gemini_model_lbl);
+    gemini_box->append(*gemini_model_combo);
+
     content->append(*groq_box);
     content->append(*or_box);
+    content->append(*gemini_box);
 
     // Sağlayıcı değişince görünürlüğü ayarla
-    auto update_visibility = [groq_box, or_box, provider_combo]() {
-        bool groq_active = provider_combo->get_active_id() == "groq";
-        groq_box->set_visible(groq_active);
-        or_box->set_visible(!groq_active);
+    auto update_visibility = [groq_box, or_box, gemini_box, provider_combo]() {
+        std::string id = provider_combo->get_active_id();
+        groq_box->set_visible(id == "groq");
+        or_box->set_visible(id == "openrouter");
+        gemini_box->set_visible(id == "gemini");
     };
     provider_combo->signal_changed().connect(update_visibility);
     update_visibility();
@@ -2302,8 +2735,11 @@ void MainWindow::show_ai_key_dialog() {
         dialog->close();
     });
 
-    btn_save->signal_clicked().connect([this, dialog, provider_combo, groq_key_entry, groq_model_combo, or_key_entry, or_model_combo]() {
-        ai_provider = provider_combo->get_active_id() == "openrouter" ? AIProvider::OPENROUTER : AIProvider::GROQ;
+    btn_save->signal_clicked().connect([this, dialog, provider_combo, groq_key_entry, groq_model_combo, or_key_entry, or_model_combo, gemini_key_entry, gemini_model_combo]() {
+        std::string prov = provider_combo->get_active_id();
+        if (prov == "gemini") ai_provider = AIProvider::GEMINI;
+        else if (prov == "openrouter") ai_provider = AIProvider::OPENROUTER;
+        else ai_provider = AIProvider::GROQ;
         set_provider(ai_provider);
 
         // Groq ayarlarını kaydet
@@ -2322,14 +2758,38 @@ void MainWindow::show_ai_key_dialog() {
         }
         ai_model_openrouter = or_model_combo->get_active_id();
 
+        // Gemini ayarlarını kaydet
+        std::string gemini_key = gemini_key_entry->get_text();
+        if (!gemini_key.empty()) {
+            ai_api_key_gemini = gemini_key;
+            set_gemini_api_key(gemini_key);
+        }
+        ai_model_gemini = gemini_model_combo->get_active_id();
+
         // Aktif sağlayıcının modelini uygula
         if (ai_provider == AIProvider::GROQ) {
             set_model(ai_model_groq);
-        } else {
+        } else if (ai_provider == AIProvider::OPENROUTER) {
             set_model(ai_model_openrouter);
+        } else {
+            set_model(ai_model_gemini);
         }
 
         save_data();
+
+        // Model rozetini güncelle
+        if (ai_model_badge) {
+            std::string model_id = get_model();
+            std::string display = model_id;
+            auto slash = display.find('/');
+            if (slash != std::string::npos) display = display.substr(slash + 1);
+            for (auto& c : display) {
+                if (c == '-' || c == '_') c = ' ';
+            }
+            if (!display.empty()) display[0] = std::toupper(display[0]);
+            ai_model_badge->set_text(display);
+        }
+
         dialog->close();
     });
 

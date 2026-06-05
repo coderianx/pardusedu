@@ -311,6 +311,32 @@ separator {
     color: __muted;
 }
 
+.stat-card {
+    background: __card_bg;
+    border: 1px solid __border;
+    border-radius: 12px;
+}
+
+.stat-icon {
+    color: __text_color;
+}
+
+.stat-icon-dark {
+    color: __btn_text;
+}
+
+.stat-value {
+    font-size: 34px;
+    font-weight: bold;
+    color: __accent;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: __muted;
+    font-weight: bold;
+}
+
 .pomo-setting-label {
     font-size: 12px;
     color: __muted;
@@ -398,63 +424,132 @@ separator {
     border-style: solid;
 }
 
-/* ================= AI CHAT BALONLARI ================= */
-
-/* USER (SAĞ - MAVİ) */
-.user-msg {
-    background: __accent;
-    color: #ffffff;
-    border-radius: 16px;
-    padding: 10px;
-    margin: 4px 0;
-    margin-left: 80px;
-}
-
-/* AI (SOL - KART RENGİ) */
-.ai-msg {
-    background: __card_bg;
-    color: __text_color;
-    border-radius: 16px;
-    padding: 10px;
-    margin: 4px 0;
-    margin-right: 80px;
-    border: 1px solid __border;
-}
-
-.ai-send-btn {
-    background: __accent;
-    color: #ffffff;
-    border-radius: 8px;
-    padding: 8px 20px;
-    min-width: 70px;
-}
+/* ================= AI CHAT MODERN (ChatGPT/DeepSeek tarzı) ================= */
 
 .ai-page-title {
-    font-size: 20px;
+    font-size: 22px;
     font-weight: bold;
-    color: #38BDF8;
-    text-shadow: 0 0 px rgba(15, 76, 129, 0.6);
+    color: __accent;
+}
+
+.ai-header-box {
+    margin-bottom: 10px;
+}
+
+.ai-model-badge {
+    background: alpha(__accent, 0.12);
+    color: __accent;
+    border-radius: 10px;
+    padding: 3px 12px;
+    font-size: 11px;
+    font-weight: bold;
 }
 
 .ai-key-btn {
-    background: __accent;
-    color: #ffffff;
-    border-radius: 8px;
-    font-size: 20px;
-    font-weight: bold;
+    background: transparent;
+    color: __muted;
+    border-radius: 10px;
+    font-size: 18px;
     padding: 0;
-    min-width: 36px;
-    min-height: 36px;
+    min-width: 38px;
+    min-height: 38px;
+    border: 1px solid transparent;
 }
 
 .ai-key-btn:hover {
+    background: __hover_bg;
+    border-color: __border;
+    color: __text_color;
+}
+
+/* Kullanıcı balonu - sağda, asimetrik (ChatGPT tarzı) */
+.user-msg {
+    background: __accent;
+    color: #ffffff;
+    border-radius: 18px 18px 4px 18px;
+    padding: 12px 16px;
+    margin: 6px 0;
+    margin-left: 80px;
+    border: none;
+    box-shadow: 0 1px 3px alpha(black, 0.15);
+}
+
+.user-msg label {
+    color: #ffffff;
+}
+
+/* AI balonu - solda, asimetrik */
+.ai-msg {
+    background: __card_bg;
+    color: __text_color;
+    border-radius: 18px 18px 18px 4px;
+    padding: 12px 16px;
+    margin: 6px 0;
+    margin-right: 80px;
+    border: 1px solid __border;
+    box-shadow: 0 1px 3px alpha(black, 0.06);
+}
+
+.ai-msg label {
+    color: __text_color;
+}
+
+/* Gönder butonu - minimalist ikon */
+.ai-send-btn {
+    background: __accent;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 8px;
+    min-width: 44px;
+    min-height: 44px;
+    border: none;
+}
+
+.ai-send-btn:hover {
     background: __accent_dark;
 }
 
-/* FRAME temiz görünüm */
-frame {
-    border: none;
+.ai-send-btn image {
+    color: #ffffff;
 }
+
+/* Input alanı - bileşik tek parça (ChatGPT tarzı) */
+.ai-input-container {
+    background: __card_bg;
+    border: 1px solid __border;
+    border-radius: 16px;
+    padding: 6px 6px 6px 16px;
+    margin-top: 10px;
+}
+
+.ai-input-container.focused {
+    border-color: __accent;
+    padding: 6px;
+}
+
+.ai-input-container entry {
+    border: none;
+    background: transparent;
+    border-radius: 10px;
+    font-size: 14px;
+    padding: 8px 4px;
+    caret-color: __accent;
+}
+
+.ai-input-container entry:focus {
+    border: none;
+    box-shadow: none;
+    outline: none;
+}
+
+/* Yükleniyor göstergesi */
+.ai-loading {
+    color: __muted;
+    font-size: 13px;
+    font-style: italic;
+}
+
+
 
 menu,
 popover,

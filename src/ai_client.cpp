@@ -7,7 +7,6 @@
 #include <fstream>
 #include <algorithm>
 #include <cstdlib>
-#include <unordered_map>
 #include <vector>
 #include <regex>
 #include <sstream>
@@ -24,13 +23,12 @@ struct Message
 // Konuşma geçmişini burada tutuyoruz, böylece AI önceki mesajları hatırlasın
 static std::vector<Message> conversation_history;
 
-// Wikipedia cevaplarını önbellekte tutuyoruz ki aynı soruyu tekrar sorana kadar beklemesin
-static std::unordered_map<std::string,
-                          std::string> wiki_cache;
+
 
 // API'ye erişmek için kullandığımız anahtarlar, kullanıcı kendininkini girebilir
 static std::string global_groq_api_key = "";
 static std::string global_openrouter_api_key = "";
+static std::string global_gemini_api_key = "";
 
 // Hangi sağlayıcının kullanılacağı (Groq Cloud veya OpenRouter)
 static AIProvider global_provider = AIProvider::GROQ;
@@ -54,6 +52,14 @@ std::string get_openrouter_api_key() {
     return global_openrouter_api_key;
 }
 
+void set_gemini_api_key(const std::string& key) {
+    global_gemini_api_key = key;
+}
+
+std::string get_gemini_api_key() {
+    return global_gemini_api_key;
+}
+
 void set_provider(AIProvider provider) {
     global_provider = provider;
 }
@@ -63,7 +69,9 @@ AIProvider get_provider() {
 }
 
 std::string get_provider_name() {
-    return global_provider == AIProvider::GROQ ? "groq" : "openrouter";
+    if (global_provider == AIProvider::GROQ) return "groq";
+    if (global_provider == AIProvider::OPENROUTER) return "openrouter";
+    return "gemini";
 }
 
 void set_model(const std::string& model) {
@@ -86,284 +94,6 @@ static size_t WriteCallback(void* contents,
     return size * nmemb;
 }
 
-// Metni küçük harfe çeviriyoruz ki karşılaştırma yaparken büyük/küçük harf sorunu olmasın
-static std::string to_lower(std::string s)
-{
-    std::transform(
-        s.begin(),
-        s.end(),
-        s.begin(),
-        [](unsigned char c)
-        {
-            return std::tolower(c);
-        });
-
-    return s;
-}
-
-// Kullanıcının sorusunda "nedir", "kimdir", "araştır" gibi kelimeler varsa Wikipedia'ya bakıyoruz
-static bool should_use_wikipedia(
-    const std::string& text)
-{
-    std::string t = to_lower(text);
-
-    return (
-        t.find("araştır") != std::string::npos ||
-        t.find("arastir") != std::string::npos ||
-        t.find("incele") != std::string::npos ||
-        t.find("bak") != std::string::npos ||
-        t.find("öğren") != std::string::npos ||
-        t.find("ogren") != std::string::npos ||
-        t.find("nedir") != std::string::npos ||
-        t.find("kimdir") != std::string::npos ||
-        t.find("açıkla") != std::string::npos ||
-        t.find("acikla") != std::string::npos
-    );
-}
-
-// Kullanıcının sorusundan "nedir", "kimdir" gibi kelimeleri çıkarıp arama yapılacak konuyu buluyoruz
-static std::string extract_topic(
-    std::string text)
-{
-    std::vector<std::string> remove_words =
-    {
-        "nedir",
-        "kimdir",
-        "açıkla",
-        "acikla",
-        "araştır",
-        "arastir",
-        "incele",
-        "öğren",
-        "ogren",
-        "hakkında",
-        "hakkinda"
-    };
-
-    text = to_lower(text);
-
-    for (const auto& word : remove_words)
-    {
-        size_t pos;
-
-        while ((pos = text.find(word))
-               != std::string::npos)
-        {
-            text.erase(pos,
-                       word.length());
-        }
-    }
-
-    // Gereksiz boşlukları temizleyip düzgün bir metin elde ediyoruz
-    std::stringstream ss(text);
-
-    std::string token;
-    std::string cleaned;
-
-    while (ss >> token)
-    {
-        cleaned += token + " ";
-    }
-
-    return cleaned;
-}
-
-// Wikipedia'da arama yapıp özet bilgiyi getiriyoruz, Türkçe bulamazsa İngilizce dener
-static std::string wikipedia_search(
-    const std::string& query,
-    const std::string& lang = "tr")
-{
-    std::string cache_key =
-        lang + ":" + query;
-
-    // Daha önce aynı terimi aradık mı? Varsa önbellekten hızlıca veriyoruz
-    if (wiki_cache.count(cache_key))
-    {
-        return wiki_cache[cache_key];
-    }
-
-    CURL* curl = curl_easy_init();
-
-    std::string response;
-
-    if (!curl)
-        return "";
-
-    char* escaped =
-        curl_easy_escape(
-            curl,
-            query.c_str(),
-            query.length());
-
-    std::string search_url =
-        "https://" + lang +
-        ".wikipedia.org/w/api.php?"
-        "action=query"
-        "&list=search"
-        "&format=json"
-        "&srlimit=1"
-        "&srsearch=" +
-        std::string(escaped);
-
-    curl_free(escaped);
-
-    curl_easy_setopt(
-        curl,
-        CURLOPT_URL,
-        search_url.c_str());
-
-    curl_easy_setopt(
-        curl,
-        CURLOPT_WRITEFUNCTION,
-        WriteCallback);
-
-    curl_easy_setopt(
-        curl,
-        CURLOPT_WRITEDATA,
-        &response);
-
-    curl_easy_setopt(
-        curl,
-        CURLOPT_SSL_VERIFYPEER,
-        1L);
-
-    curl_easy_setopt(
-        curl,
-        CURLOPT_SSL_VERIFYHOST,
-        2L);
-
-    curl_easy_setopt(
-        curl,
-        CURLOPT_TIMEOUT,
-        30L);
-
-    CURLcode res =
-        curl_easy_perform(curl);
-
-    if (res != CURLE_OK)
-    {
-        curl_easy_cleanup(curl);
-        return "";
-    }
-
-    try
-    {
-        json parsed =
-            json::parse(response);
-
-        auto search_results =
-            parsed["query"]["search"];
-
-        if (!search_results.is_array() ||
-            search_results.empty())
-        {
-            curl_easy_cleanup(curl);
-            return "";
-        }
-
-        std::string title =
-            search_results[0]["title"]
-                .get<std::string>();
-
-        std::string summary_response;
-
-        char* escaped_title =
-            curl_easy_escape(
-                curl,
-                title.c_str(),
-                title.length());
-
-        std::string summary_url =
-            "https://" + lang +
-            ".wikipedia.org/api/rest_v1/page/summary/" +
-            std::string(escaped_title);
-
-        curl_free(escaped_title);
-
-        curl_easy_setopt(
-            curl,
-            CURLOPT_URL,
-            summary_url.c_str());
-
-        curl_easy_setopt(
-            curl,
-            CURLOPT_WRITEDATA,
-            &summary_response);
-
-        response.clear();
-
-        res = curl_easy_perform(curl);
-
-        curl_easy_cleanup(curl);
-
-        if (res != CURLE_OK)
-            return "";
-
-        wiki_cache[cache_key] =
-            summary_response;
-
-        return summary_response;
-    }
-    catch (...)
-    {
-        curl_easy_cleanup(curl);
-        return "";  
-    }
-}
-
-static std::string extract_wiki_summary(
-    const std::string& response)
-{
-    try
-    {
-        json parsed =
-            json::parse(response);
-
-        if (parsed.contains("extract"))
-        {
-            return parsed["extract"]
-                .get<std::string>();
-        }
-
-        return "";
-    }
-    catch (...)
-    {
-        return "";
-    }
-}
-
-
-static std::string build_wiki_context(
-    const std::string& query)
-{
-    std::string raw =
-        wikipedia_search(query, "tr");
-
-    // Türkçe bulunamazsa İngilizce dene
-    if (raw.empty())
-    {
-        raw =
-            wikipedia_search(query, "en");
-    }
-
-    if (raw.empty())
-        return "";
-
-    std::string summary =
-        extract_wiki_summary(raw);
-
-    if (summary.empty())
-        return "";
-
-    return
-        "Aşağıdaki bilgiler yalnızca "
-        "referans amaçlıdır:\n\n"
-        "Wikipedia bilgisi:\n" +
-        summary +
-        "\n\n";
-}
-
 // API'den gelen JSON cevabından yapay zekanın yazdığı metni çekip alıyoruz
 std::string extract_ai_reply(
     const std::string& response)
@@ -378,6 +108,21 @@ std::string extract_ai_reply(
     {
         json parsed =
             json::parse(response);
+
+        if (parsed.contains("candidates"))
+        {
+            auto& candidates = parsed["candidates"];
+            if (candidates.is_array() && !candidates.empty() &&
+                candidates[0].contains("content") &&
+                candidates[0]["content"].contains("parts") &&
+                candidates[0]["content"]["parts"].is_array() &&
+                !candidates[0]["content"]["parts"].empty() &&
+                candidates[0]["content"]["parts"][0].contains("text"))
+            {
+                return candidates[0]["content"]["parts"][0]["text"].get<std::string>();
+            }
+            return "Gemini yanıtı ayrıştırılamadı";
+        }
 
         if (!parsed.contains("choices"))
             return "choices alanı bulunamadı";
@@ -462,6 +207,110 @@ static std::string remove_markdown(
     return text;
 }
 
+// Kullanıcı mesajında YouTube linki var mı kontrol ediyoruz
+static bool has_youtube_url(
+    const std::string& text)
+{
+    return
+        text.find("youtube.com/watch") != std::string::npos ||
+        text.find("youtube.com/live") != std::string::npos ||
+        text.find("youtu.be/") != std::string::npos ||
+        text.find("youtube.com/shorts/") != std::string::npos ||
+        text.find("youtube.com/embed/") != std::string::npos;
+}
+
+// Metnin içindeki ilk YouTube linkini bulup döndürüyoruz
+static std::string extract_youtube_url(
+    const std::string& text)
+{
+    std::regex url_regex(R"((https?://)?(www\.)?(youtube\.com/watch\?v=|youtu\.be/|youtube\.com/shorts/|youtube\.com/embed/)[\w-]+)", std::regex::icase);
+    std::smatch match;
+    if (std::regex_search(text, match, url_regex))
+        return match.str(0);
+    return "";
+}
+
+// nlohmann/json UTF-8 doğrulamasından geçmeyen byte'ları temizler
+static std::string sanitize_utf8(const std::string& input)
+{
+    std::string result;
+    result.reserve(input.size());
+    for (size_t i = 0; i < input.size(); i++)
+    {
+        unsigned char c = input[i];
+        if (c < 0x80)
+        {
+            if (c >= 0x20 || c == 0x09 || c == 0x0A || c == 0x0D)
+                result += c;
+            continue;
+        }
+        size_t n = 0;
+        if (c >= 0xF0) n = 3;
+        else if (c >= 0xE0) n = 2;
+        else if (c >= 0xC2) n = 1;
+        else continue;
+        if (i + n >= input.size()) continue;
+        bool ok = true;
+        for (size_t j = 1; j <= n; j++)
+            if ((input[i + j] & 0xC0) != 0x80) { ok = false; break; }
+        if (!ok) continue;
+        result += c;
+        for (size_t j = 1; j <= n; j++)
+            result += input[i + j];
+        i += n;
+    }
+    return result;
+}
+
+// yt-dlp ile YouTube videosundan transkript indirip içeriğini döndürüyoruz
+static std::string fetch_youtube_transcript(
+    const std::string& url)
+{
+    // Önce yt-dlp kurulu mu kontrol et
+    int check = system("which yt-dlp > /dev/null 2>&1");
+    if (check != 0)
+        return "yt-dlp_bulunamadi";
+
+    // Transkript dosyasını indir (vtt formatında — daha az yer kaplar)
+    std::string output = "/tmp/yt_transcript_%(id)s";
+    std::string dl_cmd = "yt-dlp --skip-download --write-auto-sub --sub-lang tr --convert-subs vtt --output '" + output + "' " + url + " 2>/dev/null";
+    system(dl_cmd.c_str());
+
+    // İndirilen dosyayı oku (önce Türkçe, sonra İngilizce dene)
+    // Tüm gereksiz bilgileri temizle: HTML tagları, zaman damgaları, satır numaraları,
+    // WEBVTT başlıkları, [Müzik] gibi işaretleyiciler, boş satırlar ve ardışık tekrarlar
+    std::string read_cmd = "cat /tmp/yt_transcript_*.tr.vtt /tmp/yt_transcript_*.en.vtt 2>/dev/null | sed -E 's/<[^>]+>//g; /^[[:space:]]*$/d; /^[0-9]+$/d; /^[0-9]{2}:[0-9]{2}:/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^\\[.*\\]/d; /^♪|^♫|^♬/d' | uniq";
+
+    std::string result;
+    FILE* pipe = popen(read_cmd.c_str(), "r");
+    if (pipe)
+    {
+        char buffer[4096];
+        while (fgets(buffer, sizeof(buffer), pipe))
+            result += buffer;
+        pclose(pipe);
+    }
+
+    // Geçici dosyaları temizle
+    system("rm -f /tmp/yt_transcript_* 2>/dev/null");
+
+    // JSON'a girmeden önce geçersiz UTF-8 byte'larını temizle
+    return sanitize_utf8(result);
+}
+
+// Basit token tahmini: ortalama 3.5 karakter ≈ 1 token (Türkçe/İngilizce karışık)
+static int estimate_tokens(const std::string& text)
+{
+    if (text.empty()) return 0;
+    return std::max(1, (int)(text.length() / 3.5f));
+}
+
+// Modelin context limitini döndürür (çoğu model 128K destekler)
+static int get_model_limit()
+{
+    return 128000;
+}
+
 std::string call_ai(
     const std::string& user_text,
     const std::string& app_context)
@@ -475,7 +324,10 @@ std::string call_ai(
         return "CURL başlatılamadı";
 
 
-    std::string api_key = global_provider == AIProvider::GROQ ? global_groq_api_key : global_openrouter_api_key;
+    std::string api_key;
+    if (global_provider == AIProvider::GROQ) api_key = global_groq_api_key;
+    else if (global_provider == AIProvider::OPENROUTER) api_key = global_openrouter_api_key;
+    else api_key = global_gemini_api_key;
 
     std::string system_prompt =
         "Sen Pardus Linux üzerinde çalışan "
@@ -486,8 +338,9 @@ std::string call_ai(
 
         "Taban Modelin " + global_model + ". "
 
-        "Ali Eymen İçli (Coderian) tarafından "
-        "geliştirildin. (Taban Modelin Hariç)"
+        "PardusEdu Uygulamasının Geliştiricisi: Ali Eymen İçli. "
+        
+        "PardusEdu Repo: github.com/coderianx/pardusedu "
 
         "Emoji Kullan ama az sayıda kullan."
         "Tüm sohbeti doldurma emojiyle her mesajda 1 yeter yada 2. "
@@ -585,311 +438,12 @@ std::string call_ai(
             "- Test Yazma. "
             "- Ve çok daha fazla şey"
 
-        "Groq mu OpenRouter mı? "
+        "Kullanıcı model seçimi konusunda yardım isterse (hangi modeli kullanmalıyım, "
+        "Groq, OpenRouter, Gemini arasındaki fark nedir gibi sorular sorarsa) "
+        "ona Groq, OpenRouter ve Gemini sağlayıcılarını ve modelleri detaylıca açıkla. "
+        "Ama kullanıcı sormadıkça modellerden bahsetme. "
+        "Hangi modeli seçmesi gerektiğini pardusedu.netlify.app/ sitesinden bakabilir. "
 
-        "Groq: "
-        "- Çok hızlı cevap verir. "
-        "- Gerçek zamanlı kullanım için uygundur. "
-        "- Düşük gecikme (latency) sunar. "
-        "- Daha sınırlı model seçenekleri vardır. "
-        "- Kimler içindir: "
-            "- Anlık sohbet isteyenler. "
-            "- Canlı asistan kullananlar. "
-            "- Hızın önemli olduğu uygulamalar. "
-
-        "OpenRouter: "
-        "- Daha yavaş olabilir (Aşırı fark hissedilmez). "
-        "- Çok fazla model seçeneği sunar. "
-        "- GPT, Claude, Gemini, Qwen, DeepSeek gibi modelleri içerir. "
-        "- En iyi modeli seçme imkanı sağlar. "
-        "- Hız modelden modele değişir. "
-        "- Kimler içindir: "
-            "- Kaliteli cevap isteyenler. "
-            "- Kodlama ve analiz yapanlar. "
-            "- Farklı modelleri denemek isteyenler. "
-
-        "Özet: "
-        "- Groq = En hızlı sistem. "
-        "- OpenRouter = En akıllı ve en geniş model sistemi. "
-
-        "Model Açıklamaları(Kullanıcılar için): "
-
-        "Groq Cloud Servisinde: "
-
-        "- Llama 3.1 8B; "
-            "- Çok hızlı çalışır. "
-            "- Basit sorular için uygun. "
-            "- Daha az token harcar. "
-            "- 8 Milyar Parametreye sahiptir. "
-            "- Dezavantaj: "
-                "- 8B olduğu için bilgi kapasitesi düşüktür. "
-                "- Zor sorularda hızlı hata yapar. "
-            "- Kimler içindir: "
-                "- Hızlı ama günlük sohbet isteyenler. "
-        
-        "- Llama 3.3 70B; "
-            "- Dengelidir. "
-            "- Akıllıdır. "
-            "- Çoğu işte kaliteli sonuç verir. "
-            "~70 Milyar Parametreye sahiptir. "
-            "- Dezavantaj: "
-                "- Küçük Modellere göre daha pahalı çalışır. "
-            "- Kimler içindir: "
-                "- Kaliteli cevap isteyen öğrenciler. "
-                "- Detaylı bilgi isteyenler. "
-
-                "- Llama 4 Scout 17B; "
-            "- Akıllı planlama yapabilir. "
-            "- Adım adım düşünmede başarılıdır. "
-            "- Proje ve araştırma işlerinde güçlüdür. "
-            "- 17 Milyar aktif parametreye sahiptir. "
-            "- Dezavantaj: "
-                "- Bazen gereğinden fazla detay verebilir. "
-                "- Yeni olduğu için bazı konularda tutarsız olabilir. "
-            "- Kimler içindir: "
-                "- Proje yapan öğrenciler. "
-                "- Araştırma yapan öğrenciler. "
-                "- Planlı çalışmak isteyenler. "
-
-        "- GPT OSS 120B; "
-            "- Çok güçlü düşünme yeteneğine sahiptir. "
-            "- Karmaşık soruları çözmede başarılıdır. "
-            "- Kodlama ve analiz konusunda çok güçlüdür. "
-            "- 120 Milyar Parametreye sahiptir. "
-            "- Dezavantaj: "
-                "- Daha yavaş çalışabilir. "
-                "- Fazla kaynak tüketebilir. "
-            "- Kimler içindir: "
-                "- En kaliteli cevapları isteyen öğrenciler. "
-                "- Zor derslerle çalışanlar. "
-                "- İleri seviye öğrenciler. "
-
-        "- GPT OSS 20B; "
-            "- Dengeli ve hızlıdır. "
-            "- Günlük kullanım için uygundur. "
-            "- Orta seviye sorularda başarılıdır. "
-            "- 20 Milyar Parametreye sahiptir. "
-            "- Dezavantaj: "
-                "- Çok karmaşık sorularda zorlanabilir. "
-            "- Kimler içindir: "
-                "- Günlük ders çalışan öğrenciler. "
-                "- Hız ve kalite dengesi isteyenler. "
-        
-        "- GPT OSS Safeguard 20B; "
-            "- Daha güvenli ve kontrollü sohbet deneyimi sunar. "
-            "- Küfürlü ve uygunsuz içerikleri azaltmaya yardımcı olur. "
-            "- Öğrenci dostu kullanım için geliştirilmiştir. "
-            "- Dezavantaj: "
-                "- Tüm uygunsuz mesajları tamamen engelleyemeyebilir. "
-            "- Kimler içindir: "
-                "- Güvenli sohbet isteyen öğrenciler. "
-                "- Kontrollü kullanım tercih eden kullanıcılar. "
-
-        "- Qwen 3 32B; "
-            "- Kodlama ve matematikte güçlüdür. "
-            "- Türkçe performansı oldukça iyidir. "
-            "- Teknik konularda başarılıdır. "
-            "- 32 Milyar Parametreye sahiptir. "
-            "- Dezavantaj: "
-                "- Bazen uzun cevaplar verebilir. "
-            "- Kimler içindir: "
-                "- Yazılım öğrenen öğrenciler. "
-                "- Matematik ve mühendislik öğrencileri. "
-                "- Teknik ders çalışanlar. "
-
-        "- Groq Compound; "
-            "- Çok hızlı cevap verir. "
-            "- Gerçek zamanlı kullanım için uygundur. "
-            "- Akıcı sohbet deneyimi sağlar. "
-            "- Birden fazla sistemi birlikte kullanabilir. "
-            "- Dezavantaj: "
-                "- Bazı cevaplarda tutarsızlık olabilir. "
-            "- Kimler içindir: "
-                "- Hızlı cevap isteyen öğrenciler. "
-                "- Canlı ders sırasında yardım alanlar. "
-                "- Beklemek istemeyen kullanıcılar. "
-            "- UYARI: "
-                "- Bu Model Sorun Çıkarabilir!!! "
-        
-        
-        
-        "OpenRouter Servisinde: "
-
-        "- DeepSeek R1; "
-            "- Çok güçlü akıl yürütme modelidir. "
-            "- Zor matematik, mantık ve analiz sorularında başarılıdır. "
-            "- Adım adım düşünme kabiliyeti yüksektir. "
-            "- Dezavantaj: "
-                "- Bazen yavaş cevap verebilir. "
-                "- Günlük sohbet için fazla detaylı olabilir. "
-            "- Kimler içindir: "
-                "- Matematik ve problem çözmek isteyenler. "
-                "- Analiz ve mantık soruları çözenler. "
-                "- Derin düşünme gerektiren işler yapanlar. "
-
-        "- DeepSeek V4 Flash; "
-            "- Çok hızlı ve verimli çalışan yeni nesil bir modeldir. "
-            "- Uzun metinleri (çok büyük bağlamları) işleyebilir. "
-            "- Kodlama ve yapay zeka ajan görevlerinde güçlüdür. "
-            "- Dezavantaj: "
-                "- Çok yeni olduğu için bazı durumlarda tutarsız olabilir. "
-                "- R1 kadar saf düşünme odaklı değildir. "
-            "- Kimler içindir: "
-                "- Hızlı ama akıllı cevap isteyenler. "
-                "- Kod yazan ve proje geliştirenler. "
-                "- Uzun dokümanlarla çalışanlar. "
-
-        "- Kimi K2 Thinking; "
-            "- Uzun metinleri çok iyi analiz edebilir. "
-            "- Mantık yürütme ve planlama konusunda başarılıdır. "
-            "- Sohbetlerde bağlamı iyi korur. "
-            "- Dezavantaj: "
-                "- Bazen gereğinden uzun cevaplar verebilir. "
-                "- Hızlı kullanımda biraz ağır kalabilir. "
-            "- Kimler içindir: "
-                "- Uzun proje ve araştırma yapanlar. "
-                "- Detaylı analiz isteyen kullanıcılar. "
-                "- Adım adım plan çıkaranlar. "
-
-        "- Qwen 3 Coder; "
-            "- Yazılım geliştirme için özel olarak güçlüdür. "
-            "- Kod yazma, düzeltme ve açıklamada başarılıdır. "
-            "- Birçok programlama dilini destekler. "
-            "- Dezavantaj: "
-                "- Genel sohbetlerde diğer modellere göre daha teknik kalabilir. "
-            "- Kimler içindir: "
-                "- Yazılım öğrenenler. "
-                "- Kod yazan geliştiriciler. "
-                "- Proje geliştiren kullanıcılar. "
-
-        "- Qwen 3.6 Flash; "
-            "- Çok hızlı ve düşük maliyetli bir modeldir. "
-            "- Günlük kullanım için idealdir. "
-            "- Basit sorulara hızlı cevap verir. "
-            "- Dezavantaj: "
-                "- Karmaşık sorularda yüzeysel kalabilir. "
-            "- Kimler içindir: "
-                "- Hızlı cevap isteyen kullanıcılar. "
-                "- Günlük sohbet yapanlar. "
-                "- Basit işler için model arayanlar. "
-
-        "- Claude Haiku 4.5; "
-            "- Çok hızlı ve dengeli bir modeldir. "
-            "- Doğal ve akıcı metin üretir. "
-            "- Kodlama ve yazı yazmada başarılıdır. "
-            "- Dezavantaj: "
-                "- Sonnet modellerine göre daha zayıftır. "
-                "- Çok karmaşık görevlerde sınırlı kalabilir. "
-            "- Kimler içindir: "
-                "- Hızlı ve kaliteli cevap isteyenler. "
-                "- Yazı yazma ve sohbet amaçlı kullanıcılar. "
-
-        "- Claude Sonnet 4.6; "
-            "- Çok güçlü ve profesyonel bir modeldir. "
-            "- Analiz, yazı yazma ve kodlamada üst seviye performans verir. "
-            "- Karmaşık görevleri iyi çözebilir. "
-            "- Dezavantaj: "
-                "- Daha pahalı ve daha yavaştır. "
-            "- Kimler içindir: "
-                "- Profesyonel kullanım isteyenler. "
-                "- En kaliteli cevapları arayanlar. "
-                "- İleri seviye analiz yapanlar. "
-
-        "- GPT 5 Mini; "
-            "- Dengeli, modern ve güçlü bir modeldir. "
-            "- Çoğu görevde yüksek kalite verir. "
-            "- Kodlama ve sohbet performansı iyidir. "
-            "- Dezavantaj: "
-                "- En büyük modeller kadar derin analiz yapamaz. "
-            "- Kimler içindir: "
-                "- Genel kullanım isteyenler. "
-                "- Öğrenciler ve günlük kullanıcılar. "
-                "- Hız + kalite dengesi isteyenler. "
-
-        "- GPT 4o Mini; "
-            "- Çok hızlı ve ekonomik bir modeldir. "
-            "- Günlük sohbet ve basit işler için uygundur. "
-            "- Dezavantaj: "
-                "- Karmaşık sorularda zayıf kalabilir. "
-            "- Kimler içindir: "
-                "- Hızlı cevap isteyen kullanıcılar. "
-                "- Basit kullanım için model arayanlar. "
-
-        "- Gemini 2.5 Flash; "
-            "- Çok hızlı çalışan Google modelidir. "
-            "- Günlük kullanım için idealdir. "
-            "- Akıcı ve stabil cevaplar verir. "
-            "- Dezavantaj: "
-                "- Derin analizlerde sınırlı kalabilir. "
-            "- Kimler içindir: "
-                "- Hızlı cevap isteyenler. "
-                "- Günlük sohbet kullanıcıları. "
-
-        "- Gemini 2.5 Pro; "
-            "- Çok güçlü analiz ve reasoning modelidir. "
-            "- Karmaşık problemleri çözmede başarılıdır. "
-            "- Kodlama ve araştırmada güçlüdür. "
-            "- Dezavantaj: "
-                "- Flash modellere göre daha yavaştır. "
-            "- Kimler içindir: "
-                "- Araştırma yapanlar. "
-                "- Zor problemleri çözenler. "
-                "- Profesyonel kullanıcılar. "
-
-        "- Gemma 4 31B; "
-            "- Açık kaynaklı güçlü bir modeldir. "
-            "- Dengeli ve genel kullanım için uygundur. "
-            "- Türkçe dahil birçok dilde iyi performans verir. "
-            "- Dezavantaj: "
-                "- En üst seviye modeller kadar güçlü değildir. "
-            "- Kimler içindir: "
-                "- Açık kaynak model tercih edenler. "
-                "- Dengeli kullanım isteyenler. "
-
-        "- Mistral Large; "
-            "- Çok güçlü genel amaçlı bir modeldir. "
-            "- Yazı yazma, analiz ve eğitim içeriklerinde başarılıdır. "
-            "- Uzun ve detaylı açıklamalar üretebilir. "
-            "- Dezavantaj: "
-                "- Daha yavaş ve maliyetli olabilir. "
-            "- Kimler içindir: "
-                "- Öğretici ve detaylı cevap isteyenler. "
-                "- Analiz ve araştırma yapanlar. "
-
-        "- Mistral Small 4; "
-            "- Hızlı ve çok yönlü bir modeldir. "
-            "- Kodlama, analiz ve agent görevlerinde dengelidir. "
-            "- Dezavantaj: "
-                "- Çok karmaşık görevlerde sınırlı kalabilir. "
-            "- Kimler içindir: "
-                "- Günlük kullanım isteyenler. "
-                "- Hızlı ama akıllı cevap isteyenler. "
-
-        "- Gemini 1.5 Flash; "
-            "- Çok hızlı ve ekonomik bir Google modelidir. "
-            "- Özetleme ve basit görevlerde başarılıdır. "
-            "- Dezavantaj: "
-                "- Derin analizlerde sınırlı kalabilir. "
-            "- Kimler içindir: "
-                "- Hızlı cevap isteyen kullanıcılar. "
-                "- Ders ve günlük kullanım. "
-
-        "- GPT 4.1 Mini; "
-            "- Stabil ve dengeli bir OpenAI modelidir. "
-            "- Eğitim ve açıklama görevlerinde başarılıdır. "
-            "- Dezavantaj: "
-                "- Büyük modeller kadar güçlü değildir. "
-            "- Kimler içindir: "
-                "- Güvenilir günlük kullanım isteyenler. "
-
-        "- Qwen 3.7 Max; "
-            "- Uzun görevleri planlayabilen güçlü bir modeldir. "
-            "- Agent ve proje yönetiminde başarılıdır. "
-            "- Dezavantaj: "
-                "- Basit sorular için ağır olabilir. "
-            "- Kimler içindir: "
-                "- Proje yapan ve uzun işlerle uğraşanlar. "
-            
         "Kurallar: "
         "- Öğrencilerin seviyesine göre anlatımS yap. "
         "- Karmaşık konuları seviyesine göre güzel anlat. "
@@ -905,6 +459,27 @@ std::string call_ai(
         "- Eğer kullanıcı “örnek ver” derse sadece örnek odaklı cevap ver"
         "- Türkçe cevap ver."
 
+        "   YouTube Transkriptinden Ders Notu Çıkarma\n"
+        "Kullanıcı bir YouTube linki gönderdiğinde transkript otomatik alınır "
+        "ve sana 'YouTube videosunun transkriptidir. Bu transkripti ders notlarına çevir:' "
+        "şeklinde iletilir. Aşağıdaki kurallara uy:\n"
+        "- Sadece verilen transkriptteki bilgileri kullan.\n"
+        "- Timestamps, tekrarlar ve gereksiz konuşmaları yok say.\n"
+        "- Uydurma bilgi ekleme.\n"
+        "- Bilgi net değilse 'videoda net belirtilmemiş' yaz.\n"
+        "- Basit, anlaşılır Türkçe kullan.\n"
+        "- Öğrenci odaklı öğretici anlatım yap.\n"
+        "ÇIKTI FORMATI:\n"
+        "1. 📌 Kısa Özet (3-5 cümle)\n"
+        "2. 📌 Önemli Noktalar (madde madde)\n"
+        "3. 📌 Ders Notları (detaylı açıklama)\n"
+        "EK KURAL:\n"
+        "- Eğer kullanıcı sınav soruları isterse:\n"
+        "  Soruları ayrı bir başlık açmadan, ders notlarının içine doğal şekilde serpiştir.\n"
+        "  Örneğin: açıklamanın sonunda veya önemli bir konudan sonra soru şeklinde ekle.\n"
+        "  Format: 'Soru: ... ? Cevap: ...' hatasız\n"
+        "Eğer sınav soruaları istemezse sınav sorusu sorma sadece kullanıcı isterse!!!.\n"
+
     "Kullanıcının Uygulama Verileri (notlar, görevler, ders programı):\n"
     "Bu veriler kullanıcının PardusEdu uygulamasına girdiği bilgilerdir. "
     "Kullanıcı 'notlarımı oku', 'ders notlarım', 'Tarih notlarım', "
@@ -914,21 +489,58 @@ std::string call_ai(
     "sadece o derse ait notları kullan.\n\n"
     + app_context;
 
-    // Kullanıcının ne sormak istediğini anlayıp konuyu çıkarıyoruz
-    std::string topic =
-        extract_topic(user_text);
+    // Kullanıcı YouTube linki attıysa yt-dlp ile transkript indir
+    std::string transcript_context;
 
-    // Eğer kullanıcı bir şey araştırmamızı istiyorsa Wikipedia'dan bilgi getiriyoruz
-    std::string wiki_context;
-
-    if (should_use_wikipedia(user_text))
+    if (has_youtube_url(user_text))
     {
-        wiki_context =
-            build_wiki_context(topic);
+        std::string youtube_url =
+            extract_youtube_url(user_text);
+
+        std::string transcript =
+            fetch_youtube_transcript(youtube_url);
+
+        if (transcript.empty())
+        {
+            transcript_context =
+                "⚠️ Bu video için transkript "
+                "bulunamadı. Video Türkçe veya "
+                "İngilizce altyazı içermiyor "
+                "olabilir.\n\n";
+        }
+        else if (transcript == "yt-dlp_bulunamadi")
+        {
+            transcript_context =
+                "⚠️ yt-dlp kurulu değil. "
+                "Transkript almak için: "
+                "sudo apt install yt-dlp\n\n";
+        }
+        else
+        {
+            // Token limitini aşmamak için transkripti kısalt
+            const size_t MAX_TRANSCRIPT_CHARS = 18000;
+            std::string truncated = transcript;
+
+            if (truncated.size() > MAX_TRANSCRIPT_CHARS)
+            {
+                // İlk yarı ve son yarıyı al ki giriş+sonuç kaybolmasın
+                size_t half = MAX_TRANSCRIPT_CHARS / 2;
+                truncated = truncated.substr(0, half)
+                    + "\n\n[...ortadaki kısım atlandı, video çok uzun...]\n\n"
+                    + truncated.substr(truncated.size() - half);
+            }
+
+            transcript_context =
+                "Aşağıdaki metin, kullanıcının "
+                "gönderdiği YouTube videosunun "
+                "transkriptidir. Bu transkripti "
+                "ders notlarına çevir:\n\n" +
+                truncated + "\n\n";
+        }
     }
 
     std::string final_user_text =
-        wiki_context + user_text;
+        transcript_context + user_text;
 
     // Kullanıcının mesajını konuşma geçmişine ekliyoruz ki AI bağlamı anlasın
     conversation_history.push_back({
@@ -936,7 +548,7 @@ std::string call_ai(
         final_user_text
     });
 
-    // API'ye göndereceğimiz mesajları sırayla diziyoruz (sistem + geçmiş)
+    // ─── Mesajları hazırla ───────────────────────────────────────────
     json messages = json::array();
 
     messages.push_back({
@@ -944,97 +556,166 @@ std::string call_ai(
         {"content", system_prompt}
     });
 
-    int start =
-        std::max(
-            0,
-            (int)conversation_history.size() - 6);
+    int start = std::max(0, (int)conversation_history.size() - 3);
 
-    for (int i = start;
-         i < conversation_history.size();
-         i++)
+    for (int i = start; i < (int)conversation_history.size(); i++)
     {
         messages.push_back({
-            {
-                "role",
-                conversation_history[i].role
-            },
-
-            {
-                "content",
-                conversation_history[i].content
-            }
+            {"role", conversation_history[i].role},
+            {"content", conversation_history[i].content}
         });
     }
 
-    // API'ye göndereceğimiz isteğin gövdesini hazırlıyoruz (model, sıcaklık, mesajlar)
-    json body = {
-        {"model", global_model},
-        {"temperature", 0.4},
-        {"top_p", 0.9},
-        {"max_tokens", 2048},
-        {"messages", messages}
-    };
+    // ─── Token tahmini ve akıllı kırpma ───────────────────────────────
+    int max_tokens = 2048;
+    const int MIN_TOKENS = 128;
+    const int MODEL_LIMIT = get_model_limit();
+    const int SAFETY_MARGIN = 1024; // model limitine göre emniyet payı
 
-    std::string json_body = body.dump();
+    // Toplam prompt token'larını tahmin et
+    int estimated_prompt = 0;
+    for (const auto& msg : messages)
+    {
+        if (msg.contains("content") && msg["content"].is_string())
+            estimated_prompt += estimate_tokens(msg["content"].get<std::string>());
+        estimated_prompt += 4; // her mesajın format overhead'i
+    }
 
-    // API isteğinin başlık bilgilerini ayarlıyoruz: yetkilendirme anahtarı ve içerik türü
+    // Eğer prompt + max_tokens limiti aşıyorsa, önce history'yi kırp
+    int total_target = estimated_prompt + max_tokens;
+    int limit = MODEL_LIMIT - SAFETY_MARGIN;
+
+    while (total_target > limit && (int)messages.size() > 1)
+    {
+        // System mesajını (index 0) koru, en eski sohbet mesajını sil
+        auto removed = messages[1]["content"];
+        estimated_prompt -= estimate_tokens(removed.get<std::string>());
+        estimated_prompt -= 4;
+        messages.erase(messages.begin() + 1);
+        total_target = estimated_prompt + max_tokens;
+    }
+
+    // Hala aşıyorsa max_tokens'ı kırp
+    if (total_target > limit)
+        max_tokens = std::max(MIN_TOKENS, max_tokens - (total_target - limit));
+
+    // ─── cURL hazırlıkları ───────────────────────────────────────────
     struct curl_slist* headers = nullptr;
 
-    headers = curl_slist_append(
-        headers,
-        ("Authorization: Bearer " + api_key).c_str());
+    bool is_gemini = (global_provider == AIProvider::GEMINI);
+
+    if (!is_gemini) {
+        headers = curl_slist_append(
+            headers,
+            ("Authorization: Bearer " + api_key).c_str());
+    }
 
     headers = curl_slist_append(
         headers,
         "Content-Type: application/json");
 
-    // Sağlayıcıya göre doğru API adresini belirliyoruz
     std::string api_url;
     if (global_provider == AIProvider::GROQ) {
         api_url = "https://api.groq.com/openai/v1/chat/completions";
+    } else if (is_gemini) {
+        api_url = "https://generativelanguage.googleapis.com/v1beta/models/" + global_model + ":generateContent?key=" + api_key;
     } else {
         api_url = "https://openrouter.ai/api/v1/chat/completions";
     }
 
     curl_easy_setopt(curl, CURLOPT_URL, api_url.c_str());
 
-    // OpenRouter ekstra başlıklar ister
     if (global_provider == AIProvider::OPENROUTER) {
         headers = curl_slist_append(headers, "HTTP-Referer: https://pardusedu.app");
         headers = curl_slist_append(headers, "X-Title: PardusEdu");
     }
 
     curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
-    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_body.c_str());
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
-    // Güvenli bağlantı için SSL sertifikası doğrulamasını açıyoruz
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
-
-    // İstek çok uzun sürerse iptal etmesi için zaman aşımı süreleri
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 60L);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 
-    // API'ye isteği gönderip cevabı bekliyoruz
-    CURLcode res = curl_easy_perform(curl);
-
-    if (res != CURLE_OK)
-    {
-        std::string error = curl_easy_strerror(res);
-        curl_slist_free_all(headers);
-        curl_easy_cleanup(curl);
-        return "API hatası: " + error;
-    }
-
-    // HTTP cevap kodunu kontrol ediyoruz, 200 değilse bir sorun var demektir
+    // ─── İsteği gönder, 413'te akıllıca yeniden dene ─────────────────
     long http_code = 0;
 
-    curl_easy_getinfo(
-        curl,
-        CURLINFO_RESPONSE_CODE,
-        &http_code);
+    for (int attempt = 0; attempt < 5; attempt++)
+    {
+        json body;
+        if (is_gemini)
+        {
+            json gemini_contents = json::array();
+
+            for (size_t mi = 1; mi < messages.size(); mi++)
+            {
+                std::string role = messages[mi]["role"];
+                if (role == "assistant") role = "model";
+                std::string content = messages[mi]["content"];
+                gemini_contents.push_back({
+                    {"role", role},
+                    {"parts", json::array({json{{"text", content}}})}
+                });
+            }
+
+            std::string system_text = messages[0]["content"];
+            body = {
+                {"system_instruction", {{"parts", json::array({json{{"text", system_text}}})}}},
+                {"contents", gemini_contents},
+                {"generationConfig", {
+                    {"temperature", 0.4},
+                    {"topP", 0.9},
+                    {"maxOutputTokens", max_tokens}
+                }}
+            };
+        }
+        else
+        {
+            body = {
+                {"model", global_model},
+                {"temperature", 0.4},
+                {"top_p", 0.9},
+                {"max_tokens", max_tokens},
+                {"messages", messages}
+            };
+        }
+
+        std::string json_body = body.dump(-1, ' ', false, json::error_handler_t::ignore);
+        curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_body.c_str());
+        response.clear();
+
+        CURLcode res = curl_easy_perform(curl);
+
+        if (res != CURLE_OK)
+        {
+            std::string error = curl_easy_strerror(res);
+            curl_slist_free_all(headers);
+            curl_easy_cleanup(curl);
+            return "API hatası: " + error;
+        }
+
+        curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+        if (http_code == 413)
+        {
+            // Önce history'den en eski mesajı at
+            if ((int)messages.size() > 1)
+            {
+                messages.erase(messages.begin() + 1);
+                continue;
+            }
+            // History bitmişse max_tokens'ı yarıya indir
+            if (max_tokens > MIN_TOKENS)
+            {
+                max_tokens = std::max(MIN_TOKENS, max_tokens / 2);
+                continue;
+            }
+        }
+
+        break;
+    }
 
     curl_slist_free_all(headers);
     curl_easy_cleanup(curl);

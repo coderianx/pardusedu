@@ -53,6 +53,7 @@ private:
 
     bool dark_mode = true;
     Gtk::Button btn_theme;
+    Gtk::Image* save_icon_ptr = nullptr;
 
     std::vector<Task> tasks;
     std::vector<CourseNote> course_notes;
@@ -61,10 +62,14 @@ private:
     int pomodoro_completed = 0;
     int pomodoro_minutes = 0;
     int study_streak = 0;
+    std::string last_streak_date;
 
     Gtk::Label dash_welcome{"", Gtk::Align::CENTER};
     Gtk::Picture dash_logo;
-    Gtk::Picture header_logo;
+    Gtk::Image header_logo;
+    Gtk::Image* dash_icon_streak = nullptr;
+    Gtk::Image* dash_icon_pomo = nullptr;
+    Gtk::Image* dash_icon_timer = nullptr;
 
     Gtk::Label pomo_time{"25:00", Gtk::Align::CENTER};
     Gtk::Button btn_pomo_start{"Başlat"};
@@ -94,6 +99,9 @@ private:
 
     Gtk::ListBox course_list;
     Gtk::Button btn_add_course{"Ders Ekle"};
+    Gtk::Button btn_add_link_note{"+"};
+    Gtk::Button btn_share_note;
+    Gtk::Image* share_icon_ptr = nullptr;
     Gtk::Box note_editor_box{Gtk::Orientation::VERTICAL, 0};
     Gtk::Label note_title{"", Gtk::Align::START};
     Gtk::TextView note_view;
@@ -134,6 +142,7 @@ private:
     std::string get_data_dir();
     void setup_data();
     void save_data();
+    void update_streak();
 
 
     void setup_ui();
@@ -163,6 +172,8 @@ private:
     void refresh_course_list();
     void on_course_select(Gtk::ListBoxRow* row);
     void on_add_course();
+    void on_add_link_note();
+    void on_share_note();
     void on_save_note();
     void on_delete_course();
 
@@ -188,11 +199,14 @@ private:
     Gtk::Entry ai_input;
     Gtk::Button btn_ai_send{};
     Gtk::Button btn_ai_key{};
+    Gtk::Label* ai_model_badge = nullptr;
     AIProvider ai_provider = AIProvider::GROQ;
     std::string ai_api_key_groq;
     std::string ai_api_key_openrouter;
+    std::string ai_api_key_gemini;
     std::string ai_model_groq = "llama-3.3-70b-versatile";
     std::string ai_model_openrouter = "openai/gpt-4o-mini";
+    std::string ai_model_gemini = "gemini-3.5-flash";
     void show_ai_key_dialog();
 
     Glib::Dispatcher ai_dispatcher;
