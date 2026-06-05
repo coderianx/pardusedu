@@ -3,11 +3,20 @@
   <gresource prefix="/org/ogrenci/merkezi">
     <file>assets/style.css</file>
     <file>assets/pardus.svg</file>
+    <file>assets/pardus.png</file>
     <file>assets/pardus_symbol.svg</file>
     <file>assets/send.svg</file>
     <file>assets/sun.svg</file>
     <file>assets/moon.svg</file>
     <file>assets/save.svg</file>
+    <file>assets/save_dark.svg</file>
+    <file>assets/share.svg</file>
+    <file>assets/share_dark.svg</file>
+    <file>assets/settings.svg</file>
+    <file>assets/settings_dark.svg</file>
+    <file>assets/streak.svg</file>
+    <file>assets/pomo.svg</file>
+    <file>assets/timer.svg</file>
     <file>docs/python/python.md</file>
   </gresource>
 </gresources>
