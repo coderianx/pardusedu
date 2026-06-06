@@ -27,6 +27,8 @@ list {
 list row {
     border-radius: 8px;
     margin: 2px 6px;
+    border-left: 3px solid transparent;
+    transition: all 0.2s ease;
 }
 
 list row:hover {
@@ -35,6 +37,7 @@ list row:hover {
 
 list row:selected {
     background: __accent;
+    border-left-color: alpha(white, 0.3);
 }
 
 list row:selected label {
@@ -47,6 +50,13 @@ list row label {
     padding: 6px 0;
 }
 
+.sidebar-glow {
+    box-shadow:
+        inset 3px 0 0 alpha(white, 0.4),
+        inset 0 0 20px alpha(white, 0.08);
+    transition: box-shadow 0.3s ease;
+}
+
 .page-title {
     font-size: 20px;
     font-weight: bold;
@@ -57,6 +67,18 @@ list row label {
     background: __card_bg;
     border: 1px solid __border;
     border-radius: 10px;
+    box-shadow:
+        0 1px 2px alpha(black, 0.05),
+        0 2px 4px alpha(black, 0.04);
+    transition: box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+.card:hover {
+    box-shadow:
+        0 2px 4px alpha(black, 0.06),
+        0 4px 8px alpha(black, 0.04),
+        0 8px 16px alpha(black, 0.03);
+    border-color: alpha(__accent, 0.25);
 }
 
 .card label {
@@ -89,7 +111,7 @@ progressbar > trough {
 }
 
 progressbar > trough > progress {
-    background: __accent;
+    background: linear-gradient(135deg, __accent, __accent_light);
     border-radius: 6px;
 }
 
@@ -99,10 +121,22 @@ progressbar > trough > progress {
     border-radius: 8px;
     padding: 8px 20px;
     min-width: 70px;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 6px alpha(__accent, 0.25);
+    background-image: radial-gradient(circle at 50% 50%, alpha(white, 0.15) 0%, transparent 100%);
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .pomo-btn:hover {
     background: __accent_dark;
+    box-shadow: 0 3px 10px alpha(__accent, 0.35);
+}
+
+.pomo-btn:active {
+    background: __accent_dark;
+    box-shadow: inset 0 2px 8px alpha(black, 0.25), 0 1px 3px alpha(__accent, 0.15);
+    background-image: radial-gradient(circle at 50% 50%, alpha(white, 0.25) 0%, transparent 80%);
 }
 
 .focus-btn-on {
@@ -112,6 +146,20 @@ progressbar > trough > progress {
     padding: 10px 28px;
     font-size: 15px;
     font-weight: bold;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 8px alpha(__danger, 0.3);
+    background-image: radial-gradient(circle at 50% 50%, alpha(white, 0.15) 0%, transparent 100%);
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.focus-btn-on:hover {
+    filter: brightness(1.1);
+}
+
+.focus-btn-on:active {
+    box-shadow: inset 0 2px 8px alpha(black, 0.3), 0 1px 3px alpha(__danger, 0.15);
+    background-image: radial-gradient(circle at 50% 50%, alpha(white, 0.2) 0%, transparent 80%);
 }
 
 .focus-btn-off {
@@ -121,6 +169,16 @@ progressbar > trough > progress {
     padding: 10px 28px;
     font-size: 15px;
     font-weight: bold;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 8px alpha(__success, 0.3);
+    background-image: radial-gradient(circle at 50% 50%, alpha(white, 0.15) 0%, transparent 100%);
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.focus-btn-off:active {
+    box-shadow: inset 0 2px 8px alpha(black, 0.3), 0 1px 3px alpha(__success, 0.15);
+    background-image: radial-gradient(circle at 50% 50%, alpha(white, 0.2) 0%, transparent 80%);
 }
 
 .action-btn {
@@ -129,10 +187,21 @@ progressbar > trough > progress {
     border-radius: 8px;
     padding: 8px 16px;
     font-weight: bold;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 4px alpha(__accent_light, 0.2);
+    background-image: radial-gradient(circle at 50% 50%, alpha(white, 0.15) 0%, transparent 100%);
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .action-btn:hover {
     background: __accent;
+    box-shadow: 0 2px 8px alpha(__accent, 0.3);
+}
+
+.action-btn:active {
+    box-shadow: inset 0 2px 8px alpha(black, 0.2), 0 0 2px alpha(__accent, 0.1);
+    background-image: radial-gradient(circle at 50% 50%, alpha(white, 0.25) 0%, transparent 80%);
 }
 
 .delete-btn {
@@ -141,27 +210,45 @@ progressbar > trough > progress {
     border: 1px solid __danger;
     border-radius: 6px;
     padding: 4px 10px;
+    transition: all 0.15s ease;
+    background-image: radial-gradient(circle at 50% 50%, alpha(__danger, 0.08) 0%, transparent 100%);
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .delete-btn:hover {
     background: __danger;
     color: #ffffff;
+    box-shadow: 0 2px 6px alpha(__danger, 0.25);
+}
+
+.delete-btn:active {
+    box-shadow: inset 0 2px 6px alpha(black, 0.25);
+    background-image: radial-gradient(circle at 50% 50%, alpha(white, 0.2) 0%, transparent 80%);
+    background-color: alpha(__danger, 0.9);
 }
 
 .task-row {
     background: __card_bg;
     border-radius: 8px;
     padding: 10px;
+    border: 1px solid __border;
+    transition: all 0.15s ease;
 }
 
 .task-row:hover {
     background: __hover_bg;
+    border-color: alpha(__accent, 0.2);
+    box-shadow:
+        0 1px 2px alpha(black, 0.05),
+        0 2px 6px alpha(black, 0.06);
 }
 
 .grade-row {
     background: __card_bg;
     border-radius: 8px;
     padding: 10px;
+    transition: all 0.15s ease;
 }
 
 .grade-row:hover {
@@ -174,10 +261,12 @@ entry {
     border: 1px solid __border;
     border-radius: 8px;
     padding: 8px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 entry:focus {
     border-color: __accent;
+    box-shadow: 0 0 0 3px alpha(__accent, 0.12);
 }
 
 comboboxtext {
@@ -203,10 +292,15 @@ spinbutton {
     border-radius: 8px;
     padding: 10px;
     border-left: 3px solid __accent;
+    transition: all 0.15s ease;
 }
 
 .cmd-card:hover {
     background: __hover_bg;
+    border-left-width: 5px;
+    box-shadow:
+        0 1px 2px alpha(black, 0.05),
+        0 2px 6px alpha(black, 0.04);
 }
 
 .cmd-card-expanded {
@@ -239,6 +333,22 @@ scrolledwindow > viewport {
     background: transparent;
 }
 
+scrolledwindow scrollbar {
+    background: transparent;
+    border: none;
+}
+
+scrolledwindow scrollbar slider {
+    background: alpha(__muted, 0.25);
+    border-radius: 4px;
+    min-width: 5px;
+    min-height: 5px;
+}
+
+scrolledwindow scrollbar slider:hover {
+    background: alpha(__muted, 0.45);
+}
+
 label {
     color: __text_color;
 }
@@ -249,16 +359,38 @@ button {
     border: 1px solid __border;
     border-radius: 8px;
     padding: 6px 12px;
+    transition: all 0.15s ease;
+    background-image: radial-gradient(circle at 50% 50%, alpha(__accent, 0.06) 0%, transparent 100%);
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 button:hover {
     background: __btn_hover;
+    box-shadow: 0 1px 4px alpha(black, 0.06);
+}
+
+button:active {
+    box-shadow: inset 0 2px 8px alpha(black, 0.18);
+    background-image: radial-gradient(circle at 50% 50%, alpha(__accent, 0.15) 0%, transparent 80%);
 }
 
 .theme-btn, .save-btn {
     padding: 6px 12px;
     min-width: 34px;
     min-height: 34px;
+    border-radius: 10px;
+}
+
+.theme-btn:hover, .save-btn:hover {
+    background: __hover_bg;
+    border-color: __accent;
+}
+
+.theme-btn:active, .save-btn:active {
+    background: alpha(__accent, 0.1);
+    border-color: __accent;
+    box-shadow: inset 0 2px 6px alpha(black, 0.15);
 }
 
 frame {
@@ -283,6 +415,7 @@ separator {
 .course-row {
     background: __card_bg;
     border-radius: 8px;
+    transition: all 0.15s ease;
 }
 
 .course-row:hover {
@@ -293,6 +426,7 @@ separator {
     background: __card_bg;
     border-radius: 10px;
     padding: 12px;
+    box-shadow: 0 1px 4px alpha(black, 0.06);
 }
 
 .dash-welcome {
@@ -315,6 +449,19 @@ separator {
     background: __card_bg;
     border: 1px solid __border;
     border-radius: 12px;
+    transition: all 0.2s ease;
+    box-shadow:
+        0 1px 2px alpha(black, 0.05),
+        0 2px 4px alpha(black, 0.04);
+}
+
+.stat-card:hover {
+    box-shadow:
+        0 2px 4px alpha(black, 0.06),
+        0 4px 10px alpha(black, 0.05),
+        0 8px 20px alpha(black, 0.03);
+    border-color: alpha(__accent, 0.2);
+    transform: translateY(-1px);
 }
 
 .stat-icon {
@@ -353,10 +500,12 @@ separator {
     color: __accent;
     border: 2px solid __border;
     min-width: 60px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .pomo-spin:focus {
     border-color: __accent;
+    box-shadow: 0 0 0 3px alpha(__accent, 0.12);
 }
 
 .pomo-spin:disabled {
@@ -370,10 +519,11 @@ separator {
 }
 
 .schedule-header {
-    background: __accent;
-    color: #ffffff;
+    background: linear-gradient(135deg, __accent, __accent_light);
+    color: __on_accent;
     border-radius: 6px;
     padding: 6px;
+    font-weight: bold;
 }
 
 .schedule-time-btn {
@@ -384,6 +534,7 @@ separator {
     padding: 6px 8px;
     font-size: 13px;
     font-weight: bold;
+    transition: all 0.15s ease;
 }
 
 .schedule-time-btn:hover {
@@ -394,17 +545,20 @@ separator {
 }
 
 .schedule-cell {
-    background: __accent;
+    background: linear-gradient(135deg, __accent, __accent_dark);
     color: #ffffff;
     border-radius: 6px;
     padding: 8px 6px;
     font-weight: bold;
     font-size: 13px;
     min-height: 40px;
+    transition: all 0.15s ease;
+    box-shadow: 0 1px 3px alpha(__accent, 0.15);
 }
 
 .schedule-cell:hover {
-    background: __accent_dark;
+    filter: brightness(1.1);
+    box-shadow: 0 2px 8px alpha(__accent, 0.3);
 }
 
 .schedule-cell-empty {
@@ -415,6 +569,7 @@ separator {
     padding: 8px 6px;
     font-size: 16px;
     min-height: 40px;
+    transition: all 0.15s ease;
 }
 
 .schedule-cell-empty:hover {
@@ -422,6 +577,7 @@ separator {
     color: __accent;
     border-color: __accent;
     border-style: solid;
+    box-shadow: 0 2px 6px alpha(__accent, 0.1);
 }
 
 /* ================= AI CHAT MODERN (ChatGPT/DeepSeek tarzı) ================= */
@@ -443,6 +599,7 @@ separator {
     padding: 3px 12px;
     font-size: 11px;
     font-weight: bold;
+    transition: all 0.15s ease;
 }
 
 .ai-key-btn {
@@ -454,6 +611,7 @@ separator {
     min-width: 38px;
     min-height: 38px;
     border: 1px solid transparent;
+    transition: all 0.15s ease;
 }
 
 .ai-key-btn:hover {
@@ -462,7 +620,7 @@ separator {
     color: __text_color;
 }
 
-/* Kullanıcı balonu - sağda, asimetrik (ChatGPT tarzı) */
+/* Kullanıcı balonu - sağda, asimetrik */
 .user-msg {
     background: __accent;
     color: #ffffff;
@@ -470,12 +628,17 @@ separator {
     padding: 12px 16px;
     margin: 6px 0;
     margin-left: 80px;
-    border: none;
-    box-shadow: 0 1px 3px alpha(black, 0.15);
+    box-shadow:
+        0 1px 2px alpha(__accent, 0.15),
+        0 2px 6px alpha(__accent, 0.20);
+    transition: box-shadow 0.15s ease, background 0.15s ease;
 }
 
-.user-msg label {
-    color: #ffffff;
+.user-msg:hover {
+    box-shadow:
+        0 2px 4px alpha(__accent, 0.20),
+        0 4px 12px alpha(__accent, 0.25);
+    background: __accent_dark;
 }
 
 /* AI balonu - solda, asimetrik */
@@ -487,11 +650,17 @@ separator {
     margin: 6px 0;
     margin-right: 80px;
     border: 1px solid __border;
-    box-shadow: 0 1px 3px alpha(black, 0.06);
+    box-shadow:
+        0 1px 2px alpha(black, 0.05),
+        0 2px 4px alpha(black, 0.03);
+    transition: all 0.15s ease;
 }
 
-.ai-msg label {
-    color: __text_color;
+.ai-msg:hover {
+    box-shadow:
+        0 1px 3px alpha(black, 0.06),
+        0 3px 8px alpha(black, 0.05);
+    border-color: alpha(__accent, 0.15);
 }
 
 /* Gönder butonu - minimalist ikon */
@@ -503,10 +672,21 @@ separator {
     min-width: 44px;
     min-height: 44px;
     border: none;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 6px alpha(__accent, 0.25);
+    background-image: radial-gradient(circle at 50% 50%, alpha(white, 0.15) 0%, transparent 100%);
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .ai-send-btn:hover {
     background: __accent_dark;
+    box-shadow: 0 3px 10px alpha(__accent, 0.35);
+}
+
+.ai-send-btn:active {
+    box-shadow: inset 0 2px 8px alpha(black, 0.25), 0 1px 3px alpha(__accent, 0.1);
+    background-image: radial-gradient(circle at 50% 50%, alpha(white, 0.25) 0%, transparent 80%);
 }
 
 .ai-send-btn image {
@@ -520,11 +700,12 @@ separator {
     border-radius: 16px;
     padding: 6px 6px 6px 16px;
     margin-top: 10px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.ai-input-container.focused {
+.ai-input-container:focus-within {
     border-color: __accent;
-    padding: 6px;
+    box-shadow: 0 0 0 3px alpha(__accent, 0.1);
 }
 
 .ai-input-container entry {
@@ -555,23 +736,18 @@ menu,
 popover,
 modelmenu {
     border-radius: 12px;
-
     border: 1px solid alpha(currentColor, 0.10);
-
     padding: 8px;
-
-    box-shadow:
-        0 6px 18px alpha(black, 0.12);
+    box-shadow: 0 8px 24px alpha(black, 0.15);
 }
 
 modelbutton,
 menuitem {
     border-radius: 8px;
-
     padding: 10px 14px;
     margin: 2px 0;
-
     background: transparent;
+    transition: background 0.1s ease;
 }
 
 modelbutton:hover,
@@ -589,3 +765,48 @@ separator {
     min-height: 1px;
     margin: 6px 4px;
 }
+
+.note-stats {
+    color: __muted;
+    font-size: 11px;
+    letter-spacing: 0.3px;
+}
+
+/* DuckDuckGo toggle butonu */
+.ai-ddg-btn {
+    background: transparent;
+    border: 2px solid __border;
+    border-radius: 12px;
+    padding: 6px;
+    min-width: 44px;
+    min-height: 44px;
+    transition: all 0.2s ease;
+}
+
+.ai-ddg-btn:hover {
+    border-color: alpha(__accent, 0.4);
+    background: alpha(__accent, 0.05);
+}
+
+.ai-ddg-btn:checked {
+    border-color: __accent;
+    background: alpha(__accent, 0.1);
+    box-shadow:
+        0 0 6px 1px alpha(__accent, 0.35),
+        0 0 14px 3px alpha(__accent, 0.18),
+        inset 0 0 8px 1px alpha(__accent, 0.08);
+}
+
+.ai-ddg-btn:checked:hover {
+    box-shadow:
+        0 0 8px 2px alpha(__accent, 0.45),
+        0 0 18px 5px alpha(__accent, 0.25),
+        inset 0 0 10px 2px alpha(__accent, 0.1);
+}
+
+.badge-earned {
+    color: __success;
+    font-weight: bold;
+    font-size: 13px;
+}
+

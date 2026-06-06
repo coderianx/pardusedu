@@ -73,6 +73,8 @@ void MainWindow::setup_ui() {
     root_box.append(*header);
     root_box.append(paned);
 
+    stack.set_transition_type(Gtk::StackTransitionType::CROSSFADE);
+    stack.set_transition_duration(200);
     setup_sidebar();
     setup_pages();
     select_first_row();
@@ -148,6 +150,7 @@ void MainWindow::apply_theme() {
             {"__accent", "#0076a8"},
             {"__accent_dark", "#005f8a"},
             {"__accent_light", "#00a8e8"},
+            {"__on_accent", "#ffffff"},
             {"__danger", "#e74c3c"},
             {"__success", "#2ecc71"},
             {"__btn_bg", "#333333"},
@@ -166,6 +169,7 @@ void MainWindow::apply_theme() {
             {"__accent", "#0076a8"},
             {"__accent_dark", "#005f8a"},
             {"__accent_light", "#00a8e8"},
+            {"__on_accent", "#000000"},
             {"__danger", "#e74c3c"},
             {"__success", "#2ecc71"},
             {"__btn_bg", "#dddddd"},
@@ -206,6 +210,7 @@ void MainWindow::setup_sidebar() {
     sidebar_box.append(sidebar);
 
     add_item("Panel", "dashboard");
+    add_item("Rozetlerim", "badges");
     add_item("Pomodoro", "pomodoro");
     add_item("Görevler", "planner");
     add_item("Notlarım", "notes");
@@ -214,6 +219,7 @@ void MainWindow::setup_sidebar() {
     add_item("Linux", "linux");
     add_item("Yapay Zeka", "ai");;
     add_item("Python Öğren", "python");
+
     sidebar.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_select));
 
     paned.set_start_child(sidebar_box);
@@ -241,6 +247,7 @@ void MainWindow::add_item(const std::string& name, const std::string& id) {
 
 void MainWindow::setup_pages() {
     setup_dashboard();
+    setup_badges();
     setup_pomodoro();
     setup_planner();
     setup_notes();
@@ -350,4 +357,10 @@ void MainWindow::on_select(Gtk::ListBoxRow* row) {
     auto name = row->get_name();
     auto* child = stack.get_child_by_name(name);
     if (child) stack.set_visible_child(*child);
+
+    row->add_css_class("sidebar-glow");
+    Glib::signal_timeout().connect([row]() {
+        row->remove_css_class("sidebar-glow");
+        return false;
+    }, 350);
 }

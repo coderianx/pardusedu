@@ -107,6 +107,7 @@ private:
     Gtk::TextView note_view;
     Gtk::Button btn_save_note{"Kaydet"};
     Gtk::Button btn_delete_course{"Dersi Sil"};
+    Gtk::Label* note_stats_label = nullptr;
     int selected_note_index = -1;
 
     Gtk::Label focus_status{"Hazır", Gtk::Align::CENTER};
@@ -198,6 +199,7 @@ private:
     Gtk::ScrolledWindow ai_scroll;
     Gtk::Entry ai_input;
     Gtk::Button btn_ai_send{};
+    Gtk::ToggleButton btn_ai_ddg{};
     Gtk::Button btn_ai_key{};
     Gtk::Label* ai_model_badge = nullptr;
     AIProvider ai_provider = AIProvider::GROQ;
@@ -214,6 +216,8 @@ private:
     Gtk::Label* pending_ai_label = nullptr;
     std::mutex ai_mutex;
     bool ai_waiting = false;
+    sigc::connection ai_loading_conn;
+    int ai_dot_count = 0;
     void on_ai_response();
 
     void on_select(Gtk::ListBoxRow* row);
@@ -222,6 +226,7 @@ private:
     Gtk::ScrolledWindow html_scrolled;  
     void setup_python();
     void reload_python();
+    void setup_badges();
     WebKitWebView* python_webview = nullptr;
 
 };

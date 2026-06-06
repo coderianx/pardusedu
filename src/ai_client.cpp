@@ -311,6 +311,52 @@ static int get_model_limit()
     return 128000;
 }
 
+std::string duckduckgo_search(const std::string& query) {
+    // Sorguyu temizle: soru ekleri/karakterleri kaldır, gereksiz boşlukları düzelt
+    std::string cleaned = query;
+    cleaned = std::regex_replace(cleaned, std::regex(R"([?¿?!¡]+)"), " ");
+    cleaned = std::regex_replace(cleaned, std::regex(R"(\b(kimdir|kim|nedir|neden|nasıl|nasil|nerede|nereye|hangi|kaç|kac|mı|mi|mu|mü|miyim|misin|midir)\b)", std::regex::icase), " ");
+    cleaned = std::regex_replace(cleaned, std::regex(R"(\s+,)"), ",");
+    cleaned = std::regex_replace(cleaned, std::regex(R"(,\s+)"), ",");
+    cleaned = std::regex_replace(cleaned, std::regex(R"(\s+)"), " ");
+    cleaned.erase(0, cleaned.find_first_not_of(" \t\r\n"));
+    cleaned.erase(cleaned.find_last_not_of(" \t\r\n") + 1);
+    if (cleaned.empty()) cleaned = query;
+
+    CURL* curl = curl_easy_init();
+    if (!curl) return "CURL başlatılamadı";
+
+    std::string encoded_query;
+    CURL* curl_enc = curl_easy_init();
+    if (curl_enc) {
+        char* enc = curl_easy_escape(curl_enc, cleaned.c_str(), (int)cleaned.size());
+        if (enc) { encoded_query = enc; curl_free(enc); }
+        curl_easy_cleanup(curl_enc);
+    }
+
+    std::string url = "https://api.duckduckgo.com/?q=" + encoded_query + "&format=json&no_html=1&skip_disambig=1";
+    std::string response;
+
+    curl_easy_setopt(curl, CURLOPT_URL, url.c_str());
+    curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 15L);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+    curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(curl, CURLOPT_USERAGENT, "PardusEdu/1.0");
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+
+    CURLcode res = curl_easy_perform(curl);
+    curl_easy_cleanup(curl);
+
+    if (res != CURLE_OK)
+        return "DuckDuckGo hatası: " + std::string(curl_easy_strerror(res));
+
+    return response;
+}
+
 std::string call_ai(
     const std::string& user_text,
     const std::string& app_context)
@@ -339,6 +385,10 @@ std::string call_ai(
         "Taban Modelin " + global_model + ". "
 
         "PardusEdu Uygulamasının Geliştiricisi: Ali Eymen İçli. "
+
+        "Uygulama C++ Kullanılarak geliştirilmiştir. "
+        
+        "Geliştiric Uygulamayı 13 Yaşında Geliştirmeye başladı. "
         
         "PardusEdu Repo: github.com/coderianx/pardusedu "
 

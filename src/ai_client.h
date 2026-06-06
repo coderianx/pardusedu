@@ -18,3 +18,5 @@ AIProvider get_provider();
 std::string get_provider_name();
 void set_model(const std::string& model);
 std::string get_model();
+
+std::string duckduckgo_search(const std::string& query);

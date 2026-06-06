@@ -14,9 +14,20 @@
     <file>assets/share_dark.svg</file>
     <file>assets/settings.svg</file>
     <file>assets/settings_dark.svg</file>
+    <file>assets/duckduckgo.svg</file>
     <file>assets/streak.svg</file>
     <file>assets/pomo.svg</file>
     <file>assets/timer.svg</file>
     <file>docs/python/python.md</file>
+    <file>assets/rozet/5days.png</file>
+    <file>assets/rozet/7days.png</file>
+    <file>assets/rozet/14days.png</file>
+    <file>assets/rozet/21days.png</file>
+    <file>assets/rozet/30days.png</file>
+    <file>assets/rozet/60days.png</file>
+    <file>assets/rozet/90days.png</file>
+    <file>assets/rozet/180days.png</file>
+    <file>assets/rozet/365days.png</file>
+
   </gresource>
 </gresources>

@@ -99,6 +99,155 @@ void MainWindow::setup_pomodoro() {
     stack.add(*sw, "pomodoro");
 }
 
+void MainWindow::setup_badges() {
+    auto* sw = Gtk::make_managed<Gtk::ScrolledWindow>();
+    sw->set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
+    sw->set_vexpand(true);
+
+    auto* box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 12);
+    box->set_margin_start(16);
+    box->set_margin_end(16);
+    box->set_margin_top(16);
+    box->set_margin_bottom(16);
+
+    auto* title = Gtk::make_managed<Gtk::Label>("Rozetlerim");
+    title->add_css_class("page-title");
+    title->set_halign(Gtk::Align::START);
+    box->append(*title);
+
+    auto* sub = Gtk::make_managed<Gtk::Label>("Çalışma serini koruyarak rozetler kazan!");
+    sub->set_halign(Gtk::Align::START);
+    sub->add_css_class("dash-sub");
+    sub->set_margin_bottom(8);
+    box->append(*sub);
+
+    auto* streak_lbl = Gtk::make_managed<Gtk::Label>("");
+    streak_lbl->set_markup("Mevcut Seri: <b>" + std::to_string(study_streak) + " gün</b>");
+    streak_lbl->set_halign(Gtk::Align::START);
+    streak_lbl->set_margin_bottom(16);
+    box->append(*streak_lbl);
+
+    struct BadgeDef { std::string name; std::string resource; int required; std::string desc; };
+    std::vector<BadgeDef> badges = {
+        {
+            "5 Gün Serisi",  
+            "/org/ogrenci/merkezi/assets/rozet/5days.png", 
+             5,  
+             "5 gün ara vermeden çalış"
+        },
+        {
+            "7 Gün Serisi",  
+            "/org/ogrenci/merkezi/assets/rozet/7days.png",  
+            7,  
+            "7 gün ara vermeden çalış"
+        },
+        {
+            "14 Gün Serisi", 
+            "/org/ogrenci/merkezi/assets/rozet/14days.png", 
+            14, 
+            "14 gün ara vermeden çalış"
+        },
+        {
+            "21 Gün",
+            "/org/ogrenci/merkezi/assets/rozet/21days.png",
+            21,
+            "Ha gayret, 1 Ay olacak"
+        },
+        {
+            "30 Gün Serisi",
+            "/org/ogrenci/merkezi/assets/rozet/30days.png",
+            30,
+            "1 Ay, iyi İlerliyorsun!"
+        },
+        {
+            "60 Gün Serisi",
+            "/org/ogrenci/merkezi/assets/rozet/60days.png",
+            60,
+            "2 Ay, Sadık Öğrenci..."
+        },
+        {
+            "90 Gün Serisi",
+            "/org/ogrenci/merkezi/assets/rozet/90days.png",
+            90,
+            "Ders Ustası"
+        },
+        {
+            "180 Gün Serisi",
+            "/org/ogrenci/merkezi/assets/rozet/180days.png",
+            180,
+            "Ders Canavarı"
+        },
+        {
+            "365 Gün Serisi",
+            "/org/ogrenci/merkezi/assets/rozet/365days.png",
+            365,
+            "Akademik Canavar..."
+        }
+    };
+
+    auto* flow = Gtk::make_managed<Gtk::FlowBox>();
+    flow->set_max_children_per_line(3);
+    flow->set_selection_mode(Gtk::SelectionMode::NONE);
+    flow->set_column_spacing(16);
+    flow->set_row_spacing(16);
+    flow->set_homogeneous(true);
+    flow->set_margin_top(4);
+
+    for (auto& b : badges) {
+        bool earned = study_streak >= b.required;
+
+        auto* card = Gtk::make_managed<Gtk::Frame>();
+        card->add_css_class("card");
+
+        auto* vb = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 8);
+        vb->set_halign(Gtk::Align::CENTER);
+        vb->set_valign(Gtk::Align::CENTER);
+        vb->set_margin_start(24);
+        vb->set_margin_end(24);
+        vb->set_margin_top(24);
+        vb->set_margin_bottom(24);
+
+        auto* img = Gtk::make_managed<Gtk::Image>();
+        img->set_from_resource(b.resource);
+        img->set_pixel_size(96);
+
+        if (!earned) img->set_opacity(0.2);
+        vb->append(*img);
+
+        auto* nl = Gtk::make_managed<Gtk::Label>("");
+        nl->set_markup("<b>" + b.name + "</b>");
+        nl->set_halign(Gtk::Align::CENTER);
+        nl->set_margin_top(4);
+        if (!earned) nl->set_opacity(0.5);
+        vb->append(*nl);
+
+        auto* dl = Gtk::make_managed<Gtk::Label>(b.desc);
+        dl->set_halign(Gtk::Align::CENTER);
+        dl->set_wrap(true);
+        dl->set_opacity(0.55);
+        vb->append(*dl);
+
+        if (earned) {
+            auto* el = Gtk::make_managed<Gtk::Label>("Kazanıldı!");
+            el->set_halign(Gtk::Align::CENTER);
+            el->add_css_class("badge-earned");
+            vb->append(*el);
+        } else {
+            auto* ll = Gtk::make_managed<Gtk::Label>("Kilitli");
+            ll->set_halign(Gtk::Align::CENTER);
+            ll->set_opacity(0.4);
+            vb->append(*ll);
+        }
+
+        card->set_child(*vb);
+        flow->append(*card);
+    }
+
+    box->append(*flow);
+    sw->set_child(*box);
+    stack.add(*sw, "badges");
+}
+
 void MainWindow::update_pomo_display() {
     int m = pomo_seconds / 60;
     int s = pomo_seconds % 60;
@@ -394,6 +543,34 @@ void MainWindow::setup_notes() {
 
     note_sw->set_child(note_view);
     note_editor_box.append(*note_sw);
+
+    note_stats_label = Gtk::make_managed<Gtk::Label>("");
+    note_stats_label->set_halign(Gtk::Align::END);
+    note_stats_label->set_margin_top(4);
+    note_stats_label->set_margin_bottom(2);
+    note_stats_label->set_margin_end(4);
+    note_stats_label->add_css_class("note-stats");
+    note_editor_box.append(*note_stats_label);
+
+    auto update_stats = [this]() {
+        if (!note_stats_label) return;
+        auto buf = note_view.get_buffer();
+        if (!buf || selected_note_index < 0) {
+            note_stats_label->set_text("");
+            return;
+        }
+        auto text = buf->get_text(false);
+        int chars = text.size();
+        int words = 0;
+        bool in_word = false;
+        for (char c : text) {
+            if (c == ' ' || c == '\n' || c == '\t') { in_word = false; }
+            else if (!in_word) { words++; in_word = true; }
+        }
+        note_stats_label->set_text(
+            std::to_string(words) + " kelime · " + std::to_string(chars) + " karakter");
+    };
+    note_view.get_buffer()->signal_changed().connect(update_stats);
 
     auto* btn_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
     btn_box->set_margin_top(8);
@@ -2325,6 +2502,8 @@ void MainWindow::on_ai_response() {
     ai_waiting = false;
     ai_input.set_sensitive(true);
     btn_ai_send.set_sensitive(true);
+    btn_ai_ddg.set_sensitive(true);
+    ai_loading_conn.disconnect();
 
     if (pending_ai_label) {
         std::string display_text;
@@ -2422,11 +2601,20 @@ void MainWindow::setup_ai_chat() {
     btn_ai_send.set_size_request(44, 44);
     btn_ai_send.add_css_class("ai-send-btn");
 
+    auto* ddg_icon = Gtk::make_managed<Gtk::Image>();
+    ddg_icon->set_from_resource("/org/ogrenci/merkezi/assets/duckduckgo.svg");
+    ddg_icon->set_pixel_size(22);
+    btn_ai_ddg.set_child(*ddg_icon);
+    btn_ai_ddg.set_size_request(44, 44);
+    btn_ai_ddg.set_tooltip_text("Aktifse mesaj gönderiminde DuckDuckGo araştırması yapılıp AI analiz eder");
+    btn_ai_ddg.add_css_class("ai-ddg-btn");
+
     auto* input_container = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
     input_container->add_css_class("ai-input-container");
 
     ai_input.set_hexpand(true);
     input_container->append(ai_input);
+    input_container->append(btn_ai_ddg);
     input_container->append(btn_ai_send);
 
     // Focus - container'ın border'ı tüm genişliği kaplasın
@@ -2439,80 +2627,154 @@ void MainWindow::setup_ai_chat() {
     });
     ai_input.add_controller(fc);
 
-    // ─── Send mesaj ───────────────────────────────────────────────
-    auto send_message = [this, format_model_name]() {
+    // ─── Send mesaj (DDG toggle aktifse araştırma + AI) ────────────
+    auto send_message = [this]() {
         if (ai_waiting) return;
         std::string text = ai_input.get_text();
         if (text.empty()) return;
 
-        // Kullanıcı balonu
-        auto* user_msg = Gtk::make_managed<Gtk::Frame>();
-        auto* user_lbl = Gtk::make_managed<Gtk::Label>(text);
-        user_msg->add_css_class("user-msg");
-        user_lbl->set_wrap(true);
-        user_lbl->set_margin(4);
-        user_msg->set_child(*user_lbl);
-        user_msg->set_halign(Gtk::Align::END);
-        ai_chat_box.append(*user_msg);
+        bool ddg_active = btn_ai_ddg.get_active();
 
-        // Yükleniyor balonu
-        auto* ai_msg = Gtk::make_managed<Gtk::Frame>();
-        auto* ai_lbl = Gtk::make_managed<Gtk::Label>("Cevap alınıyor...");
-        ai_lbl->add_css_class("ai-loading");
-        ai_msg->add_css_class("ai-msg");
-        ai_lbl->set_wrap(true);
-        ai_lbl->set_margin(4);
-        ai_lbl->set_selectable(true);
+        auto* user_lbl = Gtk::make_managed<Gtk::Label>(ddg_active ? "Araştır: " + text : text);
+        user_lbl->add_css_class("user-msg");
+        user_lbl->set_wrap(true);
+        user_lbl->set_selectable(true);
+        user_lbl->set_halign(Gtk::Align::END);
+        ai_chat_box.append(*user_lbl);
+
+        pending_ai_label = Gtk::make_managed<Gtk::Label>(
+            ddg_active ? "DuckDuckGo Üzerinden ara\u015ft\u0131r\u0131l\u0131yor.." : "Cevap al\u0131n\u0131yor");
+        pending_ai_label->add_css_class("ai-msg");
+        pending_ai_label->add_css_class("ai-loading");
+        pending_ai_label->set_wrap(true);
+        pending_ai_label->set_selectable(true);
+        pending_ai_label->set_halign(Gtk::Align::START);
 
         auto gesture = Gtk::GestureClick::create();
         gesture->set_button(3);
-        gesture->signal_pressed().connect([ai_lbl](int, double, double) {
-            auto clipboard = Gdk::Display::get_default()->get_clipboard();
-            clipboard->set_text(ai_lbl->get_text());
+        gesture->signal_pressed().connect([this](int, double, double) {
+            if (pending_ai_label) {
+                auto clipboard = Gdk::Display::get_default()->get_clipboard();
+                clipboard->set_text(pending_ai_label->get_text());
+            }
         });
-        ai_lbl->add_controller(gesture);
+        pending_ai_label->add_controller(gesture);
 
-        ai_msg->set_child(*ai_lbl);
-        ai_msg->set_halign(Gtk::Align::START);
-        ai_chat_box.append(*ai_msg);
+        ai_chat_box.append(*pending_ai_label);
 
-        // Otomatik kaydır
+        ai_dot_count = 0;
+        ai_loading_conn = Glib::signal_timeout().connect([this, ddg_active]() {
+            if (!pending_ai_label) return false;
+            ai_dot_count = (ai_dot_count + 1) % 4;
+            std::string dots(ai_dot_count, '.');
+            std::string msg = ddg_active
+                ? "DuckDuckGo ara\u015ft\u0131r\u0131l\u0131yor"
+                : "Cevap al\u0131n\u0131yor";
+            pending_ai_label->set_text(msg + dots);
+            return true;
+        }, 400);
+
         auto adj = ai_scroll.get_vadjustment();
         adj->set_value(adj->get_upper());
 
         ai_input.set_text("");
 
-        // Bağlam oluştur
-        std::string app_context;
-        {
-            std::string lower = text;
-            std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
-            static const std::vector<std::string> keywords = {
-                "not", "ders", "görev", "gorev", "ödev", "odev",
-                "oku", "analiz", "program", "takvim", "çalışma", "calisma"
-            };
-            bool needs = false;
-            for (auto& kw : keywords)
-                if (lower.find(kw) != std::string::npos) { needs = true; break; }
-            if (needs) {
-                for (auto& n : course_notes) {
-                    app_context += "- Ders: " + n.course + "\n";
-                    if (!n.content.empty())
-                        app_context += "  İçerik:\n" + n.content + "\n\n";
-                }
-            }
-        }
-
         ai_waiting = true;
         ai_input.set_sensitive(false);
         btn_ai_send.set_sensitive(false);
-        pending_ai_label = ai_lbl;
+        btn_ai_ddg.set_sensitive(false);
 
         std::string text_copy = text;
-        std::string context_copy = app_context;
+        bool do_ddg = ddg_active;
 
-        std::thread([this, text_copy, context_copy]() {
-            std::string raw = call_ai(text_copy, context_copy);
+        std::thread([this, text_copy, do_ddg]() {
+            std::string final_user_text;
+            if (do_ddg) {
+                std::string ddg_raw = duckduckgo_search(text_copy);
+                if (ddg_raw.empty() || ddg_raw.rfind("DuckDuckGo hatas\u0131", 0) == 0) {
+                    final_user_text = "Kullanıcının sorusu: " + text_copy +
+                        "\n\nNOT: DuckDuckGo araması başarısız oldu. "
+                        "Kendi bilginle cevap ver.";
+                } else {
+                    std::string ddg_summary;
+                    try {
+                        auto j = json::parse(ddg_raw);
+                        std::string abstract = j.value("Abstract", "");
+                        std::string heading = j.value("Heading", "");
+                        auto results = j["Results"];
+                        auto topics = j["RelatedTopics"];
+
+                        if (!heading.empty())
+                            ddg_summary += "Başlık: " + heading + "\n";
+                        if (!abstract.empty())
+                            ddg_summary += "Özet: " + abstract + "\n";
+
+                        if (results.is_array()) {
+                            for (auto& r : results) {
+                                if (r.contains("Text") && !r["Text"].empty())
+                                    ddg_summary += "- " + r["Text"].get<std::string>() + "\n";
+                            }
+                        }
+                        if (topics.is_array()) {
+                            int added = 0;
+                            for (auto& t : topics) {
+                                if (added >= 10) break;
+                                if (t.is_object() && t.contains("Text") && !t["Text"].empty()) {
+                                    ddg_summary += "- " + t["Text"].get<std::string>() + "\n";
+                                    added++;
+                                } else if (t.is_object() && t.contains("Topics") && t["Topics"].is_array()) {
+                                    for (auto& st : t["Topics"]) {
+                                        if (added >= 10) break;
+                                        if (st.contains("Text") && !st["Text"].empty()) {
+                                            ddg_summary += "- " + st["Text"].get<std::string>() + "\n";
+                                            added++;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (const json::parse_error&) {
+                        ddg_summary = "DuckDuckGo yanıtı ayrıştırılamadı.";
+                    }
+                    final_user_text =
+                        "Kullanıcı şunu sordu: " + text_copy +
+                        "\n\nDuckDuckGo arama sonuçları:\n" + ddg_summary +
+                        "\n\nYukarıdaki arama sonuçlarına göre kullanıcının sorusunu "
+                        "detaylıca yanıtla. Kaynak olarak arama sonuçlarını kullan, "
+                        "kendi bilgini de ekleyerek zenginleştir. "
+                        "Yanıtın en sonuna • DuckDuckGo Üzerinden Araştırıldı yaz. "
+                        "Yanıtında maddeler halinde ve açıklayıcı ol.";
+                }
+            } else {
+                std::string app_context;
+                std::string lower = text_copy;
+                std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
+                static const std::vector<std::string> keywords = {
+                    "not", "ders", "görev", "gorev", "ödev", "odev",
+                    "oku", "analiz", "program", "takvim", "çalışma", "calisma"
+                };
+                bool needs = false;
+                for (auto& kw : keywords)
+                    if (lower.find(kw) != std::string::npos) { needs = true; break; }
+                if (needs) {
+                    for (auto& n : course_notes) {
+                        app_context += "- Ders: " + n.course + "\n";
+                        if (!n.content.empty())
+                            app_context += "  İçerik:\n" + n.content + "\n\n";
+                    }
+                }
+                final_user_text = text_copy;
+                // Store app_context to pass alongside
+                // We need to call call_ai with app_context, so restructure
+                std::string raw = call_ai(final_user_text, app_context);
+                {
+                    std::lock_guard<std::mutex> lock(ai_mutex);
+                    pending_ai_response = raw;
+                }
+                ai_dispatcher.emit();
+                return;
+            }
+            std::string raw = call_ai(final_user_text, "");
             {
                 std::lock_guard<std::mutex> lock(ai_mutex);
                 pending_ai_response = raw;
