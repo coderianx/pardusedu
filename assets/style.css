@@ -1029,3 +1029,651 @@ separator {
     box-shadow: 0 0 0 4px alpha(__accent, 0.35);
     transition: box-shadow 0.1s ease;
 }
+
+/* ═══════════════════════════════════════
+   FlashCard Sistemi — Şık ve Modern Tasarım
+   ═══════════════════════════════════════ */
+
+.flash-page-title {
+    font-size: 22px;
+    font-weight: bold;
+    color: __accent;
+    letter-spacing: -0.3px;
+}
+
+.flash-back-btn {
+    background: alpha(__accent, 0.08);
+    border: 1px solid alpha(__accent, 0.2);
+    border-radius: 10px;
+    padding: 6px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    color: __accent;
+    transition: all 0.15s ease;
+}
+.flash-back-btn:hover {
+    background: alpha(__accent, 0.15);
+    border-color: __accent;
+    box-shadow: 0 1px 6px alpha(__accent, 0.15);
+}
+
+.flash-section-title {
+    font-size: 18px;
+    font-weight: 800;
+    color: __text_color;
+    letter-spacing: -0.3px;
+}
+.flash-section-subtitle {
+    font-size: 13px;
+    color: __muted;
+    margin-top: 2px;
+}
+
+.flash-action-btn {
+    background: __accent;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 2px 8px alpha(__accent, 0.25);
+}
+.flash-action-btn:hover {
+    background: __accent_dark;
+    box-shadow: 0 4px 14px alpha(__accent, 0.35);
+    transform: translateY(-1px);
+}
+.flash-action-btn:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.flash-ai-btn {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 2px 8px alpha(#6366f1, 0.3);
+}
+.flash-ai-btn:hover {
+    box-shadow: 0 4px 16px alpha(#6366f1, 0.4);
+    transform: translateY(-1px);
+}
+.flash-ai-btn:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.flash-action-btn-sm {
+    background: transparent;
+    color: __accent;
+    border: 1px solid alpha(__accent, 0.3);
+    border-radius: 10px;
+    padding: 8px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+.flash-action-btn-sm:hover {
+    background: alpha(__accent, 0.08);
+    border-color: __accent;
+}
+
+.flash-ai-btn-sm {
+    background: linear-gradient(135deg, alpha(#6366f1, 0.1), alpha(#8b5cf6, 0.1));
+    color: #7c3aed;
+    border: 1px solid alpha(#6366f1, 0.3);
+    border-radius: 10px;
+    padding: 8px 18px;
+    font-size: 12px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.flash-ai-btn-sm:hover {
+    background: linear-gradient(135deg, alpha(#6366f1, 0.2), alpha(#8b5cf6, 0.2));
+    border-color: #6366f1;
+    box-shadow: 0 2px 10px alpha(#6366f1, 0.2);
+}
+
+.flash-add-btn {
+    background: __success;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    border: none;
+    transition: all 0.15s ease;
+    box-shadow: 0 2px 6px alpha(__success, 0.2);
+}
+.flash-add-btn:hover {
+    box-shadow: 0 3px 10px alpha(__success, 0.3);
+    transform: translateY(-1px);
+}
+
+.flash-delete-btn {
+    background: transparent;
+    color: __danger;
+    border: 1px solid alpha(__danger, 0.3);
+    border-radius: 10px;
+    padding: 8px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+.flash-delete-btn:hover {
+    background: alpha(__danger, 0.08);
+    border-color: __danger;
+}
+
+.flash-deck-card {
+    background: __card_bg;
+    border: 1px solid __border;
+    border-radius: 18px;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow:
+        0 1px 3px alpha(black, 0.04),
+        0 2px 6px alpha(black, 0.03);
+}
+.flash-deck-card:hover {
+    border-color: __accent;
+    box-shadow:
+        0 4px 12px alpha(black, 0.06),
+        0 8px 24px alpha(__accent, 0.08);
+    transform: translateY(-2px);
+}
+.flash-deck-card:active {
+    transform: translateY(0) scale(0.99);
+}
+
+.flash-deck-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: __text_color;
+    letter-spacing: -0.2px;
+    word-wrap: break-word;
+}
+
+.flash-deck-stats {
+    font-size: 12px;
+    color: __muted;
+    font-weight: 500;
+}
+
+.flash-deck-time {
+    font-size: 11px;
+    color: alpha(__muted, 0.7);
+    font-weight: 500;
+}
+
+.flash-deck-arrow {
+    font-size: 20px;
+    color: __muted;
+    transition: all 0.2s ease;
+}
+.flash-deck-card:hover .flash-deck-arrow {
+    color: __accent;
+    transform: translateX(4px);
+}
+
+.flash-study-btn {
+    background: linear-gradient(135deg, __accent, __accent_light);
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 6px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 2px 8px alpha(__accent, 0.25);
+}
+.flash-study-btn:hover {
+    box-shadow: 0 4px 14px alpha(__accent, 0.4);
+    transform: translateY(-1px);
+}
+.flash-study-btn:active {
+    transform: translateY(0) scale(0.95);
+}
+
+.flash-empty-icon {
+    font-size: 56px;
+    margin-bottom: 8px;
+}
+.flash-empty-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: __text_color;
+}
+.flash-empty-desc {
+    font-size: 14px;
+    color: __muted;
+    text-align: center;
+    line-height: 1.6;
+}
+.flash-empty-sub {
+    font-size: 14px;
+    color: __muted;
+    text-align: center;
+}
+
+.flash-stats-row {
+    background: __card_bg;
+    border: 1px solid __border;
+    border-radius: 16px;
+    padding: 16px 8px;
+}
+.flash-stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: __accent;
+    letter-spacing: -0.5px;
+}
+.flash-stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: __muted;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.flash-info-card {
+    background: alpha(__accent, 0.04);
+    border: 1px solid alpha(__accent, 0.12);
+    border-radius: 14px;
+    margin-bottom: 16px;
+}
+.flash-info-text {
+    font-size: 13px;
+    color: __muted;
+}
+
+.flash-list-card {
+    background: __card_bg;
+    border: 1px solid __border;
+    border-radius: 14px;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 1px 3px alpha(black, 0.03);
+}
+.flash-list-card:hover {
+    border-color: __accent;
+    box-shadow: 0 4px 16px alpha(__accent, 0.08);
+    transform: translateY(-1px);
+}
+.flash-list-card:active {
+    transform: translateY(0) scale(0.99);
+}
+
+.flash-list-badge {
+    background: __accent;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 800;
+    min-width: 28px;
+    min-height: 28px;
+    border-radius: 14px;
+    text-align: center;
+}
+
+.flash-list-front {
+    font-size: 14px;
+    font-weight: 600;
+    color: __text_color;
+    word-wrap: break-word;
+}
+.flash-list-meta {
+    font-size: 11px;
+    color: __muted;
+    font-weight: 500;
+}
+.flash-list-edit {
+    font-size: 16px;
+    color: __muted;
+    transition: color 0.15s ease;
+}
+.flash-list-card:hover .flash-list-edit {
+    color: __accent;
+}
+
+.flash-review-progress {
+    font-size: 14px;
+    color: __muted;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.flash-progress-bar progressbar trough {
+    background: alpha(__accent, 0.12);
+    border-radius: 20px;
+    min-height: 6px;
+}
+.flash-progress-bar progressbar trough progress {
+    background: linear-gradient(90deg, __accent, __accent_light);
+    border-radius: 20px;
+}
+
+.flash-card-container {
+    background: __card_bg;
+    border: 1px solid __border;
+    border-radius: 24px;
+    min-width: 520px;
+    max-width: 720px;
+    box-shadow:
+        0 4px 12px alpha(black, 0.05),
+        0 12px 40px alpha(black, 0.08);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.flash-card-container:hover {
+    box-shadow:
+        0 6px 16px alpha(black, 0.06),
+        0 16px 48px alpha(__accent, 0.06);
+}
+
+.flash-card-flipped {
+    border-color: __success;
+    box-shadow:
+        0 4px 12px alpha(black, 0.05),
+        0 12px 40px alpha(__success, 0.08);
+}
+
+.flash-card-front {
+    font-size: 24px;
+    font-weight: 600;
+    color: __text_color;
+    line-height: 1.6;
+    text-align: center;
+    word-wrap: break-word;
+}
+.flash-card-front-revealed {
+    font-size: 18px;
+    font-weight: 500;
+    color: __muted;
+    line-height: 1.5;
+    text-align: center;
+    margin-bottom: 20px;
+    word-wrap: break-word;
+}
+
+.flash-card-back {
+    font-size: 22px;
+    font-weight: 700;
+    color: __accent;
+    line-height: 1.6;
+    text-align: center;
+    margin-top: 12px;
+    word-wrap: break-word;
+}
+
+.flash-card-hint {
+    font-size: 13px;
+    color: __muted;
+    font-style: italic;
+    text-align: center;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid alpha(__border, 0.5);
+    word-wrap: break-word;
+}
+
+.flash-reveal-btn {
+    background: linear-gradient(135deg, __accent, __accent_light);
+    color: #ffffff;
+    border-radius: 16px;
+    padding: 14px 32px;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 14px alpha(__accent, 0.3);
+}
+.flash-reveal-btn:hover {
+    box-shadow: 0 6px 20px alpha(__accent, 0.45);
+    transform: translateY(-2px);
+}
+.flash-reveal-btn:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.flash-rate-box {
+    display: flex;
+}
+.flash-rate-0 {
+    background: linear-gradient(135deg, #ef4444, #dc2626);
+    color: #ffffff;
+    border-radius: 14px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    min-width: 90px;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 2px 8px alpha(#ef4444, 0.3);
+}
+.flash-rate-0:hover {
+    box-shadow: 0 4px 16px alpha(#ef4444, 0.45);
+    transform: translateY(-2px);
+}
+.flash-rate-0:active { transform: translateY(0) scale(0.95); }
+
+.flash-rate-1 {
+    background: linear-gradient(135deg, #f59e0b, #d97706);
+    color: #ffffff;
+    border-radius: 14px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    min-width: 90px;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 2px 8px alpha(#f59e0b, 0.3);
+}
+.flash-rate-1:hover {
+    box-shadow: 0 4px 16px alpha(#f59e0b, 0.45);
+    transform: translateY(-2px);
+}
+.flash-rate-1:active { transform: translateY(0) scale(0.95); }
+
+.flash-rate-2 {
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: #ffffff;
+    border-radius: 14px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    min-width: 90px;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 2px 8px alpha(#10b981, 0.3);
+}
+.flash-rate-2:hover {
+    box-shadow: 0 4px 16px alpha(#10b981, 0.45);
+    transform: translateY(-2px);
+}
+.flash-rate-2:active { transform: translateY(0) scale(0.95); }
+
+.flash-rate-3 {
+    background: linear-gradient(135deg, #3b82f6, #2563eb);
+    color: #ffffff;
+    border-radius: 14px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    border: none;
+    min-width: 90px;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 2px 8px alpha(#3b82f6, 0.3);
+}
+.flash-rate-3:hover {
+    box-shadow: 0 4px 16px alpha(#3b82f6, 0.45);
+    transform: translateY(-2px);
+}
+.flash-rate-3:active { transform: translateY(0) scale(0.95); }
+
+.flash-done-icon {
+    font-size: 64px;
+    margin-bottom: 12px;
+}
+.flash-done-title {
+    font-size: 28px;
+    font-weight: 800;
+    color: __text_color;
+}
+.flash-done-desc {
+    font-size: 15px;
+    color: __muted;
+    text-align: center;
+    line-height: 1.7;
+    margin-bottom: 12px;
+}
+.flash-done-stats {
+    font-size: 16px;
+    color: __accent;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.flash-edit-card {
+    background: __card_bg;
+    border: 1px solid __border;
+    border-radius: 20px;
+    box-shadow:
+        0 2px 8px alpha(black, 0.04),
+        0 8px 24px alpha(black, 0.06);
+}
+
+.flash-edit-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: __text_color;
+    letter-spacing: 0.2px;
+}
+
+.flash-edit-entry {
+    background: __bg_color;
+    border: 1px solid __border;
+    border-radius: 12px;
+    padding: 12px 16px;
+    font-size: 15px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.flash-edit-entry:focus {
+    border-color: __accent;
+    box-shadow: 0 0 0 3px alpha(__accent, 0.1);
+}
+
+.flash-edit-textview {
+    background: __bg_color;
+    border: 1px solid __border;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 14px;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.flash-edit-textview:focus-within {
+    border-color: __accent;
+    box-shadow: 0 0 0 3px alpha(__accent, 0.1);
+}
+
+.flash-edit-hint {
+    font-size: 13px;
+    color: __muted;
+    line-height: 1.5;
+}
+
+.flash-edit-cancel {
+    background: transparent;
+    color: __muted;
+    border: 1px solid __border;
+    border-radius: 10px;
+    padding: 10px 24px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: all 0.15s ease;
+}
+.flash-edit-cancel:hover {
+    background: __hover_bg;
+    border-color: alpha(__muted, 0.3);
+}
+
+.flash-edit-save {
+    background: __accent;
+    color: #ffffff;
+    border-radius: 10px;
+    padding: 10px 28px;
+    font-size: 14px;
+    font-weight: 700;
+    border: none;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 2px 8px alpha(__accent, 0.25);
+}
+.flash-edit-save:hover {
+    box-shadow: 0 4px 14px alpha(__accent, 0.4);
+    transform: translateY(-1px);
+}
+.flash-edit-save:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.flash-ai-edit-btn {
+    background: linear-gradient(135deg, alpha(#6366f1, 0.08), alpha(#8b5cf6, 0.08));
+    color: #7c3aed;
+    border: 1px solid alpha(#6366f1, 0.25);
+    border-radius: 12px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+.flash-ai-edit-btn:hover {
+    background: linear-gradient(135deg, alpha(#6366f1, 0.15), alpha(#8b5cf6, 0.15));
+    border-color: #6366f1;
+    box-shadow: 0 2px 10px alpha(#6366f1, 0.2);
+}
+
+.flash-ai-generate-btn {
+    background-color: #7c3aed;
+    background-image: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+    background-size: 200% 100%;
+    color: #ffffff;
+    border-radius: 14px;
+    padding: 14px 28px;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    outline: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px alpha(#6366f1, 0.35);
+}
+.flash-ai-generate-btn:hover {
+    background-position: 100% 0;
+    box-shadow: 0 6px 24px alpha(#6366f1, 0.5);
+    transform: translateY(-2px);
+}
+.flash-ai-generate-btn:active {
+    transform: translateY(0) scale(0.97);
+}
+
+.flash-ai-status {
+    font-size: 14px;
+    font-weight: 600;
+    color: __accent;
+    min-height: 24px;
+}
+
+.flash-spin {
+    background: __card_bg;
+    border: 1px solid __border;
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-size: 16px;
+    font-weight: 700;
+    color: __accent;
+    min-width: 70px;
+}
+.flash-spin:focus {
+    border-color: __accent;
+    box-shadow: 0 0 0 3px alpha(__accent, 0.1);
+}

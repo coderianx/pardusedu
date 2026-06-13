@@ -41,6 +41,35 @@ struct ScheduleEntry {
     std::string location;
 };
 
+struct FlashDeck {
+    std::string id;
+    std::string title;
+    std::string description;
+    std::string source_note;
+    std::string source_course;
+    int card_count = 0;
+    int new_count = 0;
+    int due_count = 0;
+    int review_count = 0;
+    long created_at = 0;
+    long last_reviewed_at = 0;
+};
+
+struct FlashCard {
+    std::string id;
+    std::string deck_id;
+    std::string front;
+    std::string back;
+    std::string hint;
+    std::string tags;
+    int interval = 0;
+    int repetitions = 0;
+    double ease_factor = 2.5;
+    int lapses = 0;
+    long next_review_at = 0;
+    long last_reviewed_at = 0;
+};
+
 class MainWindow : public Gtk::ApplicationWindow {
 public:
     MainWindow();
@@ -60,6 +89,8 @@ private:
     std::vector<CourseNote> course_notes;
     std::vector<GradeEntry> grades;
     std::vector<ScheduleEntry> schedule;
+    std::vector<FlashDeck> flash_decks;
+    std::vector<FlashCard> flash_cards;
     int pomodoro_completed = 0;
     int pomodoro_minutes = 0;
     int study_streak = 0;
@@ -242,11 +273,45 @@ private:
     void setup_python();
     void reload_python();
     void setup_badges();
+    void setup_flashcards();
+    void flash_show_decks();
+    void flash_show_deck_detail(const std::string& deck_id);
+    void flash_show_review(const std::string& deck_id);
+    void flash_show_card_edit(const std::string& deck_id, const std::string& card_id = "");
+    void flash_show_ai_generate(const std::string& deck_id);
+    void process_ai_flashcards(const std::string& ai_text, const std::string& deck_id);
+    void flash_build_review_queue(const std::string& deck_id);
+    void flash_rate_card(int grade);
+    void flash_refresh_deck_stats(const std::string& deck_id);
+    void flash_refresh_all_deck_stats();
+    void flash_show_card_at_index(Gtk::ProgressBar* progress_bar);
+    void flash_show_next_card(Gtk::ProgressBar* progress_bar);
+    void flash_show_review_done();
+    std::string flash_generate_id();
+    void flash_delete_deck(const std::string& deck_id);
+    void flash_delete_card(const std::string& card_id);
+    void flash_export_anki(const std::string& deck_id);
+    void flash_load_anki_exports();
     void setup_dersler();
     void dersler_show_grades();
     void dersler_show_courses(int grade);
     void dersler_show_units(int grade, const std::string& course);
     void dersler_show_content(const std::string& md_file);
+    Gtk::Stack flash_stack;
+    Gtk::Button flash_back_btn;
+    Gtk::Label flash_header_title;
+    Gtk::Label flash_card_front;
+    Gtk::Label flash_card_back;
+    Gtk::Label flash_card_hint;
+    Gtk::Label flash_card_counter;
+    Gtk::Frame flash_card_container;
+    Gtk::Box flash_rate_box;
+    Gtk::Button flash_reveal_btn;
+    sigc::connection flash_reveal_conn;
+    Gtk::Label flash_review_progress;
+    int flash_current_index = -1;
+    std::string flash_current_deck_id;
+    std::vector<int> flash_review_queue;
     WebKitWebView* python_webview = nullptr;
 
 };

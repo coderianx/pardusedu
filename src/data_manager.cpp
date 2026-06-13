@@ -4,11 +4,13 @@
 #include <fstream>
 #include <filesystem>
 #include <cstdlib>
+#include <cctype>
 #include <ctime>
 #include <sstream>
 #include <iomanip>
 
 namespace fs = std::filesystem;
+using json = nlohmann::json;
 
 std::string MainWindow::get_data_dir() {
     const char* data = g_get_user_data_dir();
@@ -133,6 +135,61 @@ void MainWindow::setup_data() {
         if (schedule_times.empty()) schedule_times = {"08:30", "09:30", "10:30", "11:30", "13:00", "14:00", "15:00", "16:00"};
     }
 
+    auto df = dir + "/decks.dat";
+    if (fs::exists(df)) {
+        std::ifstream f(df);
+        std::string line;
+        while (std::getline(f, line)) {
+            if (line.empty()) continue;
+            auto p1 = line.find('|');
+            auto p2 = line.find('|', p1 + 1);
+            auto p3 = line.find('|', p2 + 1);
+            auto p4 = line.find('|', p3 + 1);
+            auto p5 = line.find('|', p4 + 1);
+            auto p6 = line.find('|', p5 + 1);
+            auto p7 = line.find('|', p6 + 1);
+            if (p1 != std::string::npos && p2 != std::string::npos && p3 != std::string::npos
+                && p4 != std::string::npos && p5 != std::string::npos && p6 != std::string::npos
+                && p7 != std::string::npos) {
+                FlashDeck d;
+                d.id = line.substr(0, p1);
+                d.title = line.substr(p1+1, p2-p1-1);
+                d.description = line.substr(p2+1, p3-p2-1);
+                d.source_note = line.substr(p3+1, p4-p3-1);
+                d.source_course = line.substr(p4+1, p5-p4-1);
+                d.created_at = std::stol(line.substr(p5+1, p6-p5-1));
+                d.last_reviewed_at = std::stol(line.substr(p6+1, p7-p6-1));
+                flash_decks.push_back(d);
+            }
+        }
+    }
+
+    auto cf = dir + "/cards.dat";
+    if (fs::exists(cf)) {
+        std::ifstream f(cf);
+        std::string line;
+        while (std::getline(f, line)) {
+            if (line.empty()) continue;
+            try {
+                auto j = json::parse(line);
+                FlashCard c;
+                c.id = j["id"].get<std::string>();
+                c.deck_id = j["deck_id"].get<std::string>();
+                c.front = j["front"].get<std::string>();
+                c.back = j["back"].get<std::string>();
+                if (j.contains("hint")) c.hint = j["hint"].get<std::string>();
+                if (j.contains("tags")) c.tags = j["tags"].get<std::string>();
+                c.interval = j["interval"].get<int>();
+                c.repetitions = j["repetitions"].get<int>();
+                c.ease_factor = j["ease_factor"].get<double>();
+                c.lapses = j["lapses"].get<int>();
+                c.next_review_at = j["next_review_at"].get<long>();
+                c.last_reviewed_at = j.value("last_reviewed_at", 0L);
+                flash_cards.push_back(c);
+            } catch (const std::exception&) {}
+        }
+    }
+
     auto pf_ = dir + "/provider.dat";
     if (fs::exists(pf_)) {
         std::ifstream f(pf_);
@@ -225,6 +282,28 @@ void MainWindow::save_data() {
     { std::ofstream f(dir + "/grades.dat"); for (auto& g : grades) f << g.course << "|" << g.midterm << "|" << g.final << "|\n"; }
     { std::ofstream f(dir + "/schedule.dat"); for (auto& s : schedule) f << s.day << "|" << s.time << "|" << s.course << "|" << s.location << "\n"; }
     { std::ofstream f(dir + "/schedule_times.dat"); for (auto& t : schedule_times) f << t << "\n"; }
+    { std::ofstream f(dir + "/decks.dat");
+        for (auto& d : flash_decks)
+            f << d.id << "|" << d.title << "|" << d.description << "|"
+              << d.source_note << "|" << d.source_course << "|"
+              << d.created_at << "|" << d.last_reviewed_at << "\n"; }
+    { std::ofstream f(dir + "/cards.dat");
+        for (auto& c : flash_cards) {
+            json j;
+            j["id"] = c.id;
+            j["deck_id"] = c.deck_id;
+            j["front"] = c.front;
+            j["back"] = c.back;
+            j["hint"] = c.hint;
+            j["tags"] = c.tags;
+            j["interval"] = c.interval;
+            j["repetitions"] = c.repetitions;
+            j["ease_factor"] = c.ease_factor;
+            j["lapses"] = c.lapses;
+            j["next_review_at"] = c.next_review_at;
+            j["last_reviewed_at"] = c.last_reviewed_at;
+            f << j.dump() << "\n";
+        } }
     { std::ofstream f(dir + "/provider.dat"); f << (ai_provider == AIProvider::GROQ ? "groq" : ai_provider == AIProvider::OPENROUTER ? "openrouter" : "gemini") << "\n"; }
     { std::ofstream f(dir + "/apikey_groq.dat"); f << ai_api_key_groq << "\n"; }
     { std::ofstream f(dir + "/apikey_openrouter.dat"); f << ai_api_key_openrouter << "\n"; }
@@ -232,6 +311,35 @@ void MainWindow::save_data() {
     { std::ofstream f(dir + "/model_groq.dat"); f << ai_model_groq << "\n"; }
     { std::ofstream f(dir + "/model_openrouter.dat"); f << ai_model_openrouter << "\n"; }
     { std::ofstream f(dir + "/model_gemini.dat"); f << ai_model_gemini << "\n"; }
+
+    // Sync anki_export TSV files with current data
+    std::string export_dir = dir + "/anki_export";
+    fs::create_directories(export_dir);
+    for (auto& entry : fs::directory_iterator(export_dir)) {
+        if (entry.path().extension() == ".tsv") fs::remove(entry.path());
+    }
+    for (auto& d : flash_decks) {
+        std::string slug;
+        for (char c : d.title) {
+            if (isalnum(c) || c == '-' || c == '_') slug += c;
+            else if (c == ' ') slug += '_';
+        }
+        if (slug.empty()) slug = "deck";
+        std::string path = export_dir + "/" + slug + ".tsv";
+        std::ofstream f(path);
+        f << "front\tback\ttags\n";
+        for (auto& c : flash_cards) {
+            if (c.deck_id != d.id) continue;
+            std::string ef = c.front, eb = c.back, et = c.tags;
+            size_t p;
+            while ((p = ef.find('\t')) != std::string::npos) ef.replace(p, 1, " ");
+            while ((p = ef.find('\n')) != std::string::npos) ef.replace(p, 1, " ");
+            while ((p = eb.find('\t')) != std::string::npos) eb.replace(p, 1, " ");
+            while ((p = eb.find('\n')) != std::string::npos) eb.replace(p, 1, " ");
+            while ((p = et.find('\t')) != std::string::npos) et.replace(p, 1, " ");
+            f << ef << "\t" << eb << "\t" << et << "\n";
+        }
+    }
 }
 
 static std::string today_str() {
@@ -261,6 +369,9 @@ void MainWindow::update_streak() {
         study_streak = 1;
     } else {
         study_streak++;
+    }
+    for (auto& d : flash_decks) {
+        flash_refresh_deck_stats(d.id);
     }
     last_streak_date = today;
     save_data();

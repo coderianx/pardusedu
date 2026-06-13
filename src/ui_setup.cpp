@@ -212,6 +212,7 @@ void MainWindow::setup_sidebar() {
     add_item("Panel", "dashboard");
     add_item("Dersler", "dersler");
     add_item("Rozetlerim", "badges");
+    add_item("Flashcards", "flashcards");
     add_item("Pomodoro", "pomodoro");
     add_item("Görevler", "planner");
     add_item("Notlarım", "notes");
@@ -250,6 +251,7 @@ void MainWindow::setup_pages() {
     setup_dashboard();
     setup_dersler();
     setup_badges();
+    setup_flashcards();
     setup_pomodoro();
     setup_planner();
     setup_notes();
