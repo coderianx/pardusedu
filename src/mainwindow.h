@@ -10,6 +10,7 @@
 #include <map>
 #include <mutex>
 #include <thread>
+#include <nlohmann/json.hpp>
 #include "ai_client.h"
 
 struct Task {
@@ -127,6 +128,19 @@ private:
     Gtk::Button btn_clear_schedule{"Programı Temizle"};
     std::vector<std::string> schedule_times = {"08:30", "09:30", "10:30", "11:30", "13:00", "14:00", "15:00", "16:00"};
 
+    int dersler_selected_grade = 0;
+    std::string dersler_selected_course;
+    nlohmann::json dersler_data;
+    int dersler_current_level = 0;
+    WebKitWebView* dersler_webview = nullptr;
+    Gtk::Box dersler_page_box{Gtk::Orientation::VERTICAL, 0};
+    Gtk::Box dersler_header_box{Gtk::Orientation::HORIZONTAL, 8};
+    Gtk::Button dersler_back_btn{"← Geri"};
+    Gtk::Label dersler_header_title{"Dersler", Gtk::Align::START};
+    Gtk::Stack dersler_stack;
+    Gtk::ScrolledWindow dersler_content_sw;
+    std::vector<sigc::connection> dersler_connections;
+
     std::vector<std::string> blocked_sites = {
         "instagram.com", "www.instagram.com",
         "twitter.com", "www.twitter.com", "x.com", "www.x.com",
@@ -221,12 +235,18 @@ private:
     void on_ai_response();
 
     void on_select(Gtk::ListBoxRow* row);
+    sigc::connection sidebar_glow_conn;
 
     Gtk::Box html_box{Gtk::Orientation::VERTICAL, 0};
     Gtk::ScrolledWindow html_scrolled;  
     void setup_python();
     void reload_python();
     void setup_badges();
+    void setup_dersler();
+    void dersler_show_grades();
+    void dersler_show_courses(int grade);
+    void dersler_show_units(int grade, const std::string& course);
+    void dersler_show_content(const std::string& md_file);
     WebKitWebView* python_webview = nullptr;
 
 };

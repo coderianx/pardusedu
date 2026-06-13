@@ -163,7 +163,7 @@ void MainWindow::apply_theme() {
             {"__sidebar_bg", "#ffffff"},
             {"__card_bg", "#ffffff"},
             {"__border", "#dddddd"},
-            {"__text_color", "#333333"},
+            {"__text_color", "#333333"},    
             {"__muted", "#888888"},
             {"__hover_bg", "#e8f4f8"},
             {"__accent", "#0076a8"},
@@ -210,6 +210,7 @@ void MainWindow::setup_sidebar() {
     sidebar_box.append(sidebar);
 
     add_item("Panel", "dashboard");
+    add_item("Dersler", "dersler");
     add_item("Rozetlerim", "badges");
     add_item("Pomodoro", "pomodoro");
     add_item("Görevler", "planner");
@@ -247,6 +248,7 @@ void MainWindow::add_item(const std::string& name, const std::string& id) {
 
 void MainWindow::setup_pages() {
     setup_dashboard();
+    setup_dersler();
     setup_badges();
     setup_pomodoro();
     setup_planner();
@@ -359,8 +361,11 @@ void MainWindow::on_select(Gtk::ListBoxRow* row) {
     if (child) stack.set_visible_child(*child);
 
     row->add_css_class("sidebar-glow");
-    Glib::signal_timeout().connect([row]() {
-        row->remove_css_class("sidebar-glow");
+    int idx = row->get_index();
+    if (sidebar_glow_conn.connected()) sidebar_glow_conn.disconnect();
+    sidebar_glow_conn = Glib::signal_timeout().connect([this, idx]() {
+        auto* r = sidebar.get_row_at_index(idx);
+        if (r) r->remove_css_class("sidebar-glow");
         return false;
     }, 350);
 }

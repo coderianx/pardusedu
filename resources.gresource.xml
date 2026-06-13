@@ -28,6 +28,33 @@
     <file>assets/rozet/90days.png</file>
     <file>assets/rozet/180days.png</file>
     <file>assets/rozet/365days.png</file>
+    <file>assets/dersler/dersler.json</file>
+    <file>assets/dersler/matematik_5_1.md</file>
+    <file>assets/dersler/matematik_5_2.md</file>
+    <file>assets/dersler/fen_5_1.md</file>
+    <file>assets/dersler/fen_5_2.md</file>
+    <file>assets/dersler/fen_5_3.md</file>
+    <file>assets/dersler/fen_5_4.md</file>
+    <file>assets/dersler/fen_5_5.md</file>
+    <file>assets/dersler/fen_5_6.md</file>
+    <file>assets/dersler/fen_5_7.md</file>
+    <file>assets/dersler/turkce_5_1.md</file>
+    <file>assets/dersler/turkce_5_2.md</file>
+    <file>assets/dersler/sosyal_5_1.md</file>
+    <file>assets/dersler/sosyal_5_2.md</file>
+    <file>assets/dersler/sosyal_5_3.md</file>
+    <file>assets/dersler/sosyal_5_4.md</file>
+    <file>assets/dersler/sosyal_5_5.md</file>
+    <file>assets/dersler/sosyal_5_6.md</file>
+    <file>assets/dersler/ingilizce_5_1.md</file>
+    <file>assets/dersler/matematik_6_1.md</file>
+    <file>assets/dersler/matematik_6_2.md</file>
+    <file>assets/dersler/fen_6_1.md</file>
+    <file>assets/dersler/fen_6_2.md</file>
+    <file>assets/dersler/turkce_6_1.md</file>
+    <file>assets/dersler/turkce_6_2.md</file>
+    <file>assets/dersler/sosyal_6_1.md</file>
+    <file>assets/dersler/ingilizce_6_1.md</file>
 
   </gresource>
 </gresources>

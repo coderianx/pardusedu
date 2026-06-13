@@ -386,8 +386,8 @@ std::string call_ai(
 
         "PardusEdu Uygulamasının Geliştiricisi: Ali Eymen İçli. "
 
-        "Uygulama C++ Kullanılarak geliştirilmiştir. "
-        
+        "Uygulama C++ ve GTK Kullanılarak geliştirilmiştir. "
+
         "Geliştiric Uygulamayı 13 Yaşında Geliştirmeye başladı. "
         
         "PardusEdu Repo: github.com/coderianx/pardusedu "
@@ -528,7 +528,7 @@ std::string call_ai(
         "  Soruları ayrı bir başlık açmadan, ders notlarının içine doğal şekilde serpiştir.\n"
         "  Örneğin: açıklamanın sonunda veya önemli bir konudan sonra soru şeklinde ekle.\n"
         "  Format: 'Soru: ... ? Cevap: ...' hatasız\n"
-        "Eğer sınav soruaları istemezse sınav sorusu sorma sadece kullanıcı isterse!!!.\n"
+        "Eğer sınav soruaları istemezse sınav sorusu sorma sadece kullanıcı isterse sor!!!.\n"
 
     "Kullanıcının Uygulama Verileri (notlar, görevler, ders programı):\n"
     "Bu veriler kullanıcının PardusEdu uygulamasına girdiği bilgilerdir. "
@@ -617,7 +617,7 @@ std::string call_ai(
     }
 
     // ─── Token tahmini ve akıllı kırpma ───────────────────────────────
-    int max_tokens = 2048;
+    int max_tokens = 3050;
     const int MIN_TOKENS = 128;
     const int MODEL_LIMIT = get_model_limit();
     const int SAFETY_MARGIN = 1024; // model limitine göre emniyet payı
@@ -659,7 +659,7 @@ std::string call_ai(
             headers,
             ("Authorization: Bearer " + api_key).c_str());
     }
-
+    
     headers = curl_slist_append(
         headers,
         "Content-Type: application/json");
