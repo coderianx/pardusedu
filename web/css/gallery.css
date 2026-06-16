@@ -152,6 +152,9 @@
 .gallery-card:nth-child(13) { animation-delay: .65s; }
 .gallery-card:nth-child(14) { animation-delay: .7s; }
 .gallery-card:nth-child(15) { animation-delay: .75s; }
+.gallery-card:nth-child(16) { animation-delay: .8s; }
+.gallery-card:nth-child(17) { animation-delay: .85s; }
+.gallery-card:nth-child(18) { animation-delay: .9s; }
 
 @keyframes cardIn {
   to { opacity: 1; transform: translateY(0); }

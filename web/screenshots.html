@@ -13,7 +13,6 @@
   <nav class="navbar" id="navbar">
     <div class="nav-container">
       <a href="index.html" class="nav-logo">
-        <img src="img/pardus.png" alt="Pardus" class="logo-img">
         <span>Pardus<span class="logo-highlight">Edu</span></span>
       </a>
       <ul class="nav-links" id="navLinks">
@@ -62,6 +61,7 @@
     <div class="gallery-filter">
       <button class="filter-btn active" data-filter="all">Tümü</button>
       <button class="filter-btn" data-filter="panel">Pano</button>
+      <button class="filter-btn" data-filter="pomodoro">Pomodoro</button>
       <button class="filter-btn" data-filter="gorevler">Görevler</button>
       <button class="filter-btn" data-filter="program">Ders Programı</button>
       <button class="filter-btn" data-filter="odak">Odak Modu</button>
@@ -69,6 +69,9 @@
       <button class="filter-btn" data-filter="notlar">Notlar</button>
       <button class="filter-btn" data-filter="python">Python</button>
       <button class="filter-btn" data-filter="yapayzeka">Yapay Zeka</button>
+      <button class="filter-btn" data-filter="flashcards">Kartlar</button>
+      <button class="filter-btn" data-filter="dersler">Dersler</button>
+      <button class="filter-btn" data-filter="rozetler">Rozetler</button>
     </div>
     <div class="gallery-grid">
 
@@ -79,6 +82,16 @@
         <div class="gallery-card-info">
           <span class="gallery-card-badge">Pano</span>
           <h3>Kişisel Kontrol Merkezi</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="pomodoro">
+        <div class="gallery-card-img">
+          <img src="img/pomodoro.png" alt="Pomodoro" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Pomodoro</span>
+          <h3>Zamanlayıcı ile Odaklan</h3>
         </div>
       </div>
 
@@ -102,16 +115,6 @@
         </div>
       </div>
 
-      <div class="gallery-card" data-category="program">
-        <div class="gallery-card-img">
-          <img src="img/dersprogramı2.png" alt="Ders Programı 2" loading="lazy">
-        </div>
-        <div class="gallery-card-info">
-          <span class="gallery-card-badge">Ders Programı</span>
-          <h3>Ders Düzenleme</h3>
-        </div>
-      </div>
-
       <div class="gallery-card" data-category="odak">
         <div class="gallery-card-img">
           <img src="img/dikkatmodu.png" alt="Odak Modu" loading="lazy">
@@ -119,16 +122,6 @@
         <div class="gallery-card-info">
           <span class="gallery-card-badge">Odak Modu</span>
           <h3>Sosyal Medya Engelleyici</h3>
-        </div>
-      </div>
-
-      <div class="gallery-card" data-category="odak">
-        <div class="gallery-card-img">
-          <img src="img/dikkatmodu2.png" alt="Odak Modu 2" loading="lazy">
-        </div>
-        <div class="gallery-card-info">
-          <span class="gallery-card-badge">Odak Modu</span>
-          <h3>Odak Süresi Takibi</h3>
         </div>
       </div>
 
@@ -142,16 +135,6 @@
         </div>
       </div>
 
-      <div class="gallery-card" data-category="linux">
-        <div class="gallery-card-img">
-          <img src="img/linux2.png" alt="Linux Komutları 2" loading="lazy">
-        </div>
-        <div class="gallery-card-info">
-          <span class="gallery-card-badge">Linux</span>
-          <h3>Kategorik Anlatım</h3>
-        </div>
-      </div>
-
       <div class="gallery-card" data-category="notlar">
         <div class="gallery-card-img">
           <img src="img/notlarım.png" alt="Notlar" loading="lazy">
@@ -162,43 +145,13 @@
         </div>
       </div>
 
-      <div class="gallery-card" data-category="notlar">
-        <div class="gallery-card-img">
-          <img src="img/notlarım2.png" alt="Notlar 2" loading="lazy">
-        </div>
-        <div class="gallery-card-info">
-          <span class="gallery-card-badge">Notlar</span>
-          <h3>Zengin Metin Düzenleyici</h3>
-        </div>
-      </div>
-
       <div class="gallery-card" data-category="python">
         <div class="gallery-card-img">
           <img src="img/pythonogren.png" alt="Python" loading="lazy">
         </div>
         <div class="gallery-card-info">
           <span class="gallery-card-badge">Python</span>
-          <h3>42 Bölümlük Python Eğitimi</h3>
-        </div>
-      </div>
-
-      <div class="gallery-card" data-category="python">
-        <div class="gallery-card-img">
-          <img src="img/pythonogren2.png" alt="Python 2" loading="lazy">
-        </div>
-        <div class="gallery-card-info">
-          <span class="gallery-card-badge">Python</span>
-          <h3>Etkileşimli Ders İçeriği</h3>
-        </div>
-      </div>
-
-      <div class="gallery-card" data-category="python">
-        <div class="gallery-card-img">
-          <img src="img/pythonogren3.png" alt="Python 3" loading="lazy">
-        </div>
-        <div class="gallery-card-info">
-          <span class="gallery-card-badge">Python</span>
-          <h3>Uygulamalı Alıştırmalar</h3>
+          <h3>60+ Bölümlük Python Eğitimi</h3>
         </div>
       </div>
 
@@ -212,13 +165,33 @@
         </div>
       </div>
 
-      <div class="gallery-card" data-category="yapayzeka">
+      <div class="gallery-card" data-category="flashcards">
         <div class="gallery-card-img">
-          <img src="img/yapayzeka2.png" alt="Yapay Zeka 2" loading="lazy">
+          <img src="img/flashcards.png" alt="Flash Kartlar" loading="lazy">
         </div>
         <div class="gallery-card-info">
-          <span class="gallery-card-badge">Yapay Zeka</span>
-          <h3>Çoklu Model Desteği</h3>
+          <span class="gallery-card-badge">Flash Kartlar</span>
+          <h3>SM-2 ile Akıllı Tekrar</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="dersler">
+        <div class="gallery-card-img">
+          <img src="img/dersler.png" alt="Dersler" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Dersler</span>
+          <h3>Sınıf Seviyesine Göre Müfredat</h3>
+        </div>
+      </div>
+
+      <div class="gallery-card" data-category="rozetler">
+        <div class="gallery-card-img">
+          <img src="img/rozetler.png" alt="Rozetler" loading="lazy">
+        </div>
+        <div class="gallery-card-info">
+          <span class="gallery-card-badge">Rozetler</span>
+          <h3>Başarı Rozetleri</h3>
         </div>
       </div>
 
@@ -236,7 +209,6 @@
   <footer class="footer">
     <div class="footer-container">
       <div class="footer-brand">
-        <img src="img/pardus.png" alt="Pardus" class="footer-logo-img">
         <span>PardusEdu</span>
       </div>
       <p class="footer-desc">TEKNOFEST Eğitim Teknolojileri Kategorisi — Açık Kaynak GTK4 Uygulaması</p>
