@@ -84,6 +84,14 @@ void MainWindow::setup_data() {
                 std::string content((std::istreambuf_iterator<char>(nf2)), std::istreambuf_iterator<char>());
                 course_notes[i].content = content;
             }
+            auto ff = dir + "/note_" + std::to_string(i) + "_fmt.dat";
+            if (fs::exists(ff)) {
+                std::ifstream ff2(ff);
+                std::string fmt((std::istreambuf_iterator<char>(ff2)), std::istreambuf_iterator<char>());
+                note_formats.push_back(fmt);
+            } else {
+                note_formats.push_back("");
+            }
         }
     }
 
@@ -278,6 +286,10 @@ void MainWindow::save_data() {
     for (size_t i = 0; i < course_notes.size(); i++) {
         std::ofstream f(dir + "/note_" + std::to_string(i) + ".txt");
         f << course_notes[i].content;
+    }
+    for (size_t i = 0; i < note_formats.size(); i++) {
+        std::ofstream f(dir + "/note_" + std::to_string(i) + "_fmt.dat");
+        f << note_formats[i];
     }
     { std::ofstream f(dir + "/grades.dat"); for (auto& g : grades) f << g.course << "|" << g.midterm << "|" << g.final << "|\n"; }
     { std::ofstream f(dir + "/schedule.dat"); for (auto& s : schedule) f << s.day << "|" << s.time << "|" << s.course << "|" << s.location << "\n"; }

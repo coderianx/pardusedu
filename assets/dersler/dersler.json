@@ -5,65 +5,29 @@
       {"title": "2. Ünite: Kesirler", "file": "matematik_5_2"}
     ],
     "Fen Bilimleri": [
-      {
-        "title": "1. Ünite: Gökyüzündeki Komşularımız Ve Biz",
-        "file": "fen_5_1"
-      },
-      {
-        "title": "2. Ünite: Kuvveti Tanıyalım",
-        "file": "fen_5_2"
-      },
-      {
-        "title": "3. Ünite: Canlıların Yapısına Yolculuk",
-        "file": "fen_5_3"
-      },
-      {
-        "title": "4. Ünite: Işığın Dünyası",
-        "file": "fen_5_4"
-      },
-      {
-        "title": "5. Ünite: Maddenin Doğası",
-        "file": "fen_5_5"
-      },
-      {
-        "title": "6. Ünite: Yaşamımızdaki Elektrik",
-        "file": "fen_5_6"
-      },
-      {
-        "title": "7. Ünite: Sürdürülebilir Yaşam ve Geri Dönüşüm",
-        "file": "fen_5_7"
-      }
+      {"title": "1. Ünite: Gökyüzündeki Komşularımız ve Biz", "file": "fen_5_1"},
+      {"title": "2. Ünite: Kuvveti Tanıyalım", "file": "fen_5_2"},
+      {"title": "3. Ünite: Canlıların Yapısına Yolculuk", "file": "fen_5_3"},
+      {"title": "4. Ünite: Işığın Dünyası", "file": "fen_5_4"},
+      {"title": "5. Ünite: Maddenin Doğası", "file": "fen_5_5"},
+      {"title": "6. Ünite: Yaşamımızdaki Elektrik", "file": "fen_5_6"},
+      {"title": "7. Ünite: Sürdürülebilir Yaşam ve Geri Dönüşüm", "file": "fen_5_7"}
     ],
     "Türkçe": [
-      {"title": "1. Ünite: Sözcükte Anlam", "file": "turkce_5_1"},
-      {"title": "2. Ünite: Cümlede Anlam", "file": "turkce_5_2"}
+      {"title": "1. Ünite: Oyun Dünyası", "file": "turkce_5_1"},
+      {"title": "2. Ünite: Atatürk'ü Tanımak", "file": "turkce_5_2"},
+      {"title": "3. Ünite: Duygularımı Tanıyorum", "file": "turkce_5_3"},
+      {"title": "4. Ünite: Geleneklerimiz", "file": "turkce_5_4"},
+      {"title": "5. Ünite: İletişim ve Sosyal İlişkiler", "file": "turkce_5_5"},
+      {"title": "6. Ünite: Sağlıklı Yaşıyorum", "file": "turkce_5_6"}
     ],
     "Sosyal Bilgiler": [
-      {
-        "title": "1. Ünite: Birlikte Yaşamak",
-        "file": "sosyal_5_1"
-      },
-      {
-        "title": "2. Ünite: Evimiz Dünya",
-        "file": "sosyal_5_2"
-      },
-      {
-        "title": "3. Ünite: Ortak Mirasımız",
-        "file": "sosyal_5_3"
-      },
-      {
-        "title": "4. Ünite: Yaşayan Demokrasimiz",
-        "file": "sosyal_5_4"
-      },
-      {
-        "title": "5. Ünite: Hayatımızda Ekonomi",
-        "file": "sosyal_5_5"
-      },
-      {
-        "title": "6. Ünite: Teknoloji ve Sosyal Bilimler",
-        "file": "sosyal_5_6"
-      }
-
+      {"title": "1. Ünite: Birlikte Yaşamak", "file": "sosyal_5_1"},
+      {"title": "2. Ünite: Evimiz Dünya", "file": "sosyal_5_2"},
+      {"title": "3. Ünite: Ortak Mirasımız", "file": "sosyal_5_3"},
+      {"title": "4. Ünite: Yaşayan Demokrasimiz", "file": "sosyal_5_4"},
+      {"title": "5. Ünite: Hayatımızda Ekonomi", "file": "sosyal_5_5"},
+      {"title": "6. Ünite: Teknoloji ve Sosyal Bilimler", "file": "sosyal_5_6"}
     ],
     "İngilizce": [
       {"title": "1. Ünite: Hello", "file": "ingilizce_5_1"}
@@ -76,14 +40,37 @@
     ],
     "Fen Bilimleri": [
       {"title": "1. Ünite: Güneş Sistemi", "file": "fen_6_1"},
-      {"title": "2. Ünite: Vücudumuz", "file": "fen_6_2"}
+      {"title": "2. Ünite: Vücudumuz", "file": "fen_6_2"},
+      {"title": "3. Ünite: Kuvvet ve Hareket", "file": "fen_6_3"},
+      {"title": "4. Ünite: Madde ve Isı", "file": "fen_6_4"},
+      {"title": "5. Ünite: Ses ve Özellikleri", "file": "fen_6_5"},
+      {"title": "6. Ünite: Vücudumuzdaki Sistemler ve Sağlığı", "file": "fen_6_6"},
+      {"title": "7. Ünite: Elektriğin İletimi", "file": "fen_6_7"}
     ],
     "Türkçe": [
-      {"title": "1. Ünite: Sözcükte Anlam", "file": "turkce_6_1"},
-      {"title": "2. Ünite: Cümlede Anlam", "file": "turkce_6_2"}
+      {"title": "Sözcükte Anlam", "file": "turkce_6_1"},
+      {"title": "Cümlede Anlam", "file": "turkce_6_2"},
+      {"title": "İsimler ve İsim Tamlamaları", "file": "turkce_6_3"},
+      {"title": "Sıfatlar (Ön Adlar) ve Sıfat Tamlamaları", "file": "turkce_6_4"},
+      {"title": "Cümlede Anlam", "file": "turkce_6_5"},
+      {"title": "Zamirler (Adıllar)", "file": "turkce_6_6"},
+      {"title": "Parçada (Paragrafta) Anlam", "file": "turkce_6_7"},
+      {"title": "Edat - Bağlaç - Ünlem", "file": "turkce_6_8"},
+      {"title": "Yazım Kuralları", "file": "turkce_6_9"},
+      {"title": "Noktalama İşaretleri", "file": "turkce_6_10"},
+      {"title": "Söz Gruplarında Anlam", "file": "turkce_6_11"},
+      {"title": "Parçada Anlam — Paragrafın Yapısı", "file": "turkce_6_12"},
+      {"title": "Metin Türleri (Yazı Türleri)", "file": "turkce_6_13"},
+      {"title": "Parçada Anlam", "file": "turkce_6_14"}
     ],
     "Sosyal Bilgiler": [
-      {"title": "1. Ünite: Birey ve Toplum", "file": "sosyal_6_1"}
+      {"title": "1. Ünite: Birey ve Toplum", "file": "sosyal_6_1"},
+      {"title": "2. Ünite: Kültür ve Miras", "file": "sosyal_6_2"},
+      {"title": "3. Ünite: İnsanlar, Yerler ve Çevreler", "file": "sosyal_6_3"},
+      {"title": "4. Ünite: Bilim, Teknoloji ve Toplum", "file": "sosyal_6_4"},
+      {"title": "5. Ünite: Üretim, Dağıtım ve Tüketim", "file": "sosyal_6_5"},
+      {"title": "6. Ünite: Etkin Vatandaşlık", "file": "sosyal_6_6"},
+      {"title": "7. Ünite: Küresel Bağlantılar", "file": "sosyal_6_7"}
     ],
     "İngilizce": [
       {"title": "1. Ünite: Life", "file": "ingilizce_6_1"}

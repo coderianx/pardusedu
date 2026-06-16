@@ -142,6 +142,28 @@ private:
     Gtk::Label* note_stats_label = nullptr;
     int selected_note_index = -1;
 
+    Glib::RefPtr<Gtk::TextTag> tag_bold;
+    Glib::RefPtr<Gtk::TextTag> tag_italic;
+    Glib::RefPtr<Gtk::TextTag> tag_underline;
+    Glib::RefPtr<Gtk::TextTag> tag_strikethrough;
+    Glib::RefPtr<Gtk::TextTag> tag_h1;
+    Glib::RefPtr<Gtk::TextTag> tag_h2;
+    Glib::RefPtr<Gtk::TextTag> tag_h3;
+    Glib::RefPtr<Gtk::TextTag> tag_font_inc;
+    Glib::RefPtr<Gtk::TextTag> tag_font_dec;
+    Gtk::ToggleButton btn_bold;
+    Gtk::ToggleButton btn_italic;
+    Gtk::ToggleButton btn_underline;
+    Gtk::ToggleButton btn_strikethrough;
+    Gtk::ToggleButton btn_h1;
+    Gtk::ToggleButton btn_h2;
+    Gtk::ToggleButton btn_h3;
+    Gtk::Button btn_font_inc_w;
+    Gtk::Button btn_font_dec_w;
+    Gtk::Box format_toolbar{Gtk::Orientation::HORIZONTAL, 4};
+    std::vector<std::string> note_formats;
+    bool note_loading = false;
+
     Gtk::Label focus_status{"Hazır", Gtk::Align::CENTER};
     Gtk::Label focus_timer{"00:00", Gtk::Align::CENTER};
     Gtk::Button btn_focus_toggle{"Dikkat Modunu Başlat"};
@@ -222,6 +244,11 @@ private:
     void on_share_note();
     void on_save_note();
     void on_delete_course();
+    void apply_tag_to_selection(Gtk::ToggleButton& btn, const Glib::RefPtr<Gtk::TextTag>& tag);
+    void update_format_buttons();
+    void save_note_format(size_t index);
+    void load_note_format(size_t index);
+    Glib::RefPtr<Gtk::TextTag> make_font_tag(const std::string& name, double scale);
 
     void setup_schedule();
     void build_schedule_grid();

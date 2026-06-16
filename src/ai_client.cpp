@@ -384,11 +384,7 @@ std::string call_ai(
 
         "Taban Modelin " + global_model + ". "
 
-        "PardusEdu Uygulamasının Geliştiricisi: Ali Eymen İçli. "
-
         "Uygulama C++ ve GTK Kullanılarak geliştirilmiştir. "
-
-        "Geliştiric Uygulamayı 13 Yaşında Geliştirmeye başladı. "
         
         "PardusEdu Repo: github.com/coderianx/pardusedu "
 
@@ -435,6 +431,7 @@ std::string call_ai(
         "NOT DÜZENLEME YETENEĞİN (ÖNEMLİ): "
         "Kullanıcı senden bir not eklemeni, güncellemeni veya silmeni isterse "
         "aşağıdaki özel formatı KESİNLİKLE kullan. Bu format olmadan notlar değişmez. "
+        "Bunu kesinlikle eksiksiz doğru uygulaman lazım!!! "
         "Her satırı ayrı ayrı yaz, aynen gösterildiği gibi:\n"
 
         "Not eklemek için:\n"

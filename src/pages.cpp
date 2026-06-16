@@ -12,6 +12,7 @@
 #include <curl/curl.h>
 #include <webkit/webkit.h>
 #include <gdk/gdk.h>
+#include <gdk/gdkkeysyms.h>
 #include <md4c-html.h>
 #include <nlohmann/json.hpp>
 #include <qrencode.h>
@@ -1966,6 +1967,137 @@ void MainWindow::setup_notes() {
     sep->set_margin_bottom(8);
     note_editor_box.append(*sep);
 
+    // Rich text tags
+    auto nbuf = note_view.get_buffer();
+    auto ttable = nbuf->get_tag_table();
+
+    tag_bold = Gtk::TextTag::create("bold");
+    tag_bold->property_weight() = Pango::Weight::BOLD;
+    ttable->add(tag_bold);
+
+    tag_italic = Gtk::TextTag::create("italic");
+    tag_italic->property_style() = Pango::Style::ITALIC;
+    ttable->add(tag_italic);
+
+    tag_underline = Gtk::TextTag::create("underline");
+    tag_underline->property_underline() = Pango::Underline::SINGLE;
+    ttable->add(tag_underline);
+
+    tag_strikethrough = Gtk::TextTag::create("strikethrough");
+    tag_strikethrough->property_strikethrough() = true;
+    ttable->add(tag_strikethrough);
+
+    tag_h1 = Gtk::TextTag::create("h1");
+    tag_h1->property_scale() = 2.0;
+    tag_h1->property_weight() = Pango::Weight::BOLD;
+    ttable->add(tag_h1);
+
+    tag_h2 = Gtk::TextTag::create("h2");
+    tag_h2->property_scale() = 1.5;
+    tag_h2->property_weight() = Pango::Weight::BOLD;
+    ttable->add(tag_h2);
+
+    tag_h3 = Gtk::TextTag::create("h3");
+    tag_h3->property_scale() = 1.2;
+    tag_h3->property_weight() = Pango::Weight::BOLD;
+    ttable->add(tag_h3);
+
+    tag_font_inc = make_font_tag("font_inc", 1.3);
+    tag_font_dec = make_font_tag("font_dec", 0.8);
+
+    // Format toolbar
+    format_toolbar.set_margin_top(4);
+    format_toolbar.set_margin_bottom(4);
+    format_toolbar.set_halign(Gtk::Align::START);
+
+    auto make_tool_toggle = [this](Gtk::ToggleButton& btn, const std::string& markup, const std::string& tip) {
+        auto* lbl = Gtk::make_managed<Gtk::Label>();
+        lbl->set_markup(markup);
+        btn.set_child(*lbl);
+        btn.add_css_class("note-tool-btn");
+        btn.set_tooltip_text(tip);
+        btn.set_has_frame(false);
+        format_toolbar.append(btn);
+    };
+
+    auto make_tool_btn = [this](Gtk::Button& btn, const std::string& markup, const std::string& tip) {
+        auto* lbl = Gtk::make_managed<Gtk::Label>();
+        lbl->set_markup(markup);
+        btn.set_child(*lbl);
+        btn.add_css_class("note-tool-btn");
+        btn.set_tooltip_text(tip);
+        btn.set_has_frame(false);
+        format_toolbar.append(btn);
+    };
+
+    make_tool_toggle(btn_bold, "<b>B</b>", "Kalın (Ctrl+B)");
+    make_tool_toggle(btn_italic, "<i>İ</i>", "İtalik (Ctrl+I)");
+    make_tool_toggle(btn_underline, "<u>U</u>", "Altı Çizili (Ctrl+U)");
+    make_tool_toggle(btn_strikethrough, "<s>S</s>", "Üstü Çizili (Ctrl+S)");
+
+    auto* sep1 = Gtk::make_managed<Gtk::Separator>(Gtk::Orientation::VERTICAL);
+    sep1->add_css_class("note-tool-sep");
+    format_toolbar.append(*sep1);
+
+    make_tool_toggle(btn_h1, "<span size='x-large' weight='bold'>H1</span>", "Başlık 1");
+    make_tool_toggle(btn_h2, "<span size='large' weight='bold'>H2</span>", "Başlık 2");
+    make_tool_toggle(btn_h3, "<span size='medium' weight='bold'>H3</span>", "Başlık 3");
+
+    auto* sep2 = Gtk::make_managed<Gtk::Separator>(Gtk::Orientation::VERTICAL);
+    sep2->add_css_class("note-tool-sep");
+    format_toolbar.append(*sep2);
+
+    make_tool_btn(btn_font_dec_w, "<span size='small'>A⁻</span>", "Font küçült");
+    make_tool_btn(btn_font_inc_w, "<span size='x-large'>A⁺</span>", "Font büyüt");
+
+    auto* toolbar_frame = Gtk::make_managed<Gtk::Frame>();
+    toolbar_frame->set_child(format_toolbar);
+    toolbar_frame->add_css_class("note-toolbar-frame");
+    note_editor_box.append(*toolbar_frame);
+
+    btn_bold.signal_toggled().connect([this]() { apply_tag_to_selection(btn_bold, tag_bold); });
+    btn_italic.signal_toggled().connect([this]() { apply_tag_to_selection(btn_italic, tag_italic); });
+    btn_underline.signal_toggled().connect([this]() { apply_tag_to_selection(btn_underline, tag_underline); });
+    btn_strikethrough.signal_toggled().connect([this]() { apply_tag_to_selection(btn_strikethrough, tag_strikethrough); });
+    btn_h1.signal_toggled().connect([this]() { apply_tag_to_selection(btn_h1, tag_h1); });
+    btn_h2.signal_toggled().connect([this]() { apply_tag_to_selection(btn_h2, tag_h2); });
+    btn_h3.signal_toggled().connect([this]() { apply_tag_to_selection(btn_h3, tag_h3); });
+
+    btn_font_inc_w.signal_clicked().connect([this]() {
+        auto buf = note_view.get_buffer();
+        Gtk::TextIter start, end;
+        if (buf->get_selection_bounds(start, end))
+            buf->apply_tag(tag_font_inc, start, end);
+        else
+            buf->apply_tag(tag_font_inc, buf->get_insert()->get_iter(), buf->get_insert()->get_iter());
+    });
+    btn_font_dec_w.signal_clicked().connect([this]() {
+        auto buf = note_view.get_buffer();
+        Gtk::TextIter start, end;
+        if (buf->get_selection_bounds(start, end))
+            buf->apply_tag(tag_font_dec, start, end);
+        else
+            buf->apply_tag(tag_font_dec, buf->get_insert()->get_iter(), buf->get_insert()->get_iter());
+    });
+
+    // Apply active formatting to newly inserted text
+    nbuf->signal_insert().connect([this](const Gtk::TextIter& pos, const Glib::ustring&, int length) {
+        if (length <= 0 || note_loading || selected_note_index < 0) return;
+        // signal_insert fires AFTER insertion; pos points AFTER the inserted text
+        int soff = pos.get_offset() - length;
+        if (soff < 0) return;
+        auto buf = note_view.get_buffer();
+        auto s = buf->get_iter_at_offset(soff);
+        auto e = buf->get_iter_at_offset(soff + length);
+        if (btn_bold.get_active() && tag_bold) buf->apply_tag(tag_bold, s, e);
+        if (btn_italic.get_active() && tag_italic) buf->apply_tag(tag_italic, s, e);
+        if (btn_underline.get_active() && tag_underline) buf->apply_tag(tag_underline, s, e);
+        if (btn_strikethrough.get_active() && tag_strikethrough) buf->apply_tag(tag_strikethrough, s, e);
+        if (btn_h1.get_active() && tag_h1) buf->apply_tag(tag_h1, s, e);
+        if (btn_h2.get_active() && tag_h2) buf->apply_tag(tag_h2, s, e);
+        if (btn_h3.get_active() && tag_h3) buf->apply_tag(tag_h3, s, e);
+    });
+
     auto* note_sw = Gtk::make_managed<Gtk::ScrolledWindow>();
     note_sw->set_vexpand(true);
     note_sw->set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
@@ -1977,6 +2109,32 @@ void MainWindow::setup_notes() {
     note_view.set_bottom_margin(30);
     note_view.set_editable(true);
     note_view.set_cursor_visible(true);
+
+    auto key_controller = Gtk::EventControllerKey::create();
+    key_controller->signal_key_pressed().connect(
+        [this](guint keyval, guint, Gdk::ModifierType state) -> bool {
+            if ((state & Gdk::ModifierType::CONTROL_MASK) == Gdk::ModifierType())
+                return false;
+            switch (gdk_keyval_to_upper(keyval)) {
+            case GDK_KEY_B:
+                btn_bold.set_active(!btn_bold.get_active());
+                return true;
+            case GDK_KEY_I:
+                btn_italic.set_active(!btn_italic.get_active());
+                return true;
+            case GDK_KEY_U:
+                btn_underline.set_active(!btn_underline.get_active());
+                return true;
+            case GDK_KEY_S:
+                btn_strikethrough.set_active(!btn_strikethrough.get_active());
+                return true;
+            default:
+                return false;
+            }
+        },
+        false
+    );
+    note_view.add_controller(key_controller);
 
     auto note_provider = Gtk::CssProvider::create();
     note_provider->load_from_data(
@@ -2074,7 +2232,11 @@ void MainWindow::on_course_select(Gtk::ListBoxRow* row) {
     if (idx >= 0 && idx < (int)course_notes.size()) {
         selected_note_index = idx;
         note_title.set_text(course_notes[idx].course);
+        note_loading = true;
         note_view.get_buffer()->set_text(course_notes[idx].content);
+        note_loading = false;
+        load_note_format(idx);
+        update_format_buttons();
     }
 }
 
@@ -2255,12 +2417,15 @@ void MainWindow::on_save_note() {
         Gtk::TextIter start, end;
         buf->get_bounds(start, end);
         course_notes[selected_note_index].content = buf->get_text(start, end, false);
+        save_note_format(selected_note_index);
         save_data();
     }
 }
 
 void MainWindow::on_delete_course() {
     if (selected_note_index >= 0 && selected_note_index < (int)course_notes.size()) {
+        if (selected_note_index < (int)note_formats.size())
+            note_formats.erase(note_formats.begin() + selected_note_index);
         course_notes.erase(course_notes.begin() + selected_note_index);
         selected_note_index = -1;
         note_title.set_text("Bir ders seçin");
@@ -2268,6 +2433,123 @@ void MainWindow::on_delete_course() {
         refresh_course_list();
         save_data();
     }
+}
+
+Glib::RefPtr<Gtk::TextTag> MainWindow::make_font_tag(const std::string& name, double scale) {
+    auto tag = Gtk::TextTag::create(name);
+    tag->property_scale_set() = true;
+    tag->property_scale() = scale;
+    note_view.get_buffer()->get_tag_table()->add(tag);
+    return tag;
+}
+
+void MainWindow::apply_tag_to_selection(Gtk::ToggleButton& btn, const Glib::RefPtr<Gtk::TextTag>& tag) {
+    auto buf = note_view.get_buffer();
+    Gtk::TextIter start, end;
+    if (buf->get_selection_bounds(start, end)) {
+        if (btn.get_active())
+            buf->apply_tag(tag, start, end);
+        else
+            buf->remove_tag(tag, start, end);
+    } else {
+        auto iter = buf->get_insert()->get_iter();
+        if (btn.get_active())
+            buf->apply_tag(tag, iter, iter);
+        else
+            buf->remove_tag(tag, iter, iter);
+    }
+}
+
+void MainWindow::update_format_buttons() {
+    auto buf = note_view.get_buffer();
+    if (!buf) return;
+    auto iter = buf->get_insert()->get_iter();
+
+    auto check = [&](const Glib::RefPtr<Gtk::TextTag>& tag) -> bool {
+        if (!tag) return false;
+        Gtk::TextIter s, e;
+        if (buf->get_selection_bounds(s, e))
+            return s.has_tag(tag) || e.has_tag(tag);
+        return iter.has_tag(tag);
+    };
+
+    btn_bold.set_active(check(tag_bold));
+    btn_italic.set_active(check(tag_italic));
+    btn_underline.set_active(check(tag_underline));
+    btn_strikethrough.set_active(check(tag_strikethrough));
+    btn_h1.set_active(check(tag_h1));
+    btn_h2.set_active(check(tag_h2));
+    btn_h3.set_active(check(tag_h3));
+}
+
+void MainWindow::save_note_format(size_t index) {
+    if (index >= note_formats.size())
+        note_formats.resize(index + 1, "");
+
+    auto buf = note_view.get_buffer();
+    Gtk::TextIter start, end;
+    buf->get_bounds(start, end);
+    int len = end.get_offset();
+
+    json j = json::array();
+    auto record_tag = [&](const Glib::RefPtr<Gtk::TextTag>& tag, const std::string& tname) {
+        int rs = -1;
+        for (int i = 0; i <= len; i++) {
+            auto it = (i < len) ? buf->get_iter_at_offset(i) : end;
+            bool has = it.has_tag(tag);
+            if (has && rs < 0) rs = i;
+            else if (!has && rs >= 0) {
+                json r;
+                r["s"] = rs; r["e"] = i; r["t"] = tname;
+                j.push_back(r);
+                rs = -1;
+            }
+        }
+    };
+
+    record_tag(tag_bold, "b");
+    record_tag(tag_italic, "i");
+    record_tag(tag_underline, "u");
+    record_tag(tag_strikethrough, "s");
+    record_tag(tag_h1, "h1");
+    record_tag(tag_h2, "h2");
+    record_tag(tag_h3, "h3");
+    record_tag(tag_font_inc, "fi");
+    record_tag(tag_font_dec, "fd");
+
+    note_formats[index] = j.dump();
+}
+
+void MainWindow::load_note_format(size_t index) {
+    auto buf = note_view.get_buffer();
+    if (index >= note_formats.size() || note_formats[index].empty())
+        return;
+
+    try {
+        auto j = json::parse(note_formats[index]);
+        auto tag_for_name = [this](const std::string& t) -> Glib::RefPtr<Gtk::TextTag> {
+            if (t == "b") return tag_bold;
+            if (t == "i") return tag_italic;
+            if (t == "u") return tag_underline;
+            if (t == "s") return tag_strikethrough;
+            if (t == "h1") return tag_h1;
+            if (t == "h2") return tag_h2;
+            if (t == "h3") return tag_h3;
+            if (t == "fi") return tag_font_inc;
+            if (t == "fd") return tag_font_dec;
+            return {};
+        };
+        for (auto& r : j) {
+            int s = r["s"].get<int>();
+            int e = r["e"].get<int>();
+            auto tag = tag_for_name(r["t"].get<std::string>());
+            if (tag) {
+                auto sit = buf->get_iter_at_offset(s);
+                auto eit = buf->get_iter_at_offset(e);
+                buf->apply_tag(tag, sit, eit);
+            }
+        }
+    } catch (const json::parse_error&) {}
 }
 
 void MainWindow::on_share_note() {
