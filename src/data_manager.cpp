@@ -198,6 +198,45 @@ void MainWindow::setup_data() {
         }
     }
 
+    auto rf = dir + "/reports.dat";
+    if (fs::exists(rf)) {
+        std::ifstream f(rf);
+        std::string line;
+        while (std::getline(f, line)) {
+            if (line.empty()) continue;
+            std::vector<std::string> parts;
+            size_t pos = 0, prev = 0;
+            while ((pos = line.find('|', prev)) != std::string::npos) {
+                parts.push_back(line.substr(prev, pos - prev));
+                prev = pos + 1;
+            }
+            parts.push_back(line.substr(prev));
+            if (parts.size() < 19) continue;
+
+            WeeklyReport r;
+            r.week_start = parts[0];
+            r.week_end = parts[1];
+            r.total_pomo_sessions = std::stoi(parts[2]);
+            r.total_focus_minutes = std::stoi(parts[3]);
+            r.cards_reviewed = std::stoi(parts[4]);
+            r.cards_correct = std::stoi(parts[5]);
+            r.cards_wrong = std::stoi(parts[6]);
+            r.tasks_completed = std::stoi(parts[7]);
+            r.tasks_total = std::stoi(parts[8]);
+            r.streak_count = std::stoi(parts[9]);
+            r.notes_created = std::stoi(parts[10]);
+            r.study_score = std::stoi(parts[11]);
+            r.best_deck_id = parts[12];
+            r.worst_deck_id = parts[13];
+            r.weak_deck_id = parts[14];
+            r.created_at = std::stol(parts[15]);
+            r.ai_summary = parts[16];
+            r.ai_advice = parts[17];
+            r.ai_motivation = parts[18];
+            weekly_reports.push_back(r);
+        }
+    }
+
     auto pf_ = dir + "/provider.dat";
     if (fs::exists(pf_)) {
         std::ifstream f(pf_);
@@ -315,6 +354,28 @@ void MainWindow::save_data() {
             j["next_review_at"] = c.next_review_at;
             j["last_reviewed_at"] = c.last_reviewed_at;
             f << j.dump() << "\n";
+        } }
+    { std::ofstream f(dir + "/reports.dat");
+        for (auto& r : weekly_reports) {
+            f << r.week_start << "|"
+              << r.week_end << "|"
+              << r.total_pomo_sessions << "|"
+              << r.total_focus_minutes << "|"
+              << r.cards_reviewed << "|"
+              << r.cards_correct << "|"
+              << r.cards_wrong << "|"
+              << r.tasks_completed << "|"
+              << r.tasks_total << "|"
+              << r.streak_count << "|"
+              << r.notes_created << "|"
+              << r.study_score << "|"
+              << r.best_deck_id << "|"
+              << r.worst_deck_id << "|"
+              << r.weak_deck_id << "|"
+              << r.created_at << "|"
+              << r.ai_summary << "|"
+              << r.ai_advice << "|"
+              << r.ai_motivation << "\n";
         } }
     { std::ofstream f(dir + "/provider.dat"); f << (ai_provider == AIProvider::GROQ ? "groq" : ai_provider == AIProvider::OPENROUTER ? "openrouter" : "gemini") << "\n"; }
     { std::ofstream f(dir + "/apikey_groq.dat"); f << ai_api_key_groq << "\n"; }

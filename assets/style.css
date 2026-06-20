@@ -1680,34 +1680,34 @@ separator {
 
 /* ── Note Formatting Toolbar ── */
 
-.note-toolbar-frame {
-    border: none;
-    background: none;
-    box-shadow: none;
-    margin: 0;
-    padding: 0;
-}
+/* ─── Not Defteri Format Toolbar ───────────────────────
+     Tüm butonlar ortak bir cam çerçeve içinde yer alır.
+     Glassmorphism: transparan arka plan, yumuşak kenarlar,
+     hafif iç/dış gölge ve accent renk vurgusu.          */
 
-.note-toolbar-frame > child {
-    background: alpha(__card_bg, 0.75);
-    border: 1px solid alpha(__border, 0.6);
-    border-radius: 12px;
-    padding: 5px 10px;
-    margin: 4px 0 8px 0;
+.note-toolbar-glass {
+    background: linear-gradient(
+        135deg,
+        alpha(__card_bg, 0.30),
+        alpha(__card_bg, 0.15)
+    );
+    border: 1px solid alpha(__border, 0.3);
+    border-radius: 16px;
+    padding: 6px 10px;
+    margin: 6px 0 10px 0;
     box-shadow:
-        0 2px 8px alpha(black, 0.04),
-        0 1px 2px alpha(black, 0.02),
-        inset 0 1px 0 alpha(white, 0.5);
-    backdrop-filter: blur(8px);
-    transition: border-color 0.25s ease, box-shadow 0.25s ease;
+        0 4px 20px alpha(black, 0.05),
+        0 1px 4px alpha(black, 0.03),
+        inset 0 1px 0 alpha(white, 0.4);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
-.note-toolbar-frame:hover > child {
+.note-toolbar-glass:hover {
     border-color: alpha(__accent, 0.2);
     box-shadow:
-        0 3px 14px alpha(black, 0.07),
-        0 1px 3px alpha(__accent, 0.04),
-        inset 0 1px 0 alpha(white, 0.5);
+        0 6px 28px alpha(black, 0.08),
+        0 1px 6px alpha(__accent, 0.06),
+        inset 0 1px 0 alpha(white, 0.4);
 }
 
 .note-tool-btn {
@@ -1715,39 +1715,98 @@ separator {
     color: __text_color;
     border: none;
     border-radius: 8px;
-    padding: 3px 9px;
+    padding: 5px 12px;
     font-size: 13px;
     font-weight: 600;
     min-width: 34px;
-    min-height: 30px;
-    transition: all 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+    min-height: 32px;
+    transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .note-tool-btn:hover {
-    background: __hover_bg;
+    background: alpha(__accent, 0.1);
+    color: __accent;
     transform: translateY(-1px);
 }
 .note-tool-btn:active {
-    background: alpha(__border, 0.25);
-    transform: translateY(0) scale(0.94);
+    background: alpha(__accent, 0.18);
+    transform: translateY(0) scale(0.93);
 }
 .note-tool-btn:checked {
-    background: linear-gradient(135deg, alpha(__accent, 0.12), alpha(__accent, 0.06));
+    background: linear-gradient(135deg, alpha(__accent, 0.16), alpha(__accent, 0.07));
     color: __accent;
     box-shadow: inset 0 1px 3px alpha(__accent, 0.1);
-    border: none;
 }
 .note-tool-btn:checked:hover {
-    background: linear-gradient(135deg, alpha(__accent, 0.18), alpha(__accent, 0.10));
+    background: linear-gradient(135deg, alpha(__accent, 0.22), alpha(__accent, 0.12));
 }
 
 .note-tool-btn label {
     font-weight: 600;
+    letter-spacing: -0.2px;
 }
 
-/* Toolbar vertical separators */
+/* Vertical separators between button groups */
 .note-tool-sep {
-    background: alpha(__border, 0.35);
-    min-height: 22px;
+    background: linear-gradient(
+        180deg,
+        transparent,
+        alpha(__border, 0.25),
+        transparent
+    );
+    min-height: 26px;
     min-width: 1px;
-    margin: 0 3px;
+    margin: 0 5px;
+}
+
+/* ================= Weekly Analysis ================= */
+
+.dash-weekly-btn {
+    background: linear-gradient(135deg, __accent, __accent_light);
+    color: alpha(#ffffff, 0.92);
+    border-radius: 14px;
+    padding: 12px 32px;
+    font-size: 15px;
+    font-weight: 700;
+    border: none;
+    transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 3px 12px alpha(__accent, 0.3);
+}
+.dash-weekly-btn:hover {
+    box-shadow: 0 6px 20px alpha(__accent, 0.4);
+    transform: translateY(-2px);
+}
+.dash-weekly-btn:active {
+    transform: translateY(0) scale(0.98);
+}
+
+.weekly-section-header {
+    font-size: 14px;
+    font-weight: 700;
+    color: __accent;
+    letter-spacing: -0.2px;
+    padding: 0;
+    margin-bottom: 4px;
+}
+
+.weekly-ai-text {
+    font-size: 0.95em;
+    line-height: 1.7;
+    color: __text_color;
+    padding: 2px 0;
+}
+
+.weekly-motivation {
+    font-size: 1.1em;
+    font-style: italic;
+    color: __muted;
+    padding: 8px 16px;
+    border-top: 1px solid alpha(__border, 0.4);
+    border-bottom: 1px solid alpha(__border, 0.4);
+    margin: 4px 0;
+}
+
+.weekly-weak-info {
+    font-size: 0.9em;
+    color: __muted;
+    line-height: 1.4;
 }

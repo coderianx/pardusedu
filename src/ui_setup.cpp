@@ -260,6 +260,7 @@ void MainWindow::setup_pages() {
     setup_linux();
     setup_ai_chat();
     setup_python();
+    setup_weekly_analysis();
     paned.set_end_child(stack);
 }
 
@@ -344,6 +345,15 @@ void MainWindow::setup_dashboard() {
     stats_box->append(*make_stat("/org/ogrenci/merkezi/assets/timer.svg", std::to_string(pomodoro_minutes) + "dk", "Çalışma Süresi", dash_icon_timer));
 
     box->append(*stats_box);
+
+    // --- Weekly Analysis Button ---
+    auto* btn_weekly = Gtk::make_managed<Gtk::Button>("Haftal\u0131k Analizlerim");
+    btn_weekly->set_halign(Gtk::Align::CENTER);
+    btn_weekly->set_margin_bottom(16);
+    btn_weekly->add_css_class("dash-weekly-btn");
+    btn_weekly->signal_clicked().connect(
+        sigc::mem_fun(*this, &MainWindow::navigate_to_weekly_analysis));
+    box->append(*btn_weekly);
 
     // --- Copyright ---
     auto* pardusedu = Gtk::make_managed<Gtk::Label>("©PardusEdu");

@@ -13,27 +13,24 @@
 
 using json = nlohmann::json;
 
-// Sohbet mesajlarını tutan yapı (kullanıcı veya asistan)
 struct Message
 {
     std::string role;
     std::string content;
 };
 
-// Konuşma geçmişini burada tutuyoruz, böylece AI önceki mesajları hatırlasın
+// Konuşma geçmişi (AI bağlam için)
 static std::vector<Message> conversation_history;
 
-
-
-// API'ye erişmek için kullandığımız anahtarlar, kullanıcı kendininkini girebilir
+// API anahtarları, kullanıcı kendi anahtarını girer
 static std::string global_groq_api_key = "";
 static std::string global_openrouter_api_key = "";
 static std::string global_gemini_api_key = "";
 
-// Hangi sağlayıcının kullanılacağı (Groq Cloud veya OpenRouter)
+// Hangi sağlayıcı (Groq / OpenRouter / Gemini)
 static AIProvider global_provider = AIProvider::GROQ;
 
-// Hangi yapay zeka modelini kullanacağımızı belirtiyor, kullanıcı ayarlardan değiştirebilir
+// Varsayılan model, kullanıcı ayarlardan değiştirebilir
 static std::string global_model = "llama-3.3-70b-versatile";
 
 void set_groq_api_key(const std::string& key) {
@@ -82,7 +79,7 @@ std::string get_model() {
     return global_model;
 }
 
-// CURL ile istek atınca gelen cevabı yakalamak için geri çağırma fonksiyonu
+// CURL yazma callback'i
 static size_t WriteCallback(void* contents,
                             size_t size,
                             size_t nmemb,
@@ -94,7 +91,7 @@ static size_t WriteCallback(void* contents,
     return size * nmemb;
 }
 
-// API'den gelen JSON cevabından yapay zekanın yazdığı metni çekip alıyoruz
+// API JSON yanıtından AI metnini çıkar
 std::string extract_ai_reply(
     const std::string& response)
 {
@@ -149,10 +146,43 @@ std::string extract_ai_reply(
     }
 }
 
+// Gemini groundingMetadata varsa "Google Search" ibaresini ekle
+static std::string append_grounding_sources(
+    const std::string& raw_response,
+    const std::string& ai_text)
+{
+    if (raw_response.empty() || raw_response[0] != '{')
+        return ai_text;
+
+    try
+    {
+        json parsed = json::parse(raw_response);
+        if (parsed.contains("candidates") &&
+            parsed["candidates"].is_array() &&
+            !parsed["candidates"].empty() &&
+            parsed["candidates"][0].contains("groundingMetadata") &&
+            parsed["candidates"][0]["groundingMetadata"].contains("groundingChunks"))
+        {
+            auto& chunks = parsed["candidates"][0]["groundingMetadata"]["groundingChunks"];
+            if (!chunks.is_array() || chunks.empty())
+                return ai_text;
+
+            for (auto& chunk : chunks)
+            {
+                if (chunk.contains("web") && chunk["web"].contains("uri"))
+                    return ai_text + "\n\nGoogle Search";
+            }
+        }
+    }
+    catch (...)
+    {
+    }
+    return ai_text;
+}
+
 static std::string remove_markdown(
     std::string text)
 {
-    // Kod bloklarını (``` ile yazılmış olanları) temizliyoruz, düz metin olarak kalmalı
     text = std::regex_replace(
         text,
         std::regex(R"(```[\s\S]*?```)",
@@ -160,35 +190,30 @@ static std::string remove_markdown(
         ""
     );
 
-    // Satır içi kodları (` ile yazılanları) normal metne çeviriyoruz
     text = std::regex_replace(
         text,
         std::regex(R"(`([^`]*)`)"),
         "$1"
     );
 
-    // Kalın yazılmış metinleri (** ile) düz metin haline getiriyoruz
     text = std::regex_replace(
         text,
         std::regex(R"(\*\*(.*?)\*\*)"),
         "$1"
     );
 
-    // İtalik yazılmış metinleri (* ile) düz metne çeviriyoruz
     text = std::regex_replace(
         text,
         std::regex(R"(\*(.*?)\*)"),
         "$1"
     );
 
-    // Başlıklardaki (#) işaretlerini kaldırıyoruz
     text = std::regex_replace(
         text,
         std::regex(R"(#+\s*)"),
         ""
     );
 
-    // Alıntı satırlarının başındaki (>) işaretini temizliyoruz
     text = std::regex_replace(
         text,
         std::regex(R"(^>\s?)",
@@ -196,7 +221,7 @@ static std::string remove_markdown(
         ""
     );
 
-    // Liste işaretlerini (-, *, +) düzgün bir görünüme kavuşturuyoruz
+    // Liste işaretlerini •'ya çevir
     text = std::regex_replace(
         text,
         std::regex(R"(^[-*+]\s)",
@@ -207,7 +232,7 @@ static std::string remove_markdown(
     return text;
 }
 
-// Kullanıcı mesajında YouTube linki var mı kontrol ediyoruz
+// YouTube linki var mı?
 static bool has_youtube_url(
     const std::string& text)
 {
@@ -219,7 +244,7 @@ static bool has_youtube_url(
         text.find("youtube.com/embed/") != std::string::npos;
 }
 
-// Metnin içindeki ilk YouTube linkini bulup döndürüyoruz
+// İlk YouTube linkini bul
 static std::string extract_youtube_url(
     const std::string& text)
 {
@@ -262,7 +287,7 @@ static std::string sanitize_utf8(const std::string& input)
     return result;
 }
 
-// yt-dlp ile YouTube videosundan transkript indirip içeriğini döndürüyoruz
+// yt-dlp ile transkript al
 static std::string fetch_youtube_transcript(
     const std::string& url)
 {
@@ -298,7 +323,7 @@ static std::string fetch_youtube_transcript(
     return sanitize_utf8(result);
 }
 
-// Basit token tahmini: ortalama 3.5 karakter ≈ 1 token (Türkçe/İngilizce karışık)
+// Kabaca token sayısı (3.5 karakter ≈ 1 token)
 static int estimate_tokens(const std::string& text)
 {
     if (text.empty()) return 0;
@@ -312,7 +337,7 @@ static int get_model_limit()
 }
 
 std::string duckduckgo_search(const std::string& query) {
-    // Sorguyu temizle: soru ekleri/karakterleri kaldır, gereksiz boşlukları düzelt
+    // Sorguyu temizle
     std::string cleaned = query;
     cleaned = std::regex_replace(cleaned, std::regex(R"([?¿?!¡]+)"), " ");
     cleaned = std::regex_replace(cleaned, std::regex(R"(\b(kimdir|kim|nedir|neden|nasıl|nasil|nerede|nereye|hangi|kaç|kac|mı|mi|mu|mü|miyim|misin|midir)\b)", std::regex::icase), " ");
@@ -589,13 +614,13 @@ std::string call_ai(
     std::string final_user_text =
         transcript_context + user_text;
 
-    // Kullanıcının mesajını konuşma geçmişine ekliyoruz ki AI bağlamı anlasın
+    // Kullanıcı mesajını geçmişe ekle
     conversation_history.push_back({
         "user",
         final_user_text
     });
 
-    // ─── Mesajları hazırla ───────────────────────────────────────────
+    // Mesajları hazırla
     json messages = json::array();
 
     messages.push_back({
@@ -613,7 +638,7 @@ std::string call_ai(
         });
     }
 
-    // ─── Token tahmini ve akıllı kırpma ───────────────────────────────
+    // Token tahmini ve kırpma
     int max_tokens = 3050;
     const int MIN_TOKENS = 128;
     const int MODEL_LIMIT = get_model_limit();
@@ -646,7 +671,7 @@ std::string call_ai(
     if (total_target > limit)
         max_tokens = std::max(MIN_TOKENS, max_tokens - (total_target - limit));
 
-    // ─── cURL hazırlıkları ───────────────────────────────────────────
+    // cURL ayarları
     struct curl_slist* headers = nullptr;
 
     bool is_gemini = (global_provider == AIProvider::GEMINI);
@@ -686,7 +711,7 @@ std::string call_ai(
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, 60L);
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 
-    // ─── İsteği gönder, 413'te akıllıca yeniden dene ─────────────────
+    // İsteği gönder, 413'te tekrar dene
     long http_code = 0;
 
     for (int attempt = 0; attempt < 5; attempt++)
@@ -715,7 +740,8 @@ std::string call_ai(
                     {"temperature", 0.4},
                     {"topP", 0.9},
                     {"maxOutputTokens", max_tokens}
-                }}
+                }},
+                {"tools", json::array({json{{"google_search", json::object()}}})}
             };
         }
         else
@@ -791,6 +817,9 @@ std::string call_ai(
     std::string ai_reply =
         extract_ai_reply(response);
 
+    if (is_gemini)
+        ai_reply = append_grounding_sources(response, ai_reply);
+
     ai_reply = std::regex_replace(
         ai_reply,
         std::regex(R"(<think>[\s\S]*?</think>)"),
@@ -799,7 +828,7 @@ std::string call_ai(
 
     ai_reply = remove_markdown(ai_reply);
 
-    // Cevabın başında ve sonunda gereksiz boşluklar varsa temizliyoruz
+    // Baştaki/sondaki boşlukları temizle
     ai_reply.erase(0, ai_reply.find_first_not_of(" \n\r\t"));
     ai_reply.erase(ai_reply.find_last_not_of(" \n\r\t") + 1);
 
@@ -809,4 +838,94 @@ std::string call_ai(
     });
 
     return ai_reply;
+}
+
+std::string call_ai_json(const std::string& prompt) {
+    CURL* curl = curl_easy_init();
+    if (!curl) return "{}";
+
+    std::string api_key;
+    if (global_provider == AIProvider::GROQ) api_key = global_groq_api_key;
+    else if (global_provider == AIProvider::OPENROUTER) api_key = global_openrouter_api_key;
+    else api_key = global_gemini_api_key;
+
+    bool is_gemini = (global_provider == AIProvider::GEMINI);
+
+    json messages = json::array();
+    messages.push_back({{"role", "user"}, {"content", prompt}});
+
+    json body;
+    if (is_gemini) {
+        body = {
+            {"contents", json::array({json{{"parts", json::array({json{{"text", prompt}}})}}})},
+            {"generationConfig", {{"temperature", 0.1}, {"maxOutputTokens", 1024}}},
+            {"tools", json::array({json{{"google_search", json::object()}}})}
+        };
+    } else {
+        body = {
+            {"model", global_model},
+            {"temperature", 0.1},
+            {"max_tokens", 1024},
+            {"messages", messages}
+        };
+    }
+
+    std::string json_body = body.dump(-1, ' ', false, json::error_handler_t::ignore);
+    std::string response;
+
+    struct curl_slist* headers = nullptr;
+    std::string api_url;
+
+    if (is_gemini) {
+        api_url = "https://generativelanguage.googleapis.com/v1beta/models/" + global_model + ":generateContent?key=" + api_key;
+    } else {
+        api_url = global_provider == AIProvider::GROQ
+            ? "https://api.groq.com/openai/v1/chat/completions"
+            : "https://openrouter.ai/api/v1/chat/completions";
+        headers = curl_slist_append(headers, ("Authorization: Bearer " + api_key).c_str());
+        headers = curl_slist_append(headers, "Content-Type: application/json");
+        if (global_provider == AIProvider::OPENROUTER) {
+            headers = curl_slist_append(headers, "HTTP-Referer: https://pardusedu.app");
+            headers = curl_slist_append(headers, "X-Title: PardusEdu");
+        }
+    }
+
+    curl_easy_setopt(curl, CURLOPT_URL, api_url.c_str());
+    if (headers) curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headers);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
+    curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_body.c_str());
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 60L);
+    curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
+
+    CURLcode res = curl_easy_perform(curl);
+    long http_code = 0;
+    curl_easy_getinfo(curl, CURLINFO_RESPONSE_CODE, &http_code);
+
+    curl_slist_free_all(headers);
+    curl_easy_cleanup(curl);
+
+    if (res != CURLE_OK || http_code != 200) {
+        return "{}";
+    }
+
+    std::string reply = extract_ai_reply(response);
+
+    // Strip markdown code block markers if present
+    size_t start = reply.find("```");
+    if (start != std::string::npos) {
+        start = reply.find('\n', start);
+        if (start != std::string::npos) {
+            start++;
+            size_t end = reply.rfind("```");
+            if (end != std::string::npos && end > start) {
+                reply = reply.substr(start, end - start);
+            }
+        }
+    }
+
+    reply.erase(0, reply.find_first_not_of(" \n\r\t"));
+    reply.erase(reply.find_last_not_of(" \n\r\t") + 1);
+
+    return reply;
 }

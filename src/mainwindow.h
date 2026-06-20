@@ -70,6 +70,42 @@ struct FlashCard {
     long last_reviewed_at = 0;
 };
 
+struct DailyStats {
+    std::string date;
+    int pomo_sessions = 0;
+    int focus_minutes = 0;
+    int cards_reviewed = 0;
+    int cards_correct = 0;
+    int cards_wrong = 0;
+    int tasks_done = 0;
+    int tasks_total = 0;
+};
+
+struct WeeklyReport {
+    std::string week_start;
+    std::string week_end;
+    int total_pomo_sessions = 0;
+    int total_focus_minutes = 0;
+    int cards_reviewed = 0;
+    int cards_correct = 0;
+    int cards_wrong = 0;
+    int tasks_completed = 0;
+    int tasks_total = 0;
+    int streak_count = 0;
+    int notes_created = 0;
+    int study_score = 0;
+    std::string best_deck_id;
+    std::string worst_deck_id;
+    std::vector<DailyStats> daily_stats;
+    std::vector<std::string> wrong_card_ids;
+    std::vector<std::string> leech_card_ids;
+    std::string weak_deck_id;
+    long created_at = 0;
+    std::string ai_summary;
+    std::string ai_advice;
+    std::string ai_motivation;
+};
+
 class MainWindow : public Gtk::ApplicationWindow {
 public:
     MainWindow();
@@ -319,6 +355,27 @@ private:
     void flash_delete_card(const std::string& card_id);
     void flash_export_anki(const std::string& deck_id);
     void flash_load_anki_exports();
+
+    // --- Weekly Analysis ---
+    void setup_weekly_analysis();
+    void collect_weekly_data();
+    void render_weekly_analysis_ui();
+    void navigate_to_weekly_analysis();
+    void rate_weak_card_from_analysis(int grade);
+    std::string build_weekly_ai_prompt(const WeeklyReport& data);
+    void on_weekly_ai_response();
+    WeeklyReport& get_current_weekly_report();
+    std::vector<int> find_wrong_cards_this_week();
+    std::vector<int> find_leech_cards();
+    std::string create_weak_deck(const std::vector<int>& card_indices,
+                                 const std::string& week_label);
+    void cleanup_old_weak_decks();
+
+    Glib::Dispatcher weekly_ai_dispatcher;
+    std::string pending_weekly_ai_response;
+    std::mutex weekly_ai_mutex;
+    bool weekly_ai_waiting = false;
+
     void setup_dersler();
     void dersler_show_grades();
     void dersler_show_courses(int grade);
@@ -339,6 +396,22 @@ private:
     int flash_current_index = -1;
     std::string flash_current_deck_id;
     std::vector<int> flash_review_queue;
+
+    // --- Weekly Analysis UI ---
+    std::vector<WeeklyReport> weekly_reports;
+    Gtk::Box weekly_box{Gtk::Orientation::VERTICAL, 0};
+    Gtk::ScrolledWindow weekly_scroll;
+    Gtk::Button btn_weekly_back{"\u2190"};
+    Gtk::Label weekly_header_label{"", Gtk::Align::CENTER};
+    Gtk::Box weekly_stats_box{Gtk::Orientation::HORIZONTAL, 16};
+    Gtk::Label weekly_ai_summary{"", Gtk::Align::START};
+    Gtk::Label weekly_ai_advice{"", Gtk::Align::START};
+    Gtk::Label weekly_ai_motivation{"", Gtk::Align::CENTER};
+    Gtk::Box weekly_weak_deck_box{Gtk::Orientation::VERTICAL, 6};
+    Gtk::Button btn_weekly_study_weak{"\u25b6 Bu Kartlar\u0131 \u00c7al\u0131\u015f"};
+    Gtk::Label weekly_weak_deck_info{"", Gtk::Align::START};
+    Gtk::Widget* weekly_chart_widget = nullptr;
+
     WebKitWebView* python_webview = nullptr;
 
 };
