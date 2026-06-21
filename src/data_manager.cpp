@@ -243,6 +243,7 @@ void MainWindow::setup_data() {
         std::string line;
         if (std::getline(f, line) && !line.empty()) {
             if (line == "gemini") ai_provider = AIProvider::GEMINI;
+            else if (line == "ollama") ai_provider = AIProvider::OLLAMA;
             else ai_provider = (line == "openrouter") ? AIProvider::OPENROUTER : AIProvider::GROQ;
             set_provider(ai_provider);
         }
@@ -305,13 +306,36 @@ void MainWindow::setup_data() {
         }
     }
 
+    auto mf_ol = dir + "/model_ollama.dat";
+    if (fs::exists(mf_ol)) {
+        std::ifstream f(mf_ol);
+        std::string line;
+        if (std::getline(f, line) && !line.empty()) {
+            ai_model_ollama = line;
+        }
+    }
+
+    auto ol_url = dir + "/ollama_url.dat";
+    if (fs::exists(ol_url)) {
+        std::ifstream f(ol_url);
+        std::string line;
+        if (std::getline(f, line) && !line.empty()) {
+            ai_ollama_url = line;
+        }
+    }
+
     // Apply the active provider's model
     if (ai_provider == AIProvider::GROQ)
         set_model(ai_model_groq);
     else if (ai_provider == AIProvider::OPENROUTER)
         set_model(ai_model_openrouter);
-    else
+    else if (ai_provider == AIProvider::GEMINI)
         set_model(ai_model_gemini);
+    else {
+        set_model(ai_model_ollama);
+        set_ollama_model(ai_model_ollama);
+        set_ollama_url(ai_ollama_url);
+    }
 }
 
 void MainWindow::save_data() {
@@ -377,13 +401,15 @@ void MainWindow::save_data() {
               << r.ai_advice << "|"
               << r.ai_motivation << "\n";
         } }
-    { std::ofstream f(dir + "/provider.dat"); f << (ai_provider == AIProvider::GROQ ? "groq" : ai_provider == AIProvider::OPENROUTER ? "openrouter" : "gemini") << "\n"; }
+    { std::ofstream f(dir + "/provider.dat"); f << (ai_provider == AIProvider::GROQ ? "groq" : ai_provider == AIProvider::OPENROUTER ? "openrouter" : ai_provider == AIProvider::GEMINI ? "gemini" : "ollama") << "\n"; }
     { std::ofstream f(dir + "/apikey_groq.dat"); f << ai_api_key_groq << "\n"; }
     { std::ofstream f(dir + "/apikey_openrouter.dat"); f << ai_api_key_openrouter << "\n"; }
     { std::ofstream f(dir + "/apikey_gemini.dat"); f << ai_api_key_gemini << "\n"; }
     { std::ofstream f(dir + "/model_groq.dat"); f << ai_model_groq << "\n"; }
     { std::ofstream f(dir + "/model_openrouter.dat"); f << ai_model_openrouter << "\n"; }
     { std::ofstream f(dir + "/model_gemini.dat"); f << ai_model_gemini << "\n"; }
+    { std::ofstream f(dir + "/model_ollama.dat"); f << ai_model_ollama << "\n"; }
+    { std::ofstream f(dir + "/ollama_url.dat"); f << ai_ollama_url << "\n"; }
 
     // Sync anki_export TSV files with current data
     std::string export_dir = dir + "/anki_export";

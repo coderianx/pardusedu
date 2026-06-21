@@ -1,7 +1,7 @@
 #pragma once
 #include <string>
 
-enum class AIProvider { GROQ, OPENROUTER, GEMINI };
+enum class AIProvider { GROQ, OPENROUTER, GEMINI, OLLAMA };
 
 std::string call_ai(const std::string& user_text, const std::string& app_context = "");
 std::string call_ai_json(const std::string& prompt);
@@ -19,5 +19,10 @@ AIProvider get_provider();
 std::string get_provider_name();
 void set_model(const std::string& model);
 std::string get_model();
+
+void set_ollama_model(const std::string& model);
+std::string get_ollama_model();
+void set_ollama_url(const std::string& url);
+std::string get_ollama_url();
 
 std::string duckduckgo_search(const std::string& query);

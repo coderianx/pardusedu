@@ -4553,7 +4553,8 @@ void MainWindow::show_ai_key_dialog() {
     provider_combo->append("groq", "Groq Cloud");
     provider_combo->append("openrouter", "OpenRouter");
     provider_combo->append("gemini", "Google Gemini");
-    std::string active_provider = ai_provider == AIProvider::GEMINI ? "gemini" : ai_provider == AIProvider::OPENROUTER ? "openrouter" : "groq";
+    provider_combo->append("ollama", "Ollama (Yerel)");
+    std::string active_provider = ai_provider == AIProvider::GEMINI ? "gemini" : ai_provider == AIProvider::OPENROUTER ? "openrouter" : ai_provider == AIProvider::OLLAMA ? "ollama" : "groq";
     provider_combo->set_active_id(active_provider);
 
     content->append(*provider_lbl);
@@ -4704,16 +4705,60 @@ void MainWindow::show_ai_key_dialog() {
     gemini_box->append(*gemini_model_lbl);
     gemini_box->append(*gemini_model_combo);
 
+    // Ollama bölümü
+    auto* ollama_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 8);
+
+    auto* ollama_header = Gtk::make_managed<Gtk::Label>("");
+    ollama_header->set_markup("<b>Ollama (Yerel)</b>");
+    ollama_header->set_halign(Gtk::Align::START);
+
+    auto* ollama_url_lbl = Gtk::make_managed<Gtk::Label>(
+        "Ollama Sunucu Adresi:\n(http://localhost:11434 varsayılan)");
+    ollama_url_lbl->set_wrap(true);
+    ollama_url_lbl->set_halign(Gtk::Align::START);
+
+    auto* ollama_url_entry = Gtk::make_managed<Gtk::Entry>();
+    ollama_url_entry->set_placeholder_text("http://localhost:11434");
+    ollama_url_entry->set_text(ai_ollama_url);
+    ollama_url_entry->set_hexpand(true);
+
+    auto* ollama_model_lbl = Gtk::make_managed<Gtk::Label>("Model:");
+    ollama_model_lbl->set_halign(Gtk::Align::START);
+
+    auto* ollama_model_combo = Gtk::make_managed<Gtk::ComboBoxText>();
+    ollama_model_combo->append("llama3.1:8b", "Ollama 3.1 8B");
+    ollama_model_combo->append("medgemma1.5:4b", "Medgemma 1.5 4B");
+    ollama_model_combo->append("granite4:3b", "Granite4 3B");
+    ollama_model_combo->append("gemma3:latest", "Gemma-3 4B");
+    ollama_model_combo->append("gemma3:27b-cloud", "Gemma-3 27B Cloud");
+    ollama_model_combo->append("gemma4:31b-cloud", "Gemma-4 31B Cloud");
+    ollama_model_combo->append("deepseek-v3.1:671b-cloud", "Deepseek v3.1 Cloud");
+    ollama_model_combo->append("deepseek-v4-flash:cloud", "Deepseek v4 flash Cloud");
+    ollama_model_combo->append("qwen3.5:397b-cloud", "Qwen3.5 Cloud");
+    ollama_model_combo->append("minimax-m3:cloud", "Minimax-m3 Cloud");
+    ollama_model_combo->append("kimi-k2.6:cloud", "Kimi k2.6 Cloud");
+
+
+    ollama_model_combo->set_active_id(ai_model_ollama);
+
+    ollama_box->append(*ollama_header);
+    ollama_box->append(*ollama_url_lbl);
+    ollama_box->append(*ollama_url_entry);
+    ollama_box->append(*ollama_model_lbl);
+    ollama_box->append(*ollama_model_combo);
+
     content->append(*groq_box);
     content->append(*or_box);
     content->append(*gemini_box);
+    content->append(*ollama_box);
 
     // Sağlayıcı değişince görünürlüğü ayarla
-    auto update_visibility = [groq_box, or_box, gemini_box, provider_combo]() {
+    auto update_visibility = [groq_box, or_box, gemini_box, ollama_box, provider_combo]() {
         std::string id = provider_combo->get_active_id();
         groq_box->set_visible(id == "groq");
         or_box->set_visible(id == "openrouter");
         gemini_box->set_visible(id == "gemini");
+        ollama_box->set_visible(id == "ollama");
     };
     provider_combo->signal_changed().connect(update_visibility);
     update_visibility();
@@ -4736,10 +4781,11 @@ void MainWindow::show_ai_key_dialog() {
         dialog->close();
     });
 
-    btn_save->signal_clicked().connect([this, dialog, provider_combo, groq_key_entry, groq_model_combo, or_key_entry, or_model_combo, gemini_key_entry, gemini_model_combo]() {
+    btn_save->signal_clicked().connect([this, dialog, provider_combo, groq_key_entry, groq_model_combo, or_key_entry, or_model_combo, gemini_key_entry, gemini_model_combo, ollama_url_entry, ollama_model_combo]() {
         std::string prov = provider_combo->get_active_id();
         if (prov == "gemini") ai_provider = AIProvider::GEMINI;
         else if (prov == "openrouter") ai_provider = AIProvider::OPENROUTER;
+        else if (prov == "ollama") ai_provider = AIProvider::OLLAMA;
         else ai_provider = AIProvider::GROQ;
         set_provider(ai_provider);
 
@@ -4767,13 +4813,24 @@ void MainWindow::show_ai_key_dialog() {
         }
         ai_model_gemini = gemini_model_combo->get_active_id();
 
+        // Ollama ayarlarını kaydet
+        std::string ollama_url = ollama_url_entry->get_text();
+        if (!ollama_url.empty()) {
+            ai_ollama_url = ollama_url;
+            set_ollama_url(ollama_url);
+        }
+        ai_model_ollama = ollama_model_combo->get_active_id();
+        set_ollama_model(ai_model_ollama);
+
         // Aktif sağlayıcının modelini uygula
         if (ai_provider == AIProvider::GROQ) {
             set_model(ai_model_groq);
         } else if (ai_provider == AIProvider::OPENROUTER) {
             set_model(ai_model_openrouter);
-        } else {
+        } else if (ai_provider == AIProvider::GEMINI) {
             set_model(ai_model_gemini);
+        } else {
+            set_model(ai_model_ollama);
         }
 
         save_data();

@@ -317,6 +317,8 @@ private:
     std::string ai_model_groq = "llama-3.3-70b-versatile";
     std::string ai_model_openrouter = "openai/gpt-4o-mini";
     std::string ai_model_gemini = "gemini-3.5-flash";
+    std::string ai_model_ollama = "llama3.2";
+    std::string ai_ollama_url = "http://localhost:11434";
     void show_ai_key_dialog();
 
     Glib::Dispatcher ai_dispatcher;

@@ -27,11 +27,15 @@ static std::string global_groq_api_key = "";
 static std::string global_openrouter_api_key = "";
 static std::string global_gemini_api_key = "";
 
-// Hangi sağlayıcı (Groq / OpenRouter / Gemini)
+// Hangi sağlayıcı (Groq / OpenRouter / Gemini / Ollama)
 static AIProvider global_provider = AIProvider::GROQ;
 
 // Varsayılan model, kullanıcı ayarlardan değiştirebilir
 static std::string global_model = "llama-3.3-70b-versatile";
+
+// Ollama ayarları
+static std::string global_ollama_model = "llama3.2";
+static std::string global_ollama_url = "http://localhost:11434";
 
 void set_groq_api_key(const std::string& key) {
     global_groq_api_key = key;
@@ -68,7 +72,8 @@ AIProvider get_provider() {
 std::string get_provider_name() {
     if (global_provider == AIProvider::GROQ) return "groq";
     if (global_provider == AIProvider::OPENROUTER) return "openrouter";
-    return "gemini";
+    if (global_provider == AIProvider::GEMINI) return "gemini";
+    return "ollama";
 }
 
 void set_model(const std::string& model) {
@@ -77,6 +82,22 @@ void set_model(const std::string& model) {
 
 std::string get_model() {
     return global_model;
+}
+
+void set_ollama_model(const std::string& model) {
+    global_ollama_model = model;
+}
+
+std::string get_ollama_model() {
+    return global_ollama_model;
+}
+
+void set_ollama_url(const std::string& url) {
+    global_ollama_url = url;
+}
+
+std::string get_ollama_url() {
+    return global_ollama_url;
 }
 
 // CURL yazma callback'i
@@ -395,8 +416,10 @@ std::string call_ai(
         return "CURL başlatılamadı";
 
 
+    bool is_ollama = (global_provider == AIProvider::OLLAMA);
     std::string api_key;
-    if (global_provider == AIProvider::GROQ) api_key = global_groq_api_key;
+    if (is_ollama) api_key = "";
+    else if (global_provider == AIProvider::GROQ) api_key = global_groq_api_key;
     else if (global_provider == AIProvider::OPENROUTER) api_key = global_openrouter_api_key;
     else api_key = global_gemini_api_key;
 
@@ -676,7 +699,7 @@ std::string call_ai(
 
     bool is_gemini = (global_provider == AIProvider::GEMINI);
 
-    if (!is_gemini) {
+    if (!is_gemini && !is_ollama) {
         headers = curl_slist_append(
             headers,
             ("Authorization: Bearer " + api_key).c_str());
@@ -687,7 +710,11 @@ std::string call_ai(
         "Content-Type: application/json");
 
     std::string api_url;
-    if (global_provider == AIProvider::GROQ) {
+    if (is_ollama) {
+        std::string base_url = global_ollama_url;
+        if (base_url.back() == '/') base_url.pop_back();
+        api_url = base_url + "/v1/chat/completions";
+    } else if (global_provider == AIProvider::GROQ) {
         api_url = "https://api.groq.com/openai/v1/chat/completions";
     } else if (is_gemini) {
         api_url = "https://generativelanguage.googleapis.com/v1beta/models/" + global_model + ":generateContent?key=" + api_key;
@@ -747,7 +774,7 @@ std::string call_ai(
         else
         {
             body = {
-                {"model", global_model},
+                {"model", is_ollama ? global_ollama_model : global_model},
                 {"temperature", 0.4},
                 {"top_p", 0.9},
                 {"max_tokens", max_tokens},
@@ -844,8 +871,10 @@ std::string call_ai_json(const std::string& prompt) {
     CURL* curl = curl_easy_init();
     if (!curl) return "{}";
 
+    bool is_ollama = (global_provider == AIProvider::OLLAMA);
     std::string api_key;
-    if (global_provider == AIProvider::GROQ) api_key = global_groq_api_key;
+    if (is_ollama) api_key = "";
+    else if (global_provider == AIProvider::GROQ) api_key = global_groq_api_key;
     else if (global_provider == AIProvider::OPENROUTER) api_key = global_openrouter_api_key;
     else api_key = global_gemini_api_key;
 
@@ -863,7 +892,7 @@ std::string call_ai_json(const std::string& prompt) {
         };
     } else {
         body = {
-            {"model", global_model},
+            {"model", is_ollama ? global_ollama_model : global_model},
             {"temperature", 0.1},
             {"max_tokens", 1024},
             {"messages", messages}
@@ -876,7 +905,11 @@ std::string call_ai_json(const std::string& prompt) {
     struct curl_slist* headers = nullptr;
     std::string api_url;
 
-    if (is_gemini) {
+    if (is_ollama) {
+        std::string base_url = global_ollama_url;
+        if (base_url.back() == '/') base_url.pop_back();
+        api_url = base_url + "/v1/chat/completions";
+    } else if (is_gemini) {
         api_url = "https://generativelanguage.googleapis.com/v1beta/models/" + global_model + ":generateContent?key=" + api_key;
     } else {
         api_url = global_provider == AIProvider::GROQ
@@ -929,3 +962,5 @@ std::string call_ai_json(const std::string& prompt) {
 
     return reply;
 }
+
+// 0fb350a5f83740d49e65b28bcb258cda.WHEZmLQ-PWxR6sUnBMyULStM
