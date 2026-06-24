@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="assets/pardus_symbol.svg" width="72" height="72">
+  <img src="assets/pardus.png" width="72" height="72">
   <h1 align="center">PardusEdu</h1>
   <p align="center"><b>Öğrenci Merkezi — Akademik Yaşamın Hepsi Bir Arada</b></p>
 
