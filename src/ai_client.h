@@ -1,10 +1,15 @@
 #pragma once
 #include <string>
+#include <functional>
 
 enum class AIProvider { GROQ, OPENROUTER, GEMINI, OLLAMA };
 
+using AsyncAICallback = std::function<void(std::string)>;
+
 std::string call_ai(const std::string& user_text, const std::string& app_context = "");
 std::string call_ai_json(const std::string& prompt);
+void async_call_ai(const std::string& user_text, const std::string& app_context, AsyncAICallback callback);
+void async_call_ai_json(const std::string& prompt, AsyncAICallback callback);
 std::string extract_ai_reply(const std::string& json);
 std::string strip_markdown(const std::string& text);
 

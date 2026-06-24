@@ -19,6 +19,7 @@
 #include <md4c-html.h>
 #include <nlohmann/json.hpp>
 #include <qrencode.h>
+#include <vte/vte.h>
 
 using json = nlohmann::json;
 
@@ -1271,9 +1272,8 @@ void MainWindow::flash_show_card_edit(const std::string& deck_id, const std::str
         std::string back_capture = back_text;
         std::string hint_capture = hint_text;
 
-        std::thread([this, prompt, front_buffer, back_buffer, hint_entry,
-                      front_capture, back_capture, hint_capture, ai_edit_btn]() {
-            std::string raw = call_ai(prompt, "");
+        async_call_ai(prompt, "", [front_buffer, back_buffer, hint_entry,
+                                   front_capture, back_capture, hint_capture, ai_edit_btn](std::string raw) {
             std::string reply = extract_ai_reply(raw);
 
             std::string new_front, new_back, new_hint;
@@ -1305,7 +1305,7 @@ void MainWindow::flash_show_card_edit(const std::string& deck_id, const std::str
                 ai_edit_btn->set_label("\u2728 AI ile D\u00fczenle");
                 ai_edit_btn->set_sensitive(true);
             });
-        }).detach();
+        });
 
         ai_edit_btn->set_label("D\u00fczenleniyor...");
         ai_edit_btn->set_sensitive(false);
@@ -1450,8 +1450,7 @@ void MainWindow::flash_show_ai_generate(const std::string& deck_id) {
         status_lbl->set_text("AI yan\u0131tlan\u0131yor...");
         generate_btn->set_sensitive(false);
 
-        std::thread([this, prompt, deck_id, status_lbl, generate_btn]() {
-            std::string raw = call_ai(prompt, "");
+        async_call_ai(prompt, "", [this, prompt, deck_id, status_lbl, generate_btn](std::string raw) {
             std::string reply = extract_ai_reply(raw);
 
             std::regex pattern(R"(\[KART\]([\s\S]*?)\[KART_BITTI\])", std::regex::icase);
@@ -1510,7 +1509,7 @@ void MainWindow::flash_show_ai_generate(const std::string& deck_id) {
                 }
                 generate_btn->set_sensitive(true);
             });
-        }).detach();
+        });
     });
 
     form->append(*title_lbl);
@@ -3126,6 +3125,25 @@ void MainWindow::unblock_sites() {
     std::system("pkexec /tmp/student-hub-unblock.sh");
 }
 
+void MainWindow::ensure_page_built(const std::string& name) {
+    if (pages_built.count(name)) return;
+
+    if (name == "dersler") setup_dersler();
+    else if (name == "badges") setup_badges();
+    else if (name == "flashcards") setup_flashcards();
+    else if (name == "pomodoro") setup_pomodoro();
+    else if (name == "planner") setup_planner();
+    else if (name == "notes") setup_notes();
+    else if (name == "schedule") setup_schedule();
+    else if (name == "focus") setup_focus();
+    else if (name == "linux") setup_linux();
+    else if (name == "ai") setup_ai_chat();
+    else if (name == "python") setup_python();
+    else if (name == "weekly_analysis") setup_weekly_analysis();
+
+    pages_built.insert(name);
+}
+
 void MainWindow::setup_linux() {
     auto* sw = Gtk::make_managed<Gtk::ScrolledWindow>();
     sw->set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
@@ -3144,6 +3162,16 @@ void MainWindow::setup_linux() {
     auto* search = Gtk::make_managed<Gtk::Entry>();
     search->set_placeholder_text("Komut ara...");
     search->signal_changed().connect([this, search]() { filter_linux(search->get_text()); });
+
+    lab_warning = Gtk::make_managed<Gtk::Label>("");
+    lab_warning->add_css_class("lab-warning");
+    lab_warning->set_halign(Gtk::Align::START);
+    lab_warning->set_visible(!lab_ready);
+    if (!lab_ready) {
+        lab_warning->set_markup(
+            "<b>PardusLab</b> aktif deil. Denemek iin: <tt>sudo apt install podman</tt>");
+    }
+    lab_warning->set_margin_bottom(8);
 
     struct Cmd { std::string cmd, desc, ex, detail; };
     std::vector<Cmd> cmds = {
@@ -4114,11 +4142,45 @@ void MainWindow::setup_linux() {
         cb->append(*cd);
         cb->append(*ce);
         cb->append(*revealer);
+
+        auto* lab_row = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
+        lab_row->set_margin_top(8);
+
+        auto* btn_try = Gtk::make_managed<Gtk::Button>("Dene");
+        btn_try->add_css_class("lab-btn-try");
+        btn_try->signal_clicked().connect([this, c_cmd = c.cmd, c_ex = c.ex]() {
+            on_lab_try_command(c_cmd + " " + c_ex);
+        });
+
+        auto* btn_terminal = Gtk::make_managed<Gtk::Button>("Terminal");
+        btn_terminal->add_css_class("lab-btn-terminal");
+        btn_terminal->signal_clicked().connect([this, c_cmd = c.cmd]() {
+            on_lab_open_terminal("Şimdi deneyebilirsin: " + c_cmd);
+        });
+
+        auto* output_label = Gtk::make_managed<Gtk::Label>("");
+        output_label->add_css_class("lab-output");
+        output_label->set_wrap(true);
+        output_label->set_selectable(true);
+        output_label->set_halign(Gtk::Align::START);
+        output_label->set_visible(false);
+
+        auto* output_revealer = Gtk::make_managed<Gtk::Revealer>();
+        output_revealer->set_transition_type(Gtk::RevealerTransitionType::SLIDE_DOWN);
+        output_revealer->set_child(*output_label);
+
+        lab_row->append(*btn_try);
+        lab_row->append(*btn_terminal);
+        cb->append(*lab_row);
+        cb->append(*output_revealer);
+
         outer->append(*cb);
 
         auto click_box = Gtk::GestureClick::create();
-        click_box->signal_released().connect([revealer, cb](int, double, double) {
+        click_box->signal_released().connect([revealer, cb, output_revealer, output_label](int, double, double) {
             bool revealed = revealer->get_child_revealed();
+            output_revealer->set_reveal_child(false);
+            output_label->set_visible(false);
             if (revealed) {
                 revealer->set_reveal_child(false);
                 cb->remove_css_class("cmd-card-expanded");
@@ -4137,6 +4199,7 @@ void MainWindow::setup_linux() {
 
     box->append(*title);
     box->append(*search);
+    box->append(*lab_warning);
     box->append(*sw);
     stack.add(*box, "linux");
 }
@@ -4427,7 +4490,9 @@ void MainWindow::setup_ai_chat() {
         bool do_ddg = ddg_active;
 
         std::thread([this, text_copy, do_ddg]() {
-            std::string final_user_text;
+            std::string final_user_text = text_copy;
+            std::string app_context;
+
             if (do_ddg) {
                 std::string ddg_raw = duckduckgo_search(text_copy);
                 if (ddg_raw.empty() || ddg_raw.rfind("DuckDuckGo hatas\u0131", 0) == 0) {
@@ -4485,7 +4550,6 @@ void MainWindow::setup_ai_chat() {
                         "Yanıtında maddeler halinde ve açıklayıcı ol.";
                 }
             } else {
-                std::string app_context;
                 std::string lower = text_copy;
                 std::transform(lower.begin(), lower.end(), lower.begin(), ::tolower);
                 static const std::vector<std::string> keywords = {
@@ -4502,18 +4566,9 @@ void MainWindow::setup_ai_chat() {
                             app_context += "  İçerik:\n" + n.content + "\n\n";
                     }
                 }
-                final_user_text = text_copy;
-                // Store app_context to pass alongside
-                // We need to call call_ai with app_context, so restructure
-                std::string raw = call_ai(final_user_text, app_context);
-                {
-                    std::lock_guard<std::mutex> lock(ai_mutex);
-                    pending_ai_response = raw;
-                }
-                ai_dispatcher.emit();
-                return;
             }
-            std::string raw = call_ai(final_user_text, "");
+
+            std::string raw = call_ai(final_user_text, app_context);
             {
                 std::lock_guard<std::mutex> lock(ai_mutex);
                 pending_ai_response = raw;
@@ -4593,7 +4648,10 @@ void MainWindow::show_ai_key_dialog() {
     groq_model_combo->append("openai/gpt-oss-20b", "OpenAi GPT OSS 20B");
     groq_model_combo->append("openai/gpt-oss-safeguard-20b", "OpenAİ GPT OSS SafeGuard 20B");
     groq_model_combo->append("qwen/qwen3-32b", "Qwen 3 32B");
+    groq_model_combo->append("qwen/qwen3.6-27b", "Qwen 3.6 27B");
+    groq_model_combo->append("allam-2-7b", "ALLaM 2 7B");
     groq_model_combo->append("groq-compound", "Groq Compound");
+    groq_model_combo->append("groq/compound-mini", "Groq Compound Mini");
 
     
     groq_model_combo->set_active_id(ai_model_groq);
@@ -4636,6 +4694,7 @@ void MainWindow::show_ai_key_dialog() {
     or_model_combo->append("qwen/qwen3-coder", "Qwen 3 Coder");
     or_model_combo->append("qwen/qwen3.7-max", "Qwen 3.7 Max");
     or_model_combo->append("qwen/qwen3-next-80b-a3b-instruct:free", "Qwen3 Next Free");
+    or_model_combo->append("qwen/qwen3.6-flash", "Qwen 3.6 Flash");
     // Deepseek
     or_model_combo->append("deepseek/deepseek-r1", "Deepseek R1");
     or_model_combo->append("deepseek/deepseek-v4-pro", "Deepseek V4 Pro");
@@ -5566,6 +5625,7 @@ void MainWindow::setup_weekly_analysis() {
     btn_weekly_study_weak.signal_clicked().connect([this]() {
         auto& report = get_current_weekly_report();
         if (!report.weak_deck_id.empty()) {
+            ensure_page_built("flashcards");
             flash_show_review(report.weak_deck_id);
             auto* child = stack.get_child_by_name("flashcards");
             if (child) stack.set_visible_child(*child);
@@ -5584,6 +5644,7 @@ void MainWindow::setup_weekly_analysis() {
 }
 
 void MainWindow::navigate_to_weekly_analysis() {
+    ensure_page_built("weekly_analysis");
     collect_weekly_data();
     render_weekly_analysis_ui();
 
@@ -5829,14 +5890,13 @@ void MainWindow::collect_weekly_data() {
 
     std::string prompt = build_weekly_ai_prompt(report);
     weekly_ai_waiting = true;
-    std::thread([this, prompt]() {
-        std::string response = call_ai_json(prompt);
+    async_call_ai_json(prompt, [this](std::string response) {
         {
             std::lock_guard<std::mutex> lock(weekly_ai_mutex);
             pending_weekly_ai_response = response;
         }
         weekly_ai_dispatcher.emit();
-    }).detach();
+    });
 }
 
 void MainWindow::on_weekly_ai_response() {
@@ -5942,6 +6002,379 @@ std::string MainWindow::create_weak_deck(
 
     save_data();
     return deck.id;
+}
+
+// ========== PardusLab Callbacks ==========
+
+void MainWindow::setup_parduslab() {
+    parduslab = new PardusLab();
+    lab_ready = false;
+
+    Glib::signal_idle().connect_once([this]() {
+        if (!parduslab->podman_available()) {
+            if (lab_warning)
+                lab_warning->set_text("Podman kurulu deil. PardusLab iin: sudo apt install podman");
+            return;
+        }
+        lab_ready = true;
+        parduslab->cleanup_all();
+
+        GBytes* bytes = g_resources_lookup_data(
+            "/org/ogrenci/merkezi/assets/parduslab/challenges.json",
+            G_RESOURCE_LOOKUP_FLAGS_NONE, nullptr);
+        if (bytes) {
+            gsize size = 0;
+            const char* data = static_cast<const char*>(g_bytes_get_data(bytes, &size));
+            std::string tmp = "/tmp/parduslab_challenges.json";
+            std::ofstream f(tmp);
+            if (f.is_open()) {
+                f.write(data, size);
+                f.close();
+                parduslab->load_challenges(tmp);
+            }
+            g_bytes_unref(bytes);
+        }
+
+        if (lab_warning)
+            lab_warning->set_visible(false);
+    });
+}
+
+void MainWindow::on_lab_try_command(const std::string& command) {
+    if (!lab_ready || current_lab_container_id.empty()) {
+        current_lab_container_id = parduslab->start_container();
+        if (current_lab_container_id.empty()) {
+            show_lab_error("Podman kurulu deil",
+                "PardusLab kullanmak iin:\nsudo apt install podman");
+            return;
+        }
+        lab_ready = true;
+    }
+
+    std::string output = parduslab->exec_command(
+        current_lab_container_id, command
+    );
+
+    auto* child = linux_commands.get_first_child();
+    while (child) {
+        auto name = child->get_name();
+        auto p = name.find('|');
+        if (p != std::string::npos) {
+            std::string cmd_name = name.substr(0, p);
+            if (command.find(cmd_name) == 0) {
+                auto* outer_box = dynamic_cast<Gtk::Box*>(child);
+                if (outer_box) {
+                    auto* card = dynamic_cast<Gtk::Box*>(outer_box->get_first_child());
+                    if (card) {
+                        auto children = card->get_children();
+                        for (auto* w : children) {
+                            auto* rev = dynamic_cast<Gtk::Revealer*>(w);
+                            if (rev) {
+                                auto* label = dynamic_cast<Gtk::Label*>(rev->get_child());
+                                if (label) {
+                                    std::string es;
+                                    for (char ch : output) {
+                                        if (ch == '<') es += "&lt;";
+                                        else if (ch == '>') es += "&gt;";
+                                        else if (ch == '&') es += "&amp;";
+                                        else es += ch;
+                                    }
+                                    label->set_markup("<tt>$ " + command + "</tt>\n" + es);
+                                    label->set_visible(true);
+                                    rev->set_reveal_child(true);
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                break;
+            }
+        }
+        child = child->get_next_sibling();
+    }
+}
+
+void MainWindow::spawn_vte_shell(const std::string& container_id, const std::string& username) {
+    if (vte_widget) {
+        auto* parent = gtk_widget_get_parent(vte_widget);
+        if (parent) gtk_box_remove(GTK_BOX(parent), vte_widget);
+        vte_widget = nullptr;
+    }
+
+    GtkWidget* vte = vte_terminal_new();
+    VteTerminal* term = VTE_TERMINAL(vte);
+
+    vte_terminal_set_scrollback_lines(term, 10000);
+
+    GdkRGBA bg = {0.05, 0.05, 0.05, 1.0};
+    GdkRGBA fg = {0.94, 0.94, 0.94, 1.0};
+    vte_terminal_set_color_background(term, &bg);
+    vte_terminal_set_color_foreground(term, &fg);
+
+    GdkRGBA pal[16] = {
+        {0.12,0.12,0.12,1.0}, {0.90,0.20,0.20,1.0},
+        {0.00,1.00,0.53,1.0}, {0.95,0.75,0.15,1.0},
+        {0.20,0.45,0.85,1.0}, {0.65,0.30,0.80,1.0},
+        {0.15,0.80,0.80,1.0}, {0.80,0.80,0.80,1.0},
+        {0.30,0.30,0.30,1.0}, {1.00,0.40,0.40,1.0},
+    };
+    vte_terminal_set_colors(term, nullptr, nullptr, pal, 16);
+
+    std::string home = (username == "root") ? "/root" : "/home/" + username;
+    const char* argv[] = {
+        "podman", "exec", "-it", "-u", username.c_str(),
+        "-w", home.c_str(),
+        container_id.c_str(), "/bin/bash", nullptr
+    };
+    vte_terminal_spawn_async(term, VTE_PTY_DEFAULT, nullptr,
+        const_cast<char**>(argv), nullptr, G_SPAWN_SEARCH_PATH,
+        nullptr, nullptr, nullptr, -1, nullptr, nullptr, nullptr);
+
+    gtk_widget_set_vexpand(vte, true);
+    gtk_widget_set_hexpand(vte, true);
+    vte_widget = vte;
+}
+
+void MainWindow::spawn_terminal_session(const std::string& username, Gtk::Box* vbox, Gtk::Widget* after) {
+    lab_username = username;
+
+    if (username != "root") {
+        std::string cmd = "podman exec " + current_lab_container_id +
+            " /bin/bash -c 'useradd -m " + username + " 2>/dev/null; "
+            "echo " + username + ":" + username + "123 | chpasswd; "
+            "usermod -aG sudo " + username + " 2>/dev/null'";
+        system((cmd + " >/dev/null 2>&1").c_str());
+
+        cmd = "podman exec " + current_lab_container_id +
+            " /bin/bash -c 'cat > /home/" + username + "/.bashrc <<\"EOF\"\n"
+            "if ! command -v sudo >/dev/null 2>&1; then\n"
+            "    echo \"PardusLab kuruluyor... lutfen bekleyin.\"\n"
+            "fi\n"
+            "EOF\n"
+            "chown " + username + ":" + username + " /home/" + username + "/.bashrc'";
+        system((cmd + " >/dev/null 2>&1").c_str());
+
+        if (!lab_packages_installed) {
+            system(("podman exec -d " + current_lab_container_id +
+                " /bin/bash -c 'DEBIAN_FRONTEND=noninteractive "
+                "apt-get install -y --no-install-recommends sudo nano >/dev/null 2>&1'"
+                ).c_str());
+            lab_packages_installed = true;
+        }
+    }
+
+    if (vte_widget) {
+        auto* parent = gtk_widget_get_parent(vte_widget);
+        if (parent) gtk_box_remove(GTK_BOX(parent), vte_widget);
+        vte_widget = nullptr;
+    }
+
+    spawn_vte_shell(current_lab_container_id, username);
+    if (vte_widget)
+        gtk_box_insert_child_after(GTK_BOX(vbox->gobj()), vte_widget, GTK_WIDGET(after->gobj()));
+}
+
+void MainWindow::on_lab_open_terminal(const std::string& command_hint) {
+    if (terminal_window) {
+        if (terminal_hint)
+            terminal_hint->set_markup("<b>" + command_hint + "</b>");
+        terminal_window->present();
+        return;
+    }
+
+    if (!lab_ready || current_lab_container_id.empty()) {
+        current_lab_container_id = parduslab->start_container();
+        if (current_lab_container_id.empty()) {
+            show_lab_error("Container baltlamad",
+                "Podman ile container baltlamad.\n"
+                "Podman kurulumunu kontrol edin.");
+            return;
+        }
+        lab_ready = true;
+    }
+
+    terminal_window = Gtk::make_managed<Gtk::Window>();
+    terminal_window->set_title("Terminal");
+    terminal_window->set_default_size(900, 550);
+    terminal_window->set_transient_for(*this);
+    terminal_window->set_modal(true);
+    terminal_window->add_css_class("terminal-window");
+
+    auto* vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
+
+    auto* top_bar = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
+    top_bar->add_css_class("lab-topbar");
+
+    terminal_hint = Gtk::make_managed<Gtk::Label>("");
+    terminal_hint->set_markup("<b>" + command_hint + "</b>");
+    terminal_hint->set_hexpand(true);
+    terminal_hint->set_halign(Gtk::Align::START);
+    terminal_hint->set_margin_start(12);
+    terminal_hint->add_css_class("lab-hint");
+
+    auto* user_area = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
+    user_area->add_css_class("lab-user-area");
+
+    auto* user_lbl = Gtk::make_managed<Gtk::Label>("👤 root");
+    user_lbl->add_css_class("lab-user-lbl");
+
+    auto* user_arrow = Gtk::make_managed<Gtk::MenuButton>();
+    user_arrow->set_icon_name("pan-down-symbolic");
+    user_arrow->add_css_class("lab-user-arrow");
+    user_arrow->set_has_frame(false);
+
+    auto* popover = Gtk::make_managed<Gtk::Popover>();
+    popover->add_css_class("lab-user-popover");
+
+    auto* pop_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
+    pop_box->add_css_class("lab-pop-box");
+
+    auto make_user_btn = [this, vbox, top_bar, user_lbl, popover](const std::string& name) -> Gtk::Button* {
+        auto* btn = Gtk::make_managed<Gtk::Button>(name);
+        btn->add_css_class("lab-pop-opt");
+        btn->signal_clicked().connect([this, name, vbox, top_bar, user_lbl, popover]() {
+            popover->popdown();
+            user_lbl->set_text(name);
+            spawn_terminal_session(name, vbox, top_bar);
+        });
+        return btn;
+    };
+
+    pop_box->append(*make_user_btn("root"));
+    lab_insert_after = pop_box->get_first_child();
+
+    auto* sep = Gtk::make_managed<Gtk::Separator>(Gtk::Orientation::HORIZONTAL);
+    sep->add_css_class("lab-pop-sep");
+    pop_box->append(*sep);
+
+    auto* opt_new = Gtk::make_managed<Gtk::Button>("+ Yeni kullanici...");
+    opt_new->add_css_class("lab-pop-opt");
+    opt_new->signal_clicked().connect([this, vbox, top_bar, user_area, user_lbl, popover, pop_box, sep, opt_new, make_user_btn]() {
+        popover->popdown();
+
+        if (auto* arrow = dynamic_cast<Gtk::MenuButton*>(user_area->get_last_child()))
+            arrow->set_visible(false);
+        user_lbl->set_visible(false);
+
+        auto* entry = Gtk::make_managed<Gtk::Entry>();
+        entry->set_placeholder_text("kullanici adi");
+        entry->set_max_length(32);
+        entry->set_width_chars(12);
+        entry->add_css_class("lab-user-entry");
+        user_area->append(*entry);
+        entry->grab_focus();
+
+        entry->signal_activate().connect([this, entry, vbox, top_bar, user_area, user_lbl,
+                                          popover, pop_box, sep, opt_new, make_user_btn]() {
+            auto name = entry->get_text();
+            if (name.empty()) return;
+            user_area->remove(*entry);
+            user_lbl->set_text(name);
+            user_lbl->set_visible(true);
+            if (auto* arrow = dynamic_cast<Gtk::MenuButton*>(user_area->get_last_child()))
+                arrow->set_visible(true);
+            spawn_terminal_session(name, vbox, top_bar);
+
+            if (std::find(lab_users.begin(), lab_users.end(), name) == lab_users.end()) {
+                lab_users.push_back(name);
+                auto* btn = make_user_btn(name);
+                pop_box->insert_child_after(*btn, *lab_insert_after);
+                lab_insert_after = btn;
+            }
+        });
+    });
+
+    pop_box->append(*opt_new);
+    popover->set_child(*pop_box);
+    user_arrow->set_popover(*popover);
+
+    user_area->append(*user_lbl);
+    user_area->append(*user_arrow);
+    top_bar->append(*terminal_hint);
+    top_bar->append(*user_area);
+    vbox->append(*top_bar);
+
+    auto* btn_row = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
+    btn_row->set_margin(8);
+    btn_row->set_halign(Gtk::Align::CENTER);
+
+    auto* btn_reset = Gtk::make_managed<Gtk::Button>("Sifirla");
+    btn_reset->add_css_class("lab-btn-reset");
+    btn_reset->signal_clicked().connect([this]() { on_lab_reset_container(); });
+
+    auto* btn_close = Gtk::make_managed<Gtk::Button>("Kapat");
+    btn_close->add_css_class("lab-btn-close");
+    btn_close->signal_clicked().connect([this]() { terminal_window->close(); });
+
+    btn_row->append(*btn_reset);
+    btn_row->append(*btn_close);
+    vbox->append(*btn_row);
+
+    spawn_terminal_session("root", vbox, top_bar);
+
+    terminal_window->set_child(*vbox);
+    terminal_window->signal_close_request().connect([this]() -> bool {
+        terminal_window->set_visible(false);
+        return true;
+    }, false);
+    terminal_window->present();
+}
+
+void MainWindow::on_lab_close_terminal() {
+    if (terminal_window)
+        terminal_window->set_visible(false);
+}
+
+void MainWindow::on_lab_reset_container() {
+    if (!current_lab_container_id.empty()) {
+        parduslab->stop_container(current_lab_container_id);
+        parduslab->remove_container(current_lab_container_id);
+        current_lab_container_id.clear();
+    }
+    current_lab_container_id = parduslab->start_container();
+    lab_ready = !current_lab_container_id.empty();
+    lab_cwd = "~";
+    lab_packages_installed = false;
+    lab_users.clear();
+    lab_users.push_back("root");
+
+    if (terminal_window) {
+        terminal_window->set_visible(false);
+        delete terminal_window;
+        terminal_window = nullptr;
+        vte_widget = nullptr;
+        terminal_hint = nullptr;
+        lab_insert_after = nullptr;
+        Glib::signal_idle().connect_once([this]() {
+            on_lab_open_terminal("Terminal sfrlandi");
+        });
+    }
+}
+
+void MainWindow::on_lab_snapshot() {
+    if (current_lab_container_id.empty()) return;
+
+    auto now = std::time(nullptr);
+    auto* tm = std::localtime(&now);
+    char buf[64];
+    strftime(buf, sizeof(buf), "parduslab_%Y%m%d_%H%M%S", tm);
+
+    std::string tag = buf;
+    parduslab->snapshot(current_lab_container_id, tag);
+}
+
+void MainWindow::show_lab_error(const std::string& title, const std::string& msg) {
+    auto* dialog = new Gtk::MessageDialog(
+        *this, title, false,
+        Gtk::MessageType::ERROR, Gtk::ButtonsType::OK, true
+    );
+    dialog->set_secondary_text(msg);
+    dialog->signal_response().connect([dialog](int) {
+        dialog->close();
+        delete dialog;
+    });
+    dialog->present();
 }
 
 void MainWindow::cleanup_old_weak_decks() {

@@ -6,6 +6,7 @@
 #include <sstream>
 #include <iomanip>
 #include <map>
+#include <algorithm>
 
 MainWindow::MainWindow() {
     set_title("Pardus Edu");
@@ -14,8 +15,17 @@ MainWindow::MainWindow() {
     detect_theme();
     setup_data();
     update_streak();
+    setup_parduslab();
     setup_ui();
     apply_theme();
+}
+
+MainWindow::~MainWindow() {
+    if (parduslab) {
+        parduslab->cleanup_all();
+        delete parduslab;
+        parduslab = nullptr;
+    }
 }
 
 void MainWindow::detect_theme() {
@@ -122,19 +132,28 @@ void MainWindow::apply_theme() {
 
     g_resources_register(ogrenci_get_resource());
 
-    std::string css_str;
-    auto file = Gio::File::create_for_uri("resource:///org/ogrenci/merkezi/assets/style.css");
-    try {
-        auto stream = file->read();
-        char buffer[4096];
-        while (true) {
-            gsize bytes_read = stream->read(buffer, sizeof(buffer));
-            if (bytes_read == 0) break;
-            css_str.append(buffer, bytes_read);
-        }
-    } catch (const Glib::Error& err) {
-        g_warning("CSS yüklenemedi: %s", err.what());
+    auto& cached = dark_mode ? css_provider_dark : css_provider_light;
+    if (cached) {
+        auto display = Gdk::Display::get_default();
+        Gtk::StyleContext::add_provider_for_display(display, cached, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
+        reload_python();
         return;
+    }
+
+    if (cached_css.empty()) {
+        auto file = Gio::File::create_for_uri("resource:///org/ogrenci/merkezi/assets/style.css");
+        try {
+            auto stream = file->read();
+            char buffer[8192];
+            while (true) {
+                gsize bytes_read = stream->read(buffer, sizeof(buffer));
+                if (bytes_read == 0) break;
+                cached_css.append(buffer, bytes_read);
+            }
+        } catch (const Glib::Error& err) {
+            g_warning("CSS yüklenemedi: %s", err.what());
+            return;
+        }
     }
 
     std::map<std::string, std::string> colors;
@@ -178,16 +197,34 @@ void MainWindow::apply_theme() {
         };
     }
 
-    for (auto& [placeholder, value] : colors) {
-        size_t pos = 0;
-        while ((pos = css_str.find(placeholder, pos)) != std::string::npos) {
-            css_str.replace(pos, placeholder.length(), value);
-            pos += value.length();
+    std::vector<std::pair<std::string, std::string>> sorted(colors.begin(), colors.end());
+    std::sort(sorted.begin(), sorted.end(), [](auto& a, auto& b) {
+        return a.first.size() > b.first.size();
+    });
+
+    std::string css_str;
+    css_str.reserve(cached_css.size());
+    for (size_t i = 0; i < cached_css.size(); ) {
+        if (cached_css[i] == '_' && i + 1 < cached_css.size() && cached_css[i+1] == '_') {
+            bool matched = false;
+            for (auto& [key, val] : sorted) {
+                if (cached_css.compare(i, key.size(), key) == 0) {
+                    css_str += val;
+                    i += key.size();
+                    matched = true;
+                    break;
+                }
+            }
+            if (!matched) { css_str += cached_css[i]; i++; }
+        } else {
+            css_str += cached_css[i];
+            i++;
         }
     }
 
     auto provider = Gtk::CssProvider::create();
     provider->load_from_data(css_str);
+    cached = provider;
 
     auto display = Gdk::Display::get_default();
     Gtk::StyleContext::add_provider_for_display(display, provider, GTK_STYLE_PROVIDER_PRIORITY_APPLICATION);
@@ -249,18 +286,6 @@ void MainWindow::add_item(const std::string& name, const std::string& id) {
 
 void MainWindow::setup_pages() {
     setup_dashboard();
-    setup_dersler();
-    setup_badges();
-    setup_flashcards();
-    setup_pomodoro();
-    setup_planner();
-    setup_notes();
-    setup_schedule();
-    setup_focus();
-    setup_linux();
-    setup_ai_chat();
-    setup_python();
-    setup_weekly_analysis();
     paned.set_end_child(stack);
 }
 
@@ -369,6 +394,7 @@ void MainWindow::setup_dashboard() {
 void MainWindow::on_select(Gtk::ListBoxRow* row) {
     if (!row) return;
     auto name = row->get_name();
+    ensure_page_built(name);
     auto* child = stack.get_child_by_name(name);
     if (child) stack.set_visible_child(*child);
 

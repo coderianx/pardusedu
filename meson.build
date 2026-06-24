@@ -16,6 +16,7 @@ md4c_dep = dependency('md4c-html')
 
 # ================= QRencode =================
 qrencode_dep = dependency('libqrencode')
+vte_dep = dependency('vte-2.91-gtk4')
 
 gresource = gnome.compile_resources('resources',
   'resources.gresource.xml',
@@ -31,14 +32,16 @@ executable(
     'src/ui_setup.cpp',
     'src/pages.cpp',
     'src/ai_client.cpp',
-    'src/calc_letter.cpp'
+    'src/calc_letter.cpp',
+    'src/parduslab.cpp'
   ],
   dependencies : [
     gtkmm_dep,
     curl_dep,
     webkit_dep,
     md4c_dep,
-    qrencode_dep
+    qrencode_dep,
+    vte_dep
   ],
   sources : gresource,
   install : false

@@ -1810,3 +1810,180 @@ separator {
     color: __muted;
     line-height: 1.4;
 }
+
+/* ================= PardusLab ================= */
+
+.lab-btn-try {
+    background: __accent;
+    color: white;
+    border-radius: 6px;
+    padding: 4px 14px;
+    font-size: 12px;
+    border: none;
+}
+.lab-btn-try:hover {
+    background: __accent_dark;
+}
+
+.lab-btn-terminal {
+    background: __success;
+    color: white;
+    border-radius: 6px;
+    padding: 4px 14px;
+    font-size: 12px;
+    border: none;
+}
+.lab-btn-terminal:hover {
+    background: #27ae60;
+}
+
+.lab-output {
+    background: #1a1a2e;
+    color: #00ff88;
+    font-family: monospace;
+    font-size: 13px;
+    padding: 12px;
+    border-radius: 8px;
+    margin-top: 8px;
+}
+
+.lab-hint-bar {
+    background: __accent_dark;
+    color: #f1c40f;
+    padding: 8px 16px;
+    font-size: 13px;
+    border-radius: 6px;
+}
+
+.lab-hint {
+    color: #ffffff;
+}
+
+vte-terminal {
+    background: #0d0d0d;
+    color: #f0f0f0;
+    font-family: "JetBrains Mono", "Cascadia Code", "Fira Code", "Monospace", monospace;
+    font-size: 14px;
+    padding: 4px;
+}
+
+vte-terminal text:selected {
+    background: #00ff88;
+    color: #0d0d0d;
+}
+
+.terminal-window {
+    background: #0d0d0d;
+}
+
+.terminal-window .lab-topbar {
+    background: #1a1a2e;
+    color: #ffffff;
+    border-bottom: 1px solid #2a2a44;
+}
+
+.lab-btn-reset {
+    background: __danger;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 16px;
+    font-size: 12px;
+    border: none;
+}
+.lab-btn-reset:hover {
+    background: #c0392b;
+}
+
+.lab-btn-close {
+    background: __muted;
+    color: white;
+    border-radius: 6px;
+    padding: 6px 16px;
+    font-size: 12px;
+    border: none;
+}
+.lab-btn-close:hover {
+    background: #7f8c8d;
+}
+
+.lab-warning {
+    background: alpha(#f39c12, 0.15);
+    color: #f39c12;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+.lab-topbar {
+    background: #080808;
+    color: #ffffff;
+    border-bottom: 1px solid #222;
+    padding: 6px 0;
+}
+.lab-user-area {
+    margin-right: 10px;
+    margin-left: 8px;
+}
+.lab-user-lbl {
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 600;
+    padding: 4px 8px;
+}
+.lab-user-arrow {
+    color: #ffffff;
+    padding: 4px;
+    min-width: 16px;
+    min-height: 16px;
+}
+.lab-user-arrow:hover {
+    color: #cccccc;
+}
+.lab-user-popover {
+    background: #0d0d0d;
+    border: 1px solid #333;
+    border-radius: 10px;
+    padding: 6px;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+}
+.lab-pop-box {
+    background: #0d0d0d;
+    border-radius: 8px;
+}
+.lab-pop-opt {
+    background: transparent;
+    color: #ffffff;
+    padding: 8px 24px 8px 16px;
+    font-size: 14px;
+    border: none;
+    border-radius: 6px;
+    text-align: left;
+    min-height: 36px;
+}
+.lab-pop-opt:hover {
+    background: #1a1a2e;
+    color: #ffffff;
+}
+.lab-pop-sep {
+    background: #2a2a2a;
+    margin: 4px 8px;
+    min-height: 1px;
+}
+.lab-user-entry {
+    background: #1a1a2e;
+    color: #ffffff;
+    border: 1px solid #555;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-size: 14px;
+    outline: none;
+    min-height: 32px;
+}
+.lab-user-entry:focus {
+    border-color: #5dade2;
+    box-shadow: 0 0 0 1px rgba(93, 173, 226, 0.3);
+}
+.lab-user-entry::placeholder {
+    color: #888888;
+}

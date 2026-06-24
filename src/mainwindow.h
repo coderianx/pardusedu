@@ -8,10 +8,12 @@
 #include <webkit/webkit.h>
 #include <vector>
 #include <map>
+#include <unordered_set>
 #include <mutex>
 #include <thread>
 #include <nlohmann/json.hpp>
 #include "ai_client.h"
+#include "parduslab.h"
 
 struct Task {
     std::string title;
@@ -109,6 +111,7 @@ struct WeeklyReport {
 class MainWindow : public Gtk::ApplicationWindow {
 public:
     MainWindow();
+    ~MainWindow();
 
 private:
     Gtk::Box root_box{Gtk::Orientation::VERTICAL};
@@ -120,6 +123,10 @@ private:
     bool dark_mode = true;
     Gtk::Button btn_theme;
     Gtk::Image* save_icon_ptr = nullptr;
+
+    std::string cached_css;
+    Glib::RefPtr<Gtk::CssProvider> css_provider_dark;
+    Glib::RefPtr<Gtk::CssProvider> css_provider_light;
 
     std::vector<Task> tasks;
     std::vector<CourseNote> course_notes;
@@ -207,6 +214,24 @@ private:
     bool focus_active = false;
     int focus_seconds = 0;
     sigc::connection focus_timer_conn;
+
+    // --- PardusLab ---
+    PardusLab* parduslab = nullptr;
+    std::string current_lab_container_id;
+    Gtk::Window* terminal_window = nullptr;
+    GtkWidget* vte_widget = nullptr;
+    Gtk::Label* terminal_hint = nullptr;
+    Gtk::Label* lab_warning = nullptr;
+    std::unordered_set<std::string> pages_built{"dashboard"};
+    void ensure_page_built(const std::string& name);
+
+    std::string lab_cwd = "~";
+    std::string lab_hostname = "parduslab";
+    std::string lab_username = "root";
+    std::vector<std::string> lab_users{"root"};
+    Gtk::Widget* lab_insert_after = nullptr;
+    bool lab_ready = false;
+    bool lab_packages_installed = false;
 
     Gtk::ScrolledWindow linux_scrolled;
     Gtk::Box linux_commands{Gtk::Orientation::VERTICAL, 6};
@@ -297,6 +322,17 @@ private:
     void on_focus_toggle();
     void block_sites();
     void unblock_sites();
+
+    // --- PardusLab ---
+    void setup_parduslab();
+    void on_lab_try_command(const std::string& command);
+    void on_lab_open_terminal(const std::string& command_hint);
+    void on_lab_close_terminal();
+    void on_lab_reset_container();
+    void on_lab_snapshot();
+    void spawn_vte_shell(const std::string& container_id, const std::string& username);
+    void spawn_terminal_session(const std::string& username, Gtk::Box* vbox, Gtk::Widget* after);
+    void show_lab_error(const std::string& title, const std::string& msg);
 
     void setup_linux();
     void filter_linux(const std::string& q);

@@ -82,6 +82,9 @@
     <file>assets/dersler/sosyal_6_6.md</file>
     <file>assets/dersler/sosyal_6_7.md</file>
     <file>assets/dersler/ingilizce_6_1.md</file>
+    <file>assets/parduslab/challenges.json</file>
+    <file>assets/parduslab/files/find_gizli_dosya/home/.gizli</file>
+    <file>assets/parduslab/files/yetki_yukselt/etc/sudoers.d/parduslab</file>
 
   </gresource>
 </gresources>

@@ -10,6 +10,7 @@
 #include <vector>
 #include <regex>
 #include <sstream>
+#include <thread>
 
 using json = nlohmann::json;
 
@@ -662,7 +663,7 @@ std::string call_ai(
     }
 
     // Token tahmini ve kırpma
-    int max_tokens = 3050;
+    int max_tokens = (global_provider == AIProvider::OPENROUTER) ? 512 : 2048;
     const int MIN_TOKENS = 128;
     const int MODEL_LIMIT = get_model_limit();
     const int SAFETY_MARGIN = 1024; // model limitine göre emniyet payı
@@ -735,7 +736,7 @@ std::string call_ai(
 
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 60L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, is_ollama ? 120L : (global_provider == AIProvider::OPENROUTER ? 30L : 60L));
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 
     // İsteği gönder, 413'te tekrar dene
@@ -780,6 +781,15 @@ std::string call_ai(
                 {"max_tokens", max_tokens},
                 {"messages", messages}
             };
+
+            if (global_provider == AIProvider::OPENROUTER)
+            {
+                body["provider"] = json{
+                    {"order", json::array({"Groq", "Fireworks", "Together", "Parasail", "DeepInfra"})},
+                    {"allow_fallbacks", true},
+                    {"quantizations", json::array({"fp16", "int8", "int4"})}
+                };
+            }
         }
 
         std::string json_body = body.dump(-1, ' ', false, json::error_handler_t::ignore);
@@ -884,19 +894,29 @@ std::string call_ai_json(const std::string& prompt) {
     messages.push_back({{"role", "user"}, {"content", prompt}});
 
     json body;
+    int json_max_tokens = (global_provider == AIProvider::OPENROUTER) ? 256 : 1024;
     if (is_gemini) {
         body = {
             {"contents", json::array({json{{"parts", json::array({json{{"text", prompt}}})}}})},
-            {"generationConfig", {{"temperature", 0.1}, {"maxOutputTokens", 1024}}},
+            {"generationConfig", {{"temperature", 0.1}, {"maxOutputTokens", json_max_tokens}}},
             {"tools", json::array({json{{"google_search", json::object()}}})}
         };
     } else {
         body = {
             {"model", is_ollama ? global_ollama_model : global_model},
             {"temperature", 0.1},
-            {"max_tokens", 1024},
+            {"max_tokens", json_max_tokens},
             {"messages", messages}
         };
+
+        if (global_provider == AIProvider::OPENROUTER)
+        {
+            body["provider"] = json{
+                {"order", json::array({"Groq", "Fireworks", "Together", "Parasail", "DeepInfra"})},
+                {"allow_fallbacks", true},
+                {"quantizations", json::array({"fp16", "int8", "int4"})}
+            };
+        }
     }
 
     std::string json_body = body.dump(-1, ' ', false, json::error_handler_t::ignore);
@@ -928,7 +948,7 @@ std::string call_ai_json(const std::string& prompt) {
     curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, WriteCallback);
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
     curl_easy_setopt(curl, CURLOPT_POSTFIELDS, json_body.c_str());
-    curl_easy_setopt(curl, CURLOPT_TIMEOUT, 60L);
+    curl_easy_setopt(curl, CURLOPT_TIMEOUT, is_ollama ? 120L : (global_provider == AIProvider::OPENROUTER ? 30L : 60L));
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 
     CURLcode res = curl_easy_perform(curl);
@@ -961,6 +981,20 @@ std::string call_ai_json(const std::string& prompt) {
     reply.erase(reply.find_last_not_of(" \n\r\t") + 1);
 
     return reply;
+}
+
+void async_call_ai(const std::string& user_text, const std::string& app_context, AsyncAICallback callback) {
+    std::thread([user_text, app_context, callback]() {
+        std::string result = call_ai(user_text, app_context);
+        if (callback) callback(result);
+    }).detach();
+}
+
+void async_call_ai_json(const std::string& prompt, AsyncAICallback callback) {
+    std::thread([prompt, callback]() {
+        std::string result = call_ai_json(prompt);
+        if (callback) callback(result);
+    }).detach();
 }
 
 // 0fb350a5f83740d49e65b28bcb258cda.WHEZmLQ-PWxR6sUnBMyULStM

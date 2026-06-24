@@ -1,0 +1,24 @@
+{
+  "challenges": [
+    {
+      "id": "find_gizli_dosya",
+      "title": "Gizli Dosyayı Bul",
+      "description": "Container içinde /home dizininde bir gizli dosya var. Onu bul ve içeriğini oku.",
+      "hint": "find ve cat komutlarını kullanmalısın. Gizli dosyalar '.' ile başlar.",
+      "command_to_test": "cat /home/.gizli",
+      "expected_output": "tebrikler_buldun",
+      "badge_id": "gizli_avcisi",
+      "xp": 50
+    },
+    {
+      "id": "yetki_yukselt",
+      "title": "Yetki Yükseltme",
+      "description": "sudo ile bir kullanıcı oluştur ve ona yetki ver.",
+      "hint": "useradd, passwd, usermod komutlarını araştır.",
+      "command_to_test": "id testuser",
+      "expected_output": "uid=1001\\(testuser\\)",
+      "badge_id": "sistem_yoneticisi",
+      "xp": 100
+    }
+  ]
+}
