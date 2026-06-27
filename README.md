@@ -229,9 +229,9 @@ Pazartesi–Cuma haftalık zaman çizelgesi. Özelleştirilebilir saat dilimleri
 Instagram, Twitter/X, Facebook, TikTok, Reddit, Netflix, Discord, Twitch olmak üzere 17+ siteyi `/etc/hosts` üzerinden sistem seviyesinde engeller. `pkexec` ile güvenli yükseltme, odak süresi sayacı, Pomodoro'dan bağımsız çalışır.
 
 ### 07 — Linux Komutları 🐧
-52 temel Linux komutu, 7 kategoride detaylı açıklamalar, kullanım örnekleri ve güvenlik uyarıları. Canlı arama filtresi ile anında komut bulma.
+85 temel Linux komutu, 7 kategoride, her biri detaylı açıklamalar, seçenekler ve örneklerle. Canlı arama filtresi ile anında komut bulma.
 
-**Kapsanan komutlar:** `ls`, `cd`, `pwd`, `cp`, `mv`, `rm`, `mkdir`, `cat`, `grep`, `find`, `chmod`, `chown`, `ps`, `top`, `kill`, `tar`, `wget`, `curl`, `ssh`, `scp`, `df`, `du`, `free`, `uname`, `whoami`, `sudo`, `apt`, `dnf`, `systemctl`, `journalctl`, `man`, `history`, `alias`, `ln`, `diff`, `head`, `tail`, `sort`, `uniq`, `wc`, `awk`, `sed`, `cut`, `ping`, `ip`, `touch`, `tree`, `file`, `stat`, `nslookup`, `dig`, `useradd`
+**Kapsanan komutlar:** `ls`, `cd`, `pwd`, `cp`, `mv`, `rm`, `mkdir`, `cat`, `grep`, `find`, `chmod`, `chown`, `ps`, `top`, `kill`, `tar`, `wget`, `curl`, `ssh`, `scp`, `df`, `du`, `free`, `uname`, `whoami`, `sudo`, `apt`, `dnf`, `systemctl`, `journalctl`, `man`, `history`, `alias`, `ln`, `diff`, `head`, `tail`, `sort`, `uniq`, `wc`, `awk`, `sed`, `cut`, `ping`, `ip`, `touch`, `tree`, `file`, `stat`, `nslookup`, `dig`, `useradd`, `basename`, `dirname`, `xargs`, `tee`, `watch`, `rsync`, `cron`, `lsblk`, `lsof`, `ss`, `dpkg`, `jq`, `strace`, `nc`, `tcpdump`, `gpg`, `openssl`, `git`, `make`, `which`, `whereis`, `mount`, `umount`, `uptime`, `hostname`, `printenv`, `type`, `sensors`, `sysctl`, `nice`, `fdisk`, `mkfs`, `logrotate`, `parallel`, `who`
 
 ### 08 — Yapay Zeka Asistanı 🧠
 

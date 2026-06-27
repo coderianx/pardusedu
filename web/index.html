@@ -25,6 +25,8 @@
         <li><a href="#commands">Komutlar</a></li>
         <li><a href="#ai">Yapay Zeka</a></li>
         <li><a href="#python">Python</a></li>
+        <li><a href="#parduslab">PardusLab</a></li>
+        <li><a href="#weekly">Haftalık Analiz</a></li>
         <li><a href="#dersler">Dersler</a></li>
         <li><a href="#flashcards">Kartlar</a></li>
         <li><a href="#badges">Rozetler</a></li>
@@ -60,7 +62,7 @@
         <div class="hero-feature"><i class="fa-solid fa-server hf-icon"></i> Tamamen Yerel</div>
         <div class="hero-feature"><i class="fa-solid fa-lock hf-icon"></i> Gizlilik Odaklı</div>
         <div class="hero-feature"><i class="fa-solid fa-code hf-icon"></i> Ücretsiz & Açık Kaynak</div>
-        <div class="hero-feature"><i class="fa-solid fa-puzzle-piece hf-icon"></i> 12 Modül</div>
+        <div class="hero-feature"><i class="fa-solid fa-puzzle-piece hf-icon"></i> 14 Modül</div>
       </div>
       <div class="hero-actions">
         <a href="#dashboard" class="btn btn-primary">Kesfet</a>
@@ -278,11 +280,11 @@
         <div class="feature-text">
           <div class="feature-number">07</div>
           <h2>Linux Komutları</h2>
-          <h3>52 Temel Komut, Kategorik Anlatım</h3>
+          <h3>85 Temel Komut, Kategorik Anlatım</h3>
           <p>
             Linux dünyasına adım at. Dosya işlemleri, izinler, süreç yönetimi,
             ağ, paket yönetimi, kullanıcı ve disk yönetimi olmak üzere 7 kategoride
-            52 temel Linux komutunu keşfet. Arama filtresi ve genişleyen kartlarla
+            85 temel Linux komutunu keşfet. Arama filtresi ve genişleyen kartlarla
             (Gtk::Revealer) istediğin bilgiye anında ulaş.
           </p>
         </div>
@@ -294,14 +296,15 @@
         <div class="feature-text">
           <div class="feature-number">08</div>
           <h2>Yapay Zeka Asistanı</h2>
-          <h3>Groq · OpenRouter · Google Gemini</h3>
+          <h3>Groq · OpenRouter · Google Gemini · Ollama</h3>
           <p>
-            Üç farklı sağlayıcı üzerinden 30'dan fazla yapay zeka modeline
+            Dört farklı sağlayıcı üzerinden 30'dan fazla yapay zeka modeline
             erişin. Google Gemini ile Google Search Grounding sayesinde güncel
             bilgileri kaynaklarıyla birlikte alın. YouTube linki gönderince
             otomatik transkript çıkarıp ders notlarına dönüştürün. DuckDuckGo
             ile araştırma yapın, doğal dille not ekleyin/güncelleyin/silin.
-            API anahtarını kendiniz belirleyin, tam kontrol sizde.
+            Tüm sağlayıcılar async (eşzamansız) destekler, API anahtarını
+            kendiniz belirleyin, tam kontrol sizde.
            </p>
           <div style="display:flex;gap:10px;flex-wrap:wrap;">
             <button class="models-toggle-btn" id="modelsToggleBtn"><i class="fa-solid fa-brain"></i> Tüm Modelleri Gör</button>
@@ -424,6 +427,77 @@
       </div>
     </section>
 
+    <section class="feature right" id="parduslab">
+      <div class="feature-container">
+        <div class="feature-text">
+          <div class="feature-number">13</div>
+          <h2>PardusLab</h2>
+          <h3>Linux Öğrenme Platformu</h3>
+          <p>
+            Pardus ve Linux dünyasına adım atmak için kapsamlı bir öğrenme
+            platformu. Temel komutlardan sistem yönetimine, kabuk betiklemeden
+            ağ yönetimine kadar geniş bir yelpazede ders içerikleri. Uygulamalı
+            örnekler ve etkileşimli alıştırmalarla Linux becerilerini
+            geliştir. Pardus'a özel ipuçları ve püf noktaları.
+          </p>
+        </div>
+        <div class="feature-visual">
+          <div class="mockup">
+            <div class="mockup-bar"><span></span><span></span><span></span></div>
+            <div class="mockup-body" style="gap:10px;min-height:180px;">
+              <div style="display:flex;gap:6px;align-items:center;padding:8px;border-radius:8px;background:var(--card-bg);border:1px solid var(--card-border);">
+                <span style="width:20px;height:20px;border-radius:4px;background:rgba(79,70,229,.3);flex-shrink:0;"></span>
+                <span class="m-line l2" style="width:60%;"></span>
+              </div>
+              <span class="m-line l1" style="width:50%;"></span>
+              <span class="m-line l2"></span>
+              <span class="m-line l2" style="width:65%;"></span>
+              <div style="display:flex;gap:6px;margin-top:4px;">
+                <span style="flex:1;height:30px;border-radius:6px;background:var(--card-bg);border:1px solid var(--card-border);"></span>
+                <span style="flex:1;height:30px;border-radius:6px;background:var(--card-bg);border:1px solid var(--card-border);"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature left" id="weekly">
+      <div class="feature-container">
+        <div class="feature-visual">
+          <div class="mockup">
+            <div class="mockup-bar"><span></span><span></span><span></span></div>
+            <div class="mockup-body" style="gap:10px;min-height:180px;">
+              <div style="display:flex;gap:6px;">
+                <span style="flex:1;height:40px;border-radius:8px;background:rgba(79,70,229,.15);border:1px solid rgba(79,70,229,.1);"></span>
+                <span style="flex:1;height:40px;border-radius:8px;background:var(--card-bg);border:1px solid var(--card-border);"></span>
+                <span style="flex:1;height:40px;border-radius:8px;background:var(--card-bg);border:1px solid var(--card-border);"></span>
+              </div>
+              <span class="m-line l1" style="width:35%;"></span>
+              <span class="m-line l2"></span>
+              <span class="m-line l2" style="width:55%;"></span>
+              <div style="display:flex;gap:6px;margin-top:4px;">
+                <span style="flex:1;height:50px;border-radius:8px;background:var(--card-bg);border:1px solid var(--card-border);"></span>
+                <span style="flex:1;height:50px;border-radius:8px;background:var(--card-bg);border:1px solid var(--card-border);"></span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="feature-text">
+          <div class="feature-number">14</div>
+          <h2>Haftalık Analiz</h2>
+          <h3>Çalışma Alışkanlıklarını Keşfet</h3>
+          <p>
+            Her hafta sonu otomatik oluşturulan detaylı analiz raporu.
+            Pomodoro oturumları, tamamlanan görevler, ders çalışma süresi
+            ve rozet kazanımlarının haftalık özetini gör. Çalışma
+            alışkanlıklarını keşfet, verimliliğini artıracak öneriler al.
+            İlerlemeni takip et, kendine yeni hedefler belirle.
+          </p>
+        </div>
+      </div>
+    </section>
+
     <section class="feature left" id="badges">
       <div class="feature-container">
         <div class="feature-visual">
@@ -535,6 +609,13 @@
             <button class="model-badge" data-model="gpt5mini" data-company="openai"><svg class="cl-icon" viewBox="0 0 640 512" width="14" height="14"><path fill="currentColor" d="M260.4 249.8L260.4 201.2C260.4 197.1 261.9 194 265.5 192L363.3 135.7C376.6 128 392.5 124.4 408.9 124.4C470.3 124.4 509.3 172 509.3 222.7C509.3 226.3 509.3 230.4 508.8 234.5L407.3 175.1C401.2 171.5 395 171.5 388.9 175.1L260.4 249.8zM488.7 439.2L488.7 323C488.7 315.8 485.6 310.7 479.5 307.1L351 232.4L393 208.3C396.6 206.3 399.7 206.3 403.2 208.3L501 264.7C529.2 281.1 548.1 315.9 548.1 349.7C548.1 388.6 525.1 424.5 488.7 439.3zM230.2 336.8L188.2 312.2C184.6 310.2 183.1 307.1 183.1 303L183.1 190.4C183.1 135.6 225.1 94.1 281.9 94.1C303.4 94.1 323.4 101.3 340.3 114.1L239.4 172.5C233.3 176.1 230.2 181.2 230.2 188.4L230.2 336.9zM320.6 389L260.4 355.2L260.4 283.5L320.6 249.7L380.8 283.5L380.8 355.2L320.6 389zM359.3 544.7C337.8 544.7 317.8 537.5 300.9 524.7L401.8 466.3C407.9 462.7 411 457.6 411 450.4L411 301.9L453.5 326.5C457.1 328.5 458.6 331.6 458.6 335.7L458.6 448.3C458.6 503.1 416.1 544.6 359.3 544.6zM237.8 430.5L140.1 374.2C111.9 357.8 93 323 93 289.2C93 249.8 116.6 214.4 152.9 199.6L152.9 316.3C152.9 323.5 156 328.6 162.1 332.2L290.1 406.4L248.1 430.5C244.5 432.5 241.4 432.5 237.9 430.5zM232.2 514.5C174.3 514.5 131.8 471 131.8 417.2C131.8 413.1 132.3 409 132.8 404.9L233.7 463.3C239.8 466.9 246 466.9 252.1 463.3L380.6 389.1L380.6 437.7C380.6 441.8 379.1 444.9 375.5 446.9L277.7 503.2C264.4 510.9 248.5 514.5 232.1 514.5zM359.2 575.4C421.2 575.4 472.9 531.4 484.6 473C541.9 458.1 578.8 404.4 578.8 349.6C578.8 313.8 563.4 278.9 535.8 253.9C538.4 243.1 539.9 232.4 539.9 221.6C539.9 148.4 480.5 93.6 411.9 93.6C398.1 93.6 384.8 95.6 371.5 100.3C348.5 77.8 316.7 63.4 281.9 63.4C219.9 63.4 168.2 107.4 156.5 165.8C99.2 180.6 62.3 234.4 62.3 289.2C62.3 325 77.7 359.9 105.3 384.9C102.7 395.7 101.2 406.4 101.2 417.2C101.2 490.4 160.6 545.2 229.2 545.2C243 545.2 256.3 543.2 269.6 538.5C292.6 561 324.4 575.4 359.2 575.4z"/></svg>ChatGPT 5 Mini</button>
             <button class="model-badge" data-model="gpt4omini" data-company="openai"><svg class="cl-icon" viewBox="0 0 640 512" width="14" height="14"><path fill="currentColor" d="M260.4 249.8L260.4 201.2C260.4 197.1 261.9 194 265.5 192L363.3 135.7C376.6 128 392.5 124.4 408.9 124.4C470.3 124.4 509.3 172 509.3 222.7C509.3 226.3 509.3 230.4 508.8 234.5L407.3 175.1C401.2 171.5 395 171.5 388.9 175.1L260.4 249.8zM488.7 439.2L488.7 323C488.7 315.8 485.6 310.7 479.5 307.1L351 232.4L393 208.3C396.6 206.3 399.7 206.3 403.2 208.3L501 264.7C529.2 281.1 548.1 315.9 548.1 349.7C548.1 388.6 525.1 424.5 488.7 439.3zM230.2 336.8L188.2 312.2C184.6 310.2 183.1 307.1 183.1 303L183.1 190.4C183.1 135.6 225.1 94.1 281.9 94.1C303.4 94.1 323.4 101.3 340.3 114.1L239.4 172.5C233.3 176.1 230.2 181.2 230.2 188.4L230.2 336.9zM320.6 389L260.4 355.2L260.4 283.5L320.6 249.7L380.8 283.5L380.8 355.2L320.6 389zM359.3 544.7C337.8 544.7 317.8 537.5 300.9 524.7L401.8 466.3C407.9 462.7 411 457.6 411 450.4L411 301.9L453.5 326.5C457.1 328.5 458.6 331.6 458.6 335.7L458.6 448.3C458.6 503.1 416.1 544.6 359.3 544.6zM237.8 430.5L140.1 374.2C111.9 357.8 93 323 93 289.2C93 249.8 116.6 214.4 152.9 199.6L152.9 316.3C152.9 323.5 156 328.6 162.1 332.2L290.1 406.4L248.1 430.5C244.5 432.5 241.4 432.5 237.9 430.5zM232.2 514.5C174.3 514.5 131.8 471 131.8 417.2C131.8 413.1 132.3 409 132.8 404.9L233.7 463.3C239.8 466.9 246 466.9 252.1 463.3L380.6 389.1L380.6 437.7C380.6 441.8 379.1 444.9 375.5 446.9L277.7 503.2C264.4 510.9 248.5 514.5 232.1 514.5zM359.2 575.4C421.2 575.4 472.9 531.4 484.6 473C541.9 458.1 578.8 404.4 578.8 349.6C578.8 313.8 563.4 278.9 535.8 253.9C538.4 243.1 539.9 232.4 539.9 221.6C539.9 148.4 480.5 93.6 411.9 93.6C398.1 93.6 384.8 95.6 371.5 100.3C348.5 77.8 316.7 63.4 281.9 63.4C219.9 63.4 168.2 107.4 156.5 165.8C99.2 180.6 62.3 234.4 62.3 289.2C62.3 325 77.7 359.9 105.3 384.9C102.7 395.7 101.2 406.4 101.2 417.2C101.2 490.4 160.6 545.2 229.2 545.2C243 545.2 256.3 543.2 269.6 538.5C292.6 561 324.4 575.4 359.2 575.4z"/></svg>ChatGPT 4o Mini</button>
             <button class="model-badge" data-model="gpt41mini" data-company="openai"><svg class="cl-icon" viewBox="0 0 640 512" width="14" height="14"><path fill="currentColor" d="M260.4 249.8L260.4 201.2C260.4 197.1 261.9 194 265.5 192L363.3 135.7C376.6 128 392.5 124.4 408.9 124.4C470.3 124.4 509.3 172 509.3 222.7C509.3 226.3 509.3 230.4 508.8 234.5L407.3 175.1C401.2 171.5 395 171.5 388.9 175.1L260.4 249.8zM488.7 439.2L488.7 323C488.7 315.8 485.6 310.7 479.5 307.1L351 232.4L393 208.3C396.6 206.3 399.7 206.3 403.2 208.3L501 264.7C529.2 281.1 548.1 315.9 548.1 349.7C548.1 388.6 525.1 424.5 488.7 439.3zM230.2 336.8L188.2 312.2C184.6 310.2 183.1 307.1 183.1 303L183.1 190.4C183.1 135.6 225.1 94.1 281.9 94.1C303.4 94.1 323.4 101.3 340.3 114.1L239.4 172.5C233.3 176.1 230.2 181.2 230.2 188.4L230.2 336.9zM320.6 389L260.4 355.2L260.4 283.5L320.6 249.7L380.8 283.5L380.8 355.2L320.6 389zM359.3 544.7C337.8 544.7 317.8 537.5 300.9 524.7L401.8 466.3C407.9 462.7 411 457.6 411 450.4L411 301.9L453.5 326.5C457.1 328.5 458.6 331.6 458.6 335.7L458.6 448.3C458.6 503.1 416.1 544.6 359.3 544.6zM237.8 430.5L140.1 374.2C111.9 357.8 93 323 93 289.2C93 249.8 116.6 214.4 152.9 199.6L152.9 316.3C152.9 323.5 156 328.6 162.1 332.2L290.1 406.4L248.1 430.5C244.5 432.5 241.4 432.5 237.9 430.5zM232.2 514.5C174.3 514.5 131.8 471 131.8 417.2C131.8 413.1 132.3 409 132.8 404.9L233.7 463.3C239.8 466.9 246 466.9 252.1 463.3L380.6 389.1L380.6 437.7C380.6 441.8 379.1 444.9 375.5 446.9L277.7 503.2C264.4 510.9 248.5 514.5 232.1 514.5zM359.2 575.4C421.2 575.4 472.9 531.4 484.6 473C541.9 458.1 578.8 404.4 578.8 349.6C578.8 313.8 563.4 278.9 535.8 253.9C538.4 243.1 539.9 232.4 539.9 221.6C539.9 148.4 480.5 93.6 411.9 93.6C398.1 93.6 384.8 95.6 371.5 100.3C348.5 77.8 316.7 63.4 281.9 63.4C219.9 63.4 168.2 107.4 156.5 165.8C99.2 180.6 62.3 234.4 62.3 289.2C62.3 325 77.7 359.9 105.3 384.9C102.7 395.7 101.2 406.4 101.2 417.2C101.2 490.4 160.6 545.2 229.2 545.2C243 545.2 256.3 543.2 269.6 538.5C292.6 561 324.4 575.4 359.2 575.4z"/></svg>ChatGPT 4.1 Mini</button>
+          </div>
+        </div>
+        <div class="models-list-section">
+          <h4>Ollama</h4>
+          <div class="model-grid">
+            <button class="model-badge" data-model="llama32" data-company="meta"><i class="fa-brands fa-meta cl-icon"></i>Llama 3.2 3B</button>
+            <button class="model-badge" data-model="mistral7b" data-company="mistral"><img class="cl-icon" src="https://cdn.simpleicons.org/mistralai/6366F1" alt="">Mistral 7B</button>
           </div>
         </div>
         <div class="models-list-section">

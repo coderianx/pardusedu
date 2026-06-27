@@ -193,6 +193,14 @@ const modelData = {
   gemini31pro_g: {
     title: 'Gemini 3.1 Pro',
     desc: 'Google\'ın en yeni profesyonel seviye modeli olan Gemini 3.1 Pro, gelişmiş akıl yürütme, kod üretimi ve çok modlu analiz yetenekleriyle öne çıkar. Uzun bağlam penceresi sayesinde büyük projeleri ve karmaşık belgeleri sorunsuz işler.'
+  },
+  llama32: {
+    title: 'Llama 3.2 3B',
+    desc: 'Meta\'nın en yeni küçük modeli Llama 3.2 3B, 3 milyar parametre ile düşük kaynak tüketimi ve hızlı çalışma sunar. Tamamen yerelde çalıştığı için internet bağlantısı gerektirmez ve verileriniz bilgisayarınızdan ayrılmaz.'
+  },
+  mistral7b: {
+    title: 'Mistral 7B',
+    desc: 'Mistral 7B, Fransız yapay zeka şirketi Mistral AI tarafından geliştirilen 7 milyar parametrelik güçlü bir modeldir. Yerel ortamda çalışarak yüksek performans ve hızlı yanıt süreleri sunar. Genel amaçlı görevler, kod üretimi ve mantıksal akıl yürütmede başarılıdır.'
   }
 };
 
