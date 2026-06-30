@@ -121,8 +121,12 @@ private:
     Gtk::ListBox sidebar;
 
     bool dark_mode = true;
+    bool sidebar_icons = false;
     Gtk::Button btn_theme;
+    Gtk::Button btn_settings;
     Gtk::Image* save_icon_ptr = nullptr;
+    Gtk::Image* settings_icon_ptr = nullptr;
+    std::vector<std::pair<Gtk::Image*, std::string>> sidebar_icon_widgets;
 
     std::string cached_css;
     Glib::RefPtr<Gtk::CssProvider> css_provider_dark;
@@ -136,8 +140,12 @@ private:
     std::vector<FlashCard> flash_cards;
     int pomodoro_completed = 0;
     int pomodoro_minutes = 0;
+    int weekly_pomo_sessions = 0;
+    int weekly_pomo_minutes = 0;
+    std::string current_week_start;
     int study_streak = 0;
     std::string last_streak_date;
+    void check_week_change();
 
     Gtk::Label dash_welcome{"", Gtk::Align::CENTER};
     Gtk::Picture dash_logo;
@@ -367,6 +375,8 @@ private:
     void on_ai_response();
 
     void on_select(Gtk::ListBoxRow* row);
+    void show_settings_dialog();
+    void update_sidebar_icons();
     sigc::connection sidebar_glow_conn;
 
     Gtk::Box html_box{Gtk::Orientation::VERTICAL, 0};

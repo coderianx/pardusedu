@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <map>
 #include <algorithm>
+#include <ctime>
 
 MainWindow::MainWindow() {
     set_title("Pardus Edu");
@@ -15,6 +16,7 @@ MainWindow::MainWindow() {
     detect_theme();
     setup_data();
     update_streak();
+    check_week_change();
     setup_parduslab();
     setup_ui();
     apply_theme();
@@ -75,9 +77,19 @@ void MainWindow::setup_ui() {
     save_btn->add_css_class("save-btn");
     save_btn->signal_clicked().connect([this]() { save_data(); });
 
+    settings_icon_ptr = Gtk::make_managed<Gtk::Image>();
+    settings_icon_ptr->set_from_resource(dark_mode
+        ? "/org/ogrenci/merkezi/assets/settings.svg"
+        : "/org/ogrenci/merkezi/assets/settings_dark.svg");
+    settings_icon_ptr->set_pixel_size(20);
+    btn_settings.set_child(*settings_icon_ptr);
+    btn_settings.add_css_class("settings-btn");
+    btn_settings.signal_clicked().connect(sigc::mem_fun(*this, &MainWindow::show_settings_dialog));
+
     header->append(header_logo);
     header->append(*title);
     header->append(btn_theme);
+    header->append(btn_settings);
     header->append(*save_btn);
 
     root_box.append(*header);
@@ -114,6 +126,12 @@ void MainWindow::toggle_theme() {
             : "/org/ogrenci/merkezi/assets/save_dark.svg");
     }
 
+    if (settings_icon_ptr) {
+        settings_icon_ptr->set_from_resource(dark_mode
+            ? "/org/ogrenci/merkezi/assets/settings.svg"
+            : "/org/ogrenci/merkezi/assets/settings_dark.svg");
+    }
+
     if (share_icon_ptr) {
         share_icon_ptr->set_from_resource(dark_mode
             ? "/org/ogrenci/merkezi/assets/share.svg"
@@ -124,6 +142,12 @@ void MainWindow::toggle_theme() {
     if (dash_icon_streak) reload(dash_icon_streak, "/org/ogrenci/merkezi/assets/streak.svg");
     if (dash_icon_pomo) reload(dash_icon_pomo, "/org/ogrenci/merkezi/assets/pomo.svg");
     if (dash_icon_timer) reload(dash_icon_timer, "/org/ogrenci/merkezi/assets/timer.svg");
+
+    for (auto& [img, base] : sidebar_icon_widgets) {
+        std::string p = "/org/ogrenci/merkezi/assets/" + base + ".svg";
+        std::string p_dark = "/org/ogrenci/merkezi/assets/" + base + "_dark.svg";
+        img->set_from_resource(dark_mode ? p.c_str() : p_dark.c_str());
+    }
 }
 
 void MainWindow::apply_theme() {
@@ -232,6 +256,32 @@ void MainWindow::apply_theme() {
     reload_python();
 }
 
+void MainWindow::check_week_change() {
+    time_t now = std::time(nullptr);
+    struct tm* tm_now = std::localtime(&now);
+    int current_wday = tm_now->tm_wday;
+    if (current_wday == 0) current_wday = 7;
+    time_t monday = now - (current_wday - 1) * 86400;
+
+    char buf[11];
+    struct tm* tm_monday = std::localtime(&monday);
+    std::strftime(buf, sizeof(buf), "%Y-%m-%d", tm_monday);
+    std::string this_week(buf);
+
+    if (current_week_start.empty()) {
+        current_week_start = this_week;
+        save_data();
+    } else if (current_week_start != this_week) {
+        if (weekly_pomo_sessions > 0 || weekly_pomo_minutes > 0) {
+            collect_weekly_data();
+        }
+        weekly_pomo_sessions = 0;
+        weekly_pomo_minutes = 0;
+        current_week_start = this_week;
+        save_data();
+    }
+}
+
 void MainWindow::setup_sidebar() {
     sidebar_box.add_css_class("sidebar-box");
     sidebar.set_selection_mode(Gtk::SelectionMode::SINGLE);
@@ -274,12 +324,43 @@ void MainWindow::select_first_row() {
 
 void MainWindow::add_item(const std::string& name, const std::string& id) {
     auto* row = Gtk::make_managed<Gtk::ListBoxRow>();
+    auto* hbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
+    hbox->set_margin_start(10);
+    hbox->set_margin_top(5);
+    hbox->set_margin_bottom(5);
+
+    auto* icon = Gtk::make_managed<Gtk::Image>();
+    static const std::map<std::string, std::string> icon_map = {
+        {"dashboard", "sidebar_dashboard"},
+        {"dersler", "sidebar_dersler"},
+        {"badges", "sidebar_badges"},
+        {"flashcards", "sidebar_flashcards"},
+        {"pomodoro", "sidebar_pomodoro"},
+        {"planner", "sidebar_planner"},
+        {"notes", "sidebar_notes"},
+        {"schedule", "sidebar_schedule"},
+        {"focus", "sidebar_focus"},
+        {"linux", "sidebar_linux"},
+        {"ai", "sidebar_ai"},
+        {"python", "sidebar_python"}
+    };
+    auto it = icon_map.find(id);
+    if (it != icon_map.end()) {
+        std::string base = it->second;
+        std::string path = "/org/ogrenci/merkezi/assets/" + base + ".svg";
+        std::string path_dark = "/org/ogrenci/merkezi/assets/" + base + "_dark.svg";
+        icon->set_from_resource(dark_mode ? path.c_str() : path_dark.c_str());
+        icon->set_pixel_size(18);
+        icon->set_visible(sidebar_icons);
+        sidebar_icon_widgets.push_back({icon, base});
+    }
+
     auto* label = Gtk::make_managed<Gtk::Label>(name);
     label->set_halign(Gtk::Align::START);
-    label->set_margin_start(14);
-    label->set_margin_top(5);
-    label->set_margin_bottom(5);
-    row->set_child(*label);
+
+    hbox->append(*icon);
+    hbox->append(*label);
+    row->set_child(*hbox);
     row->set_name(id);
     sidebar.append(*row);
 }
@@ -389,6 +470,70 @@ void MainWindow::setup_dashboard() {
 
     sw->set_child(*box);
     stack.add(*sw, "dashboard");
+}
+
+void MainWindow::show_settings_dialog() {
+    auto* dialog = new Gtk::Dialog();
+    dialog->set_title("Ayarlar");
+    dialog->set_transient_for(*this);
+    dialog->set_modal(true);
+    dialog->set_default_size(400, 170);
+
+    auto* content = dialog->get_content_area();
+    content->set_margin(20);
+    content->set_spacing(12);
+
+    auto* header_lbl = Gtk::make_managed<Gtk::Label>("");
+    header_lbl->set_markup("<b>G\u00f6r\u00fcn\u00fcm</b>");
+    header_lbl->set_halign(Gtk::Align::START);
+    content->append(*header_lbl);
+
+    auto* icons_row = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
+    icons_row->set_margin_top(4);
+    icons_row->add_css_class("settings-row");
+
+    auto* icons_label = Gtk::make_managed<Gtk::Label>("Sidebar \u0130konlar\u0131");
+    icons_label->set_halign(Gtk::Align::START);
+    icons_label->set_hexpand(true);
+
+    auto* icons_switch = Gtk::make_managed<Gtk::Switch>();
+    icons_switch->set_active(sidebar_icons);
+    icons_switch->set_halign(Gtk::Align::END);
+
+    icons_row->append(*icons_label);
+    icons_row->append(*icons_switch);
+    content->append(*icons_row);
+
+    auto* btn_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
+    btn_box->set_halign(Gtk::Align::END);
+    btn_box->set_margin_top(16);
+
+    auto* btn_cancel = Gtk::make_managed<Gtk::Button>("\u0130ptal");
+    auto* btn_save = Gtk::make_managed<Gtk::Button>("Kaydet");
+    btn_save->add_css_class("suggested-action");
+
+    btn_box->append(*btn_cancel);
+    btn_box->append(*btn_save);
+    content->append(*btn_box);
+
+    btn_cancel->signal_clicked().connect([dialog]() {
+        dialog->close();
+    });
+
+    btn_save->signal_clicked().connect([this, dialog, icons_switch]() {
+        sidebar_icons = icons_switch->get_active();
+        update_sidebar_icons();
+        save_data();
+        dialog->close();
+    });
+
+    dialog->show();
+}
+
+void MainWindow::update_sidebar_icons() {
+    for (auto& [img, base] : sidebar_icon_widgets) {
+        img->set_visible(sidebar_icons);
+    }
 }
 
 void MainWindow::on_select(Gtk::ListBoxRow* row) {

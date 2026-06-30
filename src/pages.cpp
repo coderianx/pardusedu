@@ -1737,7 +1737,7 @@ void MainWindow::on_pomo_start() {
         if (!pomo_running) return false;
         pomo_seconds--;
         if (pomo_seconds <= 0) {
-            if (!pomo_break) { pomodoro_completed++; pomodoro_minutes += pomo_duration_minutes; }
+            if (!pomo_break) { pomodoro_completed++; pomodoro_minutes += pomo_duration_minutes; weekly_pomo_sessions++; weekly_pomo_minutes += pomo_duration_minutes; }
             pomo_break = !pomo_break;
             pomo_seconds = pomo_break ? pomo_break_minutes * 60 : pomo_duration_minutes * 60;
             pomo_total = pomo_seconds;
@@ -6353,10 +6353,18 @@ void MainWindow::render_weekly_analysis_ui() {
     double accuracy = report.cards_reviewed > 0
         ? (100.0 * report.cards_correct / report.cards_reviewed) : 0.0;
 
+    std::string hours_str;
+    {
+        int h = report.total_focus_minutes / 60;
+        int m = report.total_focus_minutes % 60;
+        if (h > 0) hours_str = std::to_string(h) + "s " + std::to_string(m) + "dk";
+        else hours_str = std::to_string(m) + "dk";
+    }
+
     add_stat(std::to_string(report.study_score) + "/100", "Haftal\u0131k Skor");
     add_stat(std::to_string((int)accuracy) + "%", "Do\u011fruluk");
     add_stat(std::to_string(report.total_pomo_sessions), "Pomodoro");
-    add_stat(std::to_string(report.total_focus_minutes) + "dk", "\u00c7al\u0131\u015fma");
+    add_stat(hours_str, "\u00c7al\u0131\u015fma S\u00fcresi");
 
     if (report.ai_summary.empty()) {
         weekly_ai_summary.set_text(
@@ -6465,8 +6473,8 @@ void MainWindow::collect_weekly_data() {
     report.week_end = week_end;
     report.created_at = now;
     report.streak_count = study_streak;
-    report.total_pomo_sessions = pomodoro_completed;
-    report.total_focus_minutes = pomodoro_minutes;
+    report.total_pomo_sessions = weekly_pomo_sessions;
+    report.total_focus_minutes = weekly_pomo_minutes;
     report.tasks_completed = 0;
     report.tasks_total = (int)tasks.size();
     report.notes_created = (int)course_notes.size();
@@ -6479,7 +6487,6 @@ void MainWindow::collect_weekly_data() {
     report.cards_correct = 0;
     report.cards_wrong = 0;
 
-    // Populate daily stats for chart
     report.daily_stats.clear();
     int total_day_cards = 0;
     std::vector<int> day_card_counts(7, 0);
@@ -6505,25 +6512,48 @@ void MainWindow::collect_weekly_data() {
         day_card_counts[di] = ds.cards_reviewed;
         total_day_cards += ds.cards_reviewed;
 
-        for (auto& t : tasks) {
-            if (t.done) ds.tasks_done++;
-        }
-        ds.pomo_sessions = report.total_pomo_sessions / 7;
-        ds.tasks_total = (int)tasks.size();
+        ds.tasks_done = report.tasks_completed;
+        ds.tasks_total = report.tasks_total;
+        ds.pomo_sessions = 0;
+        ds.focus_minutes = 0;
 
         report.daily_stats.push_back(ds);
     }
 
-    // Distribute focus minutes proportionally by card activity
+    // Distribute pomodoro and minutes proportionally by card activity
+    int active_days = 0;
     for (int di = 0; di < 7; di++) {
-        if (total_day_cards > 0) {
-            report.daily_stats[di].focus_minutes =
-                report.total_focus_minutes * day_card_counts[di] / total_day_cards;
-        }
-        if (report.daily_stats[di].focus_minutes == 0 && report.total_focus_minutes > 0) {
-            report.daily_stats[di].focus_minutes = report.total_focus_minutes / 7;
+        if (day_card_counts[di] > 0) active_days++;
+    }
+    if (active_days == 0 && weekly_pomo_sessions > 0) active_days = 7;
+
+    if (active_days > 0) {
+        int base_pomo = weekly_pomo_sessions / active_days;
+        int base_min = weekly_pomo_minutes / active_days;
+        int rem_pomo = weekly_pomo_sessions % active_days;
+        int rem_min = weekly_pomo_minutes % active_days;
+        for (int di = 0; di < 7; di++) {
+            if (day_card_counts[di] > 0 || weekly_pomo_sessions > 0) {
+                report.daily_stats[di].pomo_sessions = base_pomo + (rem_pomo > 0 ? 1 : 0);
+                report.daily_stats[di].focus_minutes = base_min + (rem_min > 0 ? 1 : 0);
+                if (rem_pomo > 0) rem_pomo--;
+                if (rem_min > 0) rem_min--;
+            }
         }
     }
+
+    // Study score: weighted from multiple factors
+    double score = 0;
+    // Pomodoro factor (max 30 points): 10+ sessions = full
+    score += std::min(30.0, (double)weekly_pomo_sessions * 3.0);
+    // Task factor (max 25 points): 80% completion = full
+    double task_rate = report.tasks_total > 0 ? (double)report.tasks_completed / report.tasks_total : 0;
+    score += std::min(25.0, task_rate * 31.25);
+    // Card factor (max 25 points): 50+ cards = full
+    score += std::min(25.0, (double)total_day_cards * 0.5);
+    // Streak factor (max 20 points): 7+ streak = full
+    score += std::min(20.0, (double)study_streak * 2.857);
+    report.study_score = (int)std::round(score);
 
     auto weak_indices = find_wrong_cards_this_week();
     auto leech_indices = find_leech_cards();
