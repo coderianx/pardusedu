@@ -5822,6 +5822,7 @@ void MainWindow::on_ai_response() {
     ai_input.set_sensitive(true);
     btn_ai_send.set_sensitive(true);
     btn_ai_ddg.set_sensitive(true);
+    btn_ai_image.set_sensitive(true);
     ai_loading_conn.disconnect();
 
     if (pending_ai_label) {
@@ -5928,10 +5929,89 @@ void MainWindow::setup_ai_chat() {
     btn_ai_ddg.set_tooltip_text("Aktifse mesaj gönderiminde DuckDuckGo araştırması yapılıp AI analiz eder");
     btn_ai_ddg.add_css_class("ai-ddg-btn");
 
+    // ─── Fotoğraf ekleme butonu ────────────────────────────────────
+    auto* image_icon = Gtk::make_managed<Gtk::Image>();
+    image_icon->set_from_resource(dark_mode
+        ? "/org/ogrenci/merkezi/assets/image_dark.svg"
+        : "/org/ogrenci/merkezi/assets/image.svg");
+    image_icon->set_pixel_size(20);
+    btn_ai_image.set_child(*image_icon);
+    btn_ai_image.set_size_request(38, 38);
+    btn_ai_image.set_tooltip_text("Soru fotoğrafı ekle");
+    btn_ai_image.add_css_class("ai-image-btn");
+
+    // Görsel seçme dialogu
+    btn_ai_image.signal_clicked().connect([this]() {
+        auto file_dialog = Gtk::FileDialog::create();
+        file_dialog->set_title("Soru fotoğrafı seç");
+        auto filter = Gtk::FileFilter::create();
+        filter->set_name("Resim Dosyaları");
+        filter->add_mime_type("image/png");
+        filter->add_mime_type("image/jpeg");
+        filter->add_mime_type("image/webp");
+        auto filters = Gio::ListStore<Gtk::FileFilter>::create();
+        filters->append(filter);
+        file_dialog->set_filters(filters);
+        file_dialog->set_default_filter(filter);
+        file_dialog->open(*this, [this, file_dialog](const Glib::RefPtr<Gio::AsyncResult>& result) {
+            auto file = file_dialog->open_finish(result);
+            if (file) {
+                ai_image_path = file->get_path();
+                ai_image_mime = "image/png";
+                auto path_lower = ai_image_path;
+                std::transform(path_lower.begin(), path_lower.end(),
+                    path_lower.begin(), ::tolower);
+                auto has_suffix = [](const std::string& s, const std::string& suf) {
+                    if (s.size() < suf.size()) return false;
+                    return s.compare(s.size() - suf.size(), suf.size(), suf) == 0;
+                };
+                if (has_suffix(path_lower, ".jpg") || has_suffix(path_lower, ".jpeg"))
+                    ai_image_mime = "image/jpeg";
+                else if (has_suffix(path_lower, ".webp"))
+                    ai_image_mime = "image/webp";
+                std::ifstream ifs(ai_image_path, std::ios::binary);
+                if (ifs) {
+                    std::ostringstream buf;
+                    buf << ifs.rdbuf();
+                    ai_image_base64 = base64_encode(buf.str());
+                }
+                try {
+                    auto pixbuf = Gdk::Pixbuf::create_from_file(ai_image_path, 80, 60, true);
+                    if (pixbuf) {
+                        auto texture = Gdk::Texture::create_for_pixbuf(pixbuf);
+                        ai_image_thumbnail.set(texture);
+                        ai_image_thumbnail.set_pixel_size(80);
+                    }
+                } catch (const Glib::Error& e) {
+                    g_warning("Thumbnail hatası: %s", e.what());
+                }
+                ai_image_preview_box.set_visible(true);
+            }
+        });
+    });
+
+    // Görsel kaldırma (Label + gesture, çerçevesiz yuvarlak)
+    auto* remove_lbl = Gtk::make_managed<Gtk::Label>("✕");
+    remove_lbl->add_css_class("ai-image-remove-btn");
+    remove_lbl->set_size_request(24, 24);
+    remove_lbl->set_valign(Gtk::Align::CENTER);
+    auto click = Gtk::GestureClick::create();
+    click->signal_pressed().connect([this](int, double, double) {
+        ai_image_clear();
+    });
+    remove_lbl->add_controller(click);
+
+    ai_image_preview_box.set_spacing(6);
+    ai_image_preview_box.add_css_class("ai-image-preview");
+    ai_image_preview_box.append(ai_image_thumbnail);
+    ai_image_preview_box.append(*remove_lbl);
+    ai_image_preview_box.set_visible(false);
+
     auto* input_container = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
     input_container->add_css_class("ai-input-container");
 
     ai_input.set_hexpand(true);
+    input_container->append(btn_ai_image);
     input_container->append(ai_input);
     input_container->append(btn_ai_ddg);
     input_container->append(btn_ai_send);
@@ -5950,11 +6030,27 @@ void MainWindow::setup_ai_chat() {
     auto send_message = [this]() {
         if (ai_waiting) return;
         std::string text = ai_input.get_text();
-        if (text.empty()) return;
+        bool has_image = !ai_image_base64.empty();
+        if (text.empty() && !has_image) return;
+
+        // Görsel yalnızca Gemini'de çalışır
+        if (has_image && ai_provider != AIProvider::GEMINI) {
+            auto* warn = Gtk::make_managed<Gtk::MessageDialog>(
+                *this,
+                "Görsel analizi yalnızca Google Gemini sa\u011flay\u0131c\u0131s\u0131nda "
+                "kullan\u0131labilir. Ayarlardan sa\u011flay\u0131c\u0131y\u0131 "
+                "Gemini olarak de\u011fi\u015ftirin.",
+                false, Gtk::MessageType::WARNING, Gtk::ButtonsType::OK, true);
+            warn->signal_response().connect([warn](int) { warn->close(); });
+            warn->show();
+            return;
+        }
 
         bool ddg_active = btn_ai_ddg.get_active();
 
-        auto* user_lbl = Gtk::make_managed<Gtk::Label>(ddg_active ? "Araştır: " + text : text);
+        std::string display_text = text;
+        if (has_image) display_text += " [📷]";
+        auto* user_lbl = Gtk::make_managed<Gtk::Label>(ddg_active ? "Araştır: " + display_text : display_text);
         user_lbl->add_css_class("user-msg");
         user_lbl->set_wrap(true);
         user_lbl->set_selectable(true);
@@ -6002,15 +6098,26 @@ void MainWindow::setup_ai_chat() {
         ai_input.set_sensitive(false);
         btn_ai_send.set_sensitive(false);
         btn_ai_ddg.set_sensitive(false);
+        btn_ai_image.set_sensitive(false);
 
         std::string text_copy = text;
         bool do_ddg = ddg_active;
 
-        std::thread([this, text_copy, do_ddg]() {
+        std::string img_b64 = ai_image_base64;
+        std::string img_mime = ai_image_mime;
+        ai_image_clear();
+
+        std::thread([this, text_copy, do_ddg, img_b64, img_mime]() {
             std::string final_user_text = text_copy;
             std::string app_context;
 
-            if (do_ddg) {
+            if (!img_b64.empty()) {
+                final_user_text = text_copy.empty()
+                    ? "Kullanıcı bir görsel gönderdi. Görseldeki soruyu çöz."
+                    : "Kullanıcı bir görsel gönderdi: " + text_copy;
+            }
+
+            if (do_ddg && img_b64.empty()) {
                 std::string ddg_raw = duckduckgo_search(text_copy);
                 if (ddg_raw.empty() || ddg_raw.rfind("DuckDuckGo hatas\u0131", 0) == 0) {
                     final_user_text = "Kullanıcının sorusu: " + text_copy +
@@ -6085,7 +6192,7 @@ void MainWindow::setup_ai_chat() {
                 }
             }
 
-            std::string raw = call_ai(final_user_text, app_context);
+            std::string raw = call_ai(final_user_text, app_context, img_b64, img_mime);
             {
                 std::lock_guard<std::mutex> lock(ai_mutex);
                 pending_ai_response = raw;
@@ -6100,10 +6207,18 @@ void MainWindow::setup_ai_chat() {
     // ─── Sayfayı birleştir ────────────────────────────────────────
     page->append(*header_box);
     page->append(ai_scroll);
+    page->append(ai_image_preview_box);
     page->append(*input_container);
 
     sw->set_child(*page);
     stack.add(*sw, "ai");
+}
+
+void MainWindow::ai_image_clear() {
+    ai_image_path.clear();
+    ai_image_base64.clear();
+    ai_image_mime.clear();
+    ai_image_preview_box.set_visible(false);
 }
 
 void MainWindow::show_ai_key_dialog() {

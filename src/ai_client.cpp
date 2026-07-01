@@ -406,7 +406,9 @@ std::string duckduckgo_search(const std::string& query) {
 
 std::string call_ai(
     const std::string& user_text,
-    const std::string& app_context)
+    const std::string& app_context,
+    const std::string& image_base64,
+    const std::string& image_mime)
 {
     CURL* curl =
         curl_easy_init();
@@ -754,9 +756,21 @@ std::string call_ai(
                 std::string role = messages[mi]["role"];
                 if (role == "assistant") role = "model";
                 std::string content = messages[mi]["content"];
+                json parts = json::array({json{{"text", content}}});
+
+                // Son kullanıcı mesajına görsel ekle
+                if (!image_base64.empty() && mi == messages.size() - 1 && role == "user") {
+                    parts.push_back({
+                        {"inline_data", {
+                            {"mime_type", image_mime},
+                            {"data", image_base64}
+                        }}
+                    });
+                }
+
                 gemini_contents.push_back({
                     {"role", role},
-                    {"parts", json::array({json{{"text", content}}})}
+                    {"parts", parts}
                 });
             }
 
@@ -769,7 +783,6 @@ std::string call_ai(
                     {"topP", 0.9},
                     {"maxOutputTokens", max_tokens}
                 }},
-                {"tools", json::array({json{{"google_search", json::object()}}})}
             };
         }
         else
@@ -999,11 +1012,43 @@ void async_call_ai(const std::string& user_text, const std::string& app_context,
     }).detach();
 }
 
+void async_call_ai(const std::string& user_text, const std::string& app_context,
+                    AsyncAICallback callback,
+                    const std::string& image_base64,
+                    const std::string& image_mime) {
+    std::thread([user_text, app_context, callback, image_base64, image_mime]() {
+        std::string result = call_ai(user_text, app_context, image_base64, image_mime);
+        if (callback) callback(result);
+    }).detach();
+}
+
 void async_call_ai_json(const std::string& prompt, AsyncAICallback callback) {
     std::thread([prompt, callback]() {
         std::string result = call_ai_json(prompt);
         if (callback) callback(result);
     }).detach();
+}
+
+std::string base64_encode(const std::string& data) {
+    static const char* chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string out;
+    out.reserve(((data.size() + 2) / 3) * 4);
+    unsigned int val = 0;
+    int bits = -6;
+    for (unsigned char c : data) {
+        val = (val << 8) + c;
+        bits += 8;
+        while (bits >= 0) {
+            out.push_back(chars[(val >> bits) & 0x3F]);
+            bits -= 6;
+        }
+    }
+    if (bits > -6) {
+        out.push_back(chars[((val << 8) >> (bits + 8)) & 0x3F]);
+        while (out.size() % 4) out.push_back('=');
+    }
+    return out;
 }
 
 // 0fb350a5f83740d49e65b28bcb258cda.WHEZmLQ-PWxR6sUnBMyULStM

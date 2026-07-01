@@ -368,6 +368,13 @@ private:
     Gtk::Entry ai_input;
     Gtk::Button btn_ai_send{};
     Gtk::ToggleButton btn_ai_ddg{};
+    Gtk::Button btn_ai_image{};
+    std::string ai_image_path;
+    std::string ai_image_base64;
+    std::string ai_image_mime;
+    Gtk::Box ai_image_preview_box{Gtk::Orientation::HORIZONTAL, 4};
+    Gtk::Image ai_image_thumbnail;
+    void ai_image_clear();
     Gtk::Button btn_ai_key{};
     Gtk::Label* ai_model_badge = nullptr;
     AIProvider ai_provider = AIProvider::GROQ;

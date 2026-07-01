@@ -6,9 +6,16 @@ enum class AIProvider { GROQ, OPENROUTER, GEMINI, OLLAMA };
 
 using AsyncAICallback = std::function<void(std::string)>;
 
-std::string call_ai(const std::string& user_text, const std::string& app_context = "");
+std::string call_ai(const std::string& user_text, const std::string& app_context = "",
+                    const std::string& image_base64 = "",
+                    const std::string& image_mime = "");
 std::string call_ai_json(const std::string& prompt);
+std::string base64_encode(const std::string& data);
 void async_call_ai(const std::string& user_text, const std::string& app_context, AsyncAICallback callback);
+void async_call_ai(const std::string& user_text, const std::string& app_context,
+                   AsyncAICallback callback,
+                   const std::string& image_base64,
+                   const std::string& image_mime);
 void async_call_ai_json(const std::string& prompt, AsyncAICallback callback);
 std::string extract_ai_reply(const std::string& json);
 std::string strip_markdown(const std::string& text);
