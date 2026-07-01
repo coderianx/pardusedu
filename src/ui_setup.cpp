@@ -307,6 +307,7 @@ void MainWindow::setup_sidebar() {
     add_item("Dikkat Modu", "focus");
     add_item("Linux", "linux");
     add_item("Yapay Zeka", "ai");;
+    add_item("Koç", "ai_koc");
     add_item("Python Öğren", "python");
 
     sidebar.signal_row_selected().connect(sigc::mem_fun(*this, &MainWindow::on_select));
@@ -342,6 +343,7 @@ void MainWindow::add_item(const std::string& name, const std::string& id) {
         {"focus", "sidebar_focus"},
         {"linux", "sidebar_linux"},
         {"ai", "sidebar_ai"},
+        {"ai_koc", "sidebar_ai_koc"},
         {"python", "sidebar_python"}
     };
     auto it = icon_map.find(id);

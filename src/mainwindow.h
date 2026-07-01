@@ -83,6 +83,22 @@ struct DailyStats {
     int tasks_total = 0;
 };
 
+struct GunlukSoru {
+    std::string tarih;
+    std::string ders;
+    std::string konu;
+    int dogru = 0;
+    int yanlis = 0;
+    int bos = 0;
+};
+
+struct KocHedef {
+    std::string hedef;
+    std::string hedef_turu;
+    std::string olusturma_tarihi;
+    std::string opsiyonel_alan;
+};
+
 struct WeeklyReport {
     std::string week_start;
     std::string week_end;
@@ -424,6 +440,22 @@ private:
     std::mutex weekly_ai_mutex;
     bool weekly_ai_waiting = false;
 
+    std::vector<GunlukSoru> gunluk_sorular;
+    KocHedef koc_hedef;
+    std::string koc_son_rapor;
+    bool koc_rapor_bekliyor = false;
+
+    Glib::Dispatcher koc_ai_dispatcher;
+    std::string pending_koc_ai_response;
+    std::mutex koc_ai_mutex;
+
+    Glib::Dispatcher koc_plan_dispatcher;
+    std::string pending_koc_plan_response;
+    std::mutex koc_plan_mutex;
+    bool koc_plan_bekliyor = false;
+    std::string koc_plan_json;
+    bool koc_dispatchers_connected = false;
+
     void setup_dersler();
     void dersler_show_grades();
     void dersler_show_courses(int grade);
@@ -459,6 +491,22 @@ private:
     Gtk::Button btn_weekly_study_weak{"\u25b6 Bu Kartlar\u0131 \u00c7al\u0131\u015f"};
     Gtk::Label weekly_weak_deck_info{"", Gtk::Align::START};
     Gtk::Widget* weekly_chart_widget = nullptr;
+
+    void setup_ai_koc();
+    void koc_hedef_ekle();
+    void koc_soru_ekle(const std::string& ders, const std::string& konu, int d, int y, int b);
+    void koc_haftalik_rapor();
+    void koc_soru_kaydet();
+    void koc_hedef_kaydet();
+    std::string koc_rapor_prompt();
+    void on_koc_ai_response();
+    void koc_plan_olustur();
+    std::string koc_plan_prompt();
+    void on_koc_plan_response();
+    Gtk::Widget* koc_plan_tablosu();
+    void koc_bugunku_listeyi_guncelle(Gtk::Box* liste);
+    void koc_hata_analizini_doldur(Gtk::Box* liste);
+    void koc_hata_listesini_guncelle(Gtk::Box* liste);
 
     WebKitWebView* python_webview = nullptr;
 

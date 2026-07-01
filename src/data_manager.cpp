@@ -348,6 +348,58 @@ void MainWindow::setup_data() {
         }
     }
 
+    // AI Koç
+    auto akf = dir + "/ai_koc.dat";
+    if (fs::exists(akf)) {
+        // Read entire file (fields may contain newlines)
+        std::ifstream f(akf);
+        std::stringstream buf;
+        buf << f.rdbuf();
+        std::string content = buf.str();
+        // Remove trailing newline
+        if (!content.empty() && content.back() == '\n')
+            content.pop_back();
+
+        // Parse: only split on first three pipes, rest is content
+        auto p1 = content.find('|');
+        auto p2 = content.find('|', p1 + 1);
+        auto p3 = content.find('|', p2 + 1);
+        if (p1 != std::string::npos && p2 != std::string::npos) {
+            koc_hedef.hedef = content.substr(0, p1);
+            koc_hedef.olusturma_tarihi = content.substr(p1+1, p2-p1-1);
+            if (p3 != std::string::npos) {
+                koc_son_rapor = content.substr(p2+1, p3-p2-1);
+                koc_hedef.opsiyonel_alan = content.substr(p3+1);
+            } else {
+                koc_son_rapor = content.substr(p2+1);
+            }
+        }
+    }
+
+    auto gsf = dir + "/gunluk_soru.dat";
+    if (fs::exists(gsf)) {
+        std::ifstream f(gsf);
+        std::string line;
+        while (std::getline(f, line)) {
+            if (line.empty()) continue;
+            auto p1 = line.find('|');
+            auto p2 = line.find('|', p1 + 1);
+            auto p3 = line.find('|', p2 + 1);
+            auto p4 = line.find('|', p3 + 1);
+            auto p5 = line.find('|', p4 + 1);
+            if (p1 != std::string::npos && p2 != std::string::npos && p3 != std::string::npos) {
+                GunlukSoru gs;
+                gs.tarih = line.substr(0, p1);
+                gs.ders = line.substr(p1+1, p2-p1-1);
+                gs.konu = line.substr(p2+1, p3-p2-1);
+                gs.dogru = std::stoi(line.substr(p3+1, p4-p3-1));
+                gs.yanlis = std::stoi(line.substr(p4+1, p5-p4-1));
+                gs.bos = std::stoi(line.substr(p5+1));
+                gunluk_sorular.push_back(gs);
+            }
+        }
+    }
+
     // Apply the active provider's model
     if (ai_provider == AIProvider::GROQ)
         set_model(ai_model_groq);
@@ -436,6 +488,14 @@ void MainWindow::save_data() {
     { std::ofstream f(dir + "/ollama_url.dat"); f << ai_ollama_url << "\n"; }
     { std::ofstream f(dir + "/sidebar_icons.dat"); f << (sidebar_icons ? "1" : "0") << "\n"; }
     { std::ofstream f(dir + "/weekly.dat"); f << weekly_pomo_sessions << "|" << weekly_pomo_minutes << "|" << current_week_start << "\n"; }
+    { std::ofstream f(dir + "/ai_koc.dat");
+        f << koc_hedef.hedef << "|" << koc_hedef.olusturma_tarihi << "|"
+          << koc_son_rapor << "|" << koc_hedef.opsiyonel_alan << "\n"; }
+    { std::ofstream f(dir + "/gunluk_soru.dat");
+        for (auto& gs : gunluk_sorular) {
+            f << gs.tarih << "|" << gs.ders << "|" << gs.konu << "|"
+              << gs.dogru << "|" << gs.yanlis << "|" << gs.bos << "\n";
+        } }
 
     // Sync anki_export TSV files with current data
     std::string export_dir = dir + "/anki_export";

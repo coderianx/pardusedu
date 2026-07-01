@@ -898,8 +898,7 @@ std::string call_ai_json(const std::string& prompt) {
     if (is_gemini) {
         body = {
             {"contents", json::array({json{{"parts", json::array({json{{"text", prompt}}})}}})},
-            {"generationConfig", {{"temperature", 0.1}, {"maxOutputTokens", json_max_tokens}}},
-            {"tools", json::array({json{{"google_search", json::object()}}})}
+            {"generationConfig", {{"temperature", 0.1}, {"maxOutputTokens", json_max_tokens}}}
         };
     } else {
         body = {
@@ -931,6 +930,7 @@ std::string call_ai_json(const std::string& prompt) {
         api_url = base_url + "/v1/chat/completions";
     } else if (is_gemini) {
         api_url = "https://generativelanguage.googleapis.com/v1beta/models/" + global_model + ":generateContent?key=" + api_key;
+        headers = curl_slist_append(headers, "Content-Type: application/json");
     } else {
         api_url = global_provider == AIProvider::GROQ
             ? "https://api.groq.com/openai/v1/chat/completions"
@@ -959,7 +959,16 @@ std::string call_ai_json(const std::string& prompt) {
     curl_easy_cleanup(curl);
 
     if (res != CURLE_OK || http_code != 200) {
-        return "{}";
+        if (!response.empty()) {
+            // Try to extract an error message from the API response
+            try {
+                auto err = json::parse(response);
+                if (err.contains("error") && err["error"].contains("message")) {
+                    return "[API Hatas\u0131] " + err["error"]["message"].get<std::string>();
+                }
+            } catch (...) {}
+        }
+        return "[API Hatas\u0131] HTTP " + std::to_string(http_code);
     }
 
     std::string reply = extract_ai_reply(response);

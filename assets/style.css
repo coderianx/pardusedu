@@ -2008,3 +2008,151 @@ vte-terminal text:selected {
 .lab-user-entry::placeholder {
     color: #888888;
 }
+
+/* --- AI Koç Sayfası --- */
+
+.koc-hedef-card {
+    background: linear-gradient(135deg, __accent, __accent_light);
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px alpha(__accent, 0.3);
+}
+
+.koc-hedef-card label {
+    color: #ffffff;
+}
+
+.koc-hedef-emoji {
+    font-size: 36px;
+    min-width: 48px;
+    min-height: 48px;
+}
+
+.koc-hedef-alt {
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+.koc-btn {
+    background: alpha(#ffffff, 0.2);
+    color: #ffffff;
+    border: 1px solid alpha(#ffffff, 0.3);
+    border-radius: 10px;
+    padding: 8px 20px;
+    font-weight: 600;
+    font-size: 13px;
+    transition: all 0.2s ease;
+}
+
+.koc-btn:hover {
+    background: alpha(#ffffff, 0.35);
+    border-color: alpha(#ffffff, 0.5);
+}
+
+.koc-btn-ekle {
+    background: __accent;
+    color: #ffffff;
+    border: none;
+    border-radius: 10px;
+    padding: 8px 20px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.koc-btn-ekle:hover {
+    background: __accent_light;
+    box-shadow: 0 2px 12px alpha(__accent, 0.4);
+}
+
+.koc-btn-rapor {
+    background: linear-gradient(135deg, __accent, __accent_light);
+    color: #ffffff;
+    border: none;
+    border-radius: 12px;
+    padding: 12px 28px;
+    font-weight: 700;
+    font-size: 14px;
+    transition: all 0.25s ease;
+}
+
+.koc-btn-rapor:hover {
+    box-shadow: 0 4px 16px alpha(__accent, 0.4);
+}
+
+.koc-entry, .koc-combo {
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: __card_bg;
+    border: 1px solid __border;
+    transition: border-color 0.2s ease;
+}
+
+.koc-entry:focus, .koc-combo:focus {
+    border-color: __accent;
+    box-shadow: 0 0 0 2px alpha(__accent, 0.15);
+}
+
+.koc-spin {
+    border-radius: 6px;
+    padding: 6px 8px;
+    background: __card_bg;
+    border: 1px solid __border;
+    min-width: 50px;
+}
+
+.koc-dogru {
+    color: #2ecc71;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.koc-yanlis {
+    color: #e74c3c;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.koc-bos {
+    color: __muted;
+    font-weight: 600;
+    font-size: 13px;
+}
+
+.koc-muted {
+    color: __muted;
+    font-size: 12px;
+}
+
+.koc-section-title {
+    font-size: 15px;
+    color: __text_color;
+}
+
+.koc-liste-row {
+    background: alpha(__accent, 0.04);
+    border-radius: 6px;
+    padding: 6px 10px;
+    margin: 2px 0;
+    transition: background 0.15s ease;
+}
+
+.koc-liste-row:hover {
+    background: alpha(__accent, 0.1);
+}
+
+.koc-sil-btn {
+    background: transparent;
+    color: __muted;
+    border: none;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 16px;
+    font-weight: bold;
+    min-width: 28px;
+    min-height: 24px;
+}
+
+.koc-sil-btn:hover {
+    background: alpha(#e74c3c, 0.15);
+    color: #e74c3c;
+}

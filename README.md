@@ -79,6 +79,24 @@
     <sub>Podman konteyner, VTE terminal, komut sandbox</sub>
   </td>
 </tr>
+<tr>
+  <td align="center">
+    <h3>🎯 AI Koç</h3>
+    <sub>Hedef takibi, soru günlüğü, AI rapor + plan</sub>
+  </td>
+  <td align="center">
+    <h3></h3>
+    <sub></sub>
+  </td>
+  <td align="center">
+    <h3></h3>
+    <sub></sub>
+  </td>
+  <td align="center">
+    <h3></h3>
+    <sub></sub>
+  </td>
+</tr>
 </table>
 
 <br>
@@ -95,17 +113,17 @@ Ekran görüntüleri için [screenshots.html](web/screenshots.html) sayfasını 
 pardusedu/
 ├── src/                          # C++ kaynak kodu
 │   ├── main.cpp                  # Uygulama giriş noktası
-│   ├── mainwindow.h              # Ana pencere bildirimi (~460 satır, tüm state)
-│   ├── ui_setup.cpp              # UI başlatma, sidebar, tema
-│   ├── pages.cpp                 # **Tüm sayfalar (~6.400 satır)**
-│   ├── data_manager.cpp          # Veri yönetimi (kayıt/yükleme)
-│   ├── ai_client.cpp/.h          # AI asistan (multi-provider, async)
+│   ├── mainwindow.h              # Ana pencere bildirimi (~515 satır, tüm state)
+│   ├── ui_setup.cpp              # UI başlatma, sidebar, tema (~555 satır)
+│   ├── pages.cpp                 # **Tüm sayfalar (~7.900 satır)**
+│   ├── data_manager.cpp          # Veri yönetimi (kayıt/yükleme, ~560 satır)
+│   ├── ai_client.cpp/.h          # AI asistan (multi-provider, async, ~1.000 satır)
 │   ├── calc_letter.cpp/.h        # Harf notu hesaplama
-│   ├── parduslab.cpp/.h          # PardusLab (Podman + VTE)
+│   ├── parduslab.cpp/.h          # PardusLab (Podman + VTE, ~200 satır)
 │   ├── meson.build               # Kaynak derleme yapılandırması
 │
 ├── assets/                       # UI varlıkları
-│   ├── style.css                 # Ana stil dosyası (+800 satır)
+│   ├── style.css                 # Ana stil dosyası (~2.150 satır)
 │   ├── pardus*.svg               # Pardus logoları
 │   ├── send.svg, save.svg, sun.svg, moon.svg
 │   ├── badges/                   # Rozet PNG'leri
@@ -271,6 +289,9 @@ Pomodoro, görev, flashcard ve odak verilerini toplar, AI ile özet/öneri/motiv
 
 #### 🧪 PardusLab
 Podman konteyner yönetimi: VTE terminal emülatörü, çoklu kullanıcı desteği, komut sandbox, challenge sistemi. `pkexec` ile güvenli yükseltme.
+
+#### 🎯 AI Koç
+Kişisel AI eğitim koçu. Öğrenci hedefini belirler, her gün çözdüğü soruları (ders/konu bazında doğru/yanlış/boş) kaydeder. Haftalık AI raporu ile performans değerlendirmesi ve haftalık çalışma planı (JSON tablosu, Pazartesi-Pazar). Opsiyonel ek not alanı ile AI'ya ek yönlendirme. Canlı hata analizi (Bu Hafta: özet satırı).
 
 <br>
 
