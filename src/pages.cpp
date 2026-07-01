@@ -6033,17 +6033,26 @@ void MainWindow::setup_ai_chat() {
         bool has_image = !ai_image_base64.empty();
         if (text.empty() && !has_image) return;
 
-        // Görsel yalnızca Gemini'de çalışır
+        // Görsel yalnızca Gemini veya Groq vision modellerinde çalışır
         if (has_image && ai_provider != AIProvider::GEMINI) {
-            auto* warn = Gtk::make_managed<Gtk::MessageDialog>(
-                *this,
-                "Görsel analizi yalnızca Google Gemini sa\u011flay\u0131c\u0131s\u0131nda "
-                "kullan\u0131labilir. Ayarlardan sa\u011flay\u0131c\u0131y\u0131 "
-                "Gemini olarak de\u011fi\u015ftirin.",
-                false, Gtk::MessageType::WARNING, Gtk::ButtonsType::OK, true);
-            warn->signal_response().connect([warn](int) { warn->close(); });
-            warn->show();
-            return;
+            std::string model = get_model();
+            bool is_groq_vision = (ai_provider == AIProvider::GROQ && (
+                model.find("llama-4-scout") != std::string::npos ||
+                model.find("qwen3.6") != std::string::npos
+            ));
+            if (!is_groq_vision) {
+                auto* warn = Gtk::make_managed<Gtk::MessageDialog>(
+                    *this,
+                    "Görsel analizi yaln\u0131zca Google Gemini veya "
+                    "Groq vision modellerinde (\n"
+                    "  \u2022 meta-llama/llama-4-scout-17b-16e-instruct\n"
+                    "  \u2022 qwen/qwen3.6-27b\n"
+                    ") kullan\u0131labilir.",
+                    false, Gtk::MessageType::WARNING, Gtk::ButtonsType::OK, true);
+                warn->signal_response().connect([warn](int) { warn->close(); });
+                warn->show();
+                return;
+            }
         }
 
         bool ddg_active = btn_ai_ddg.get_active();

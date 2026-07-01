@@ -744,6 +744,26 @@ std::string call_ai(
     // İsteği gönder, 413'te tekrar dene
     long http_code = 0;
 
+    // OpenAI-compat (Groq) vision modelleri için son mesajı array formatına çevir
+    bool is_openai_vision = !image_base64.empty() && !is_gemini &&
+        global_provider == AIProvider::GROQ && (
+            global_model.find("llama-4-scout") != std::string::npos ||
+            global_model.find("qwen3.6") != std::string::npos
+        );
+    if (is_openai_vision && messages.size() > 0) {
+        auto& last = messages.back();
+        if (last.contains("role") && last["role"] == "user") {
+            std::string text = last["content"].get<std::string>();
+            json img;
+            img["type"] = "image_url";
+            img["image_url"]["url"] = "data:" + image_mime + ";base64," + image_base64;
+            last["content"] = json::array({
+                json{{"type", "text"}, {"text", text}},
+                img
+            });
+        }
+    }
+
     for (int attempt = 0; attempt < 5; attempt++)
     {
         json body;
