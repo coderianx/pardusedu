@@ -1827,6 +1827,29 @@ separator {
     margin: 0 5px;
 }
 
+/* ================= Math Symbols Popup ================= */
+.math-sym-btn {
+    background: transparent;
+    color: __text_color;
+    border: 1px solid alpha(__border, 0.4);
+    border-radius: 6px;
+    padding: 6px 14px;
+    font-size: 18px;
+    font-family: monospace;
+    min-width: 40px;
+    min-height: 36px;
+    transition: all 0.15s;
+}
+.math-sym-btn:hover {
+    background: alpha(__accent, 0.12);
+    border-color: __accent;
+    color: __accent;
+}
+.math-sym-btn:active {
+    background: alpha(__accent, 0.2);
+    transform: scale(0.92);
+}
+
 /* ================= Weekly Analysis ================= */
 
 .dash-weekly-btn {

@@ -2059,6 +2059,195 @@ void MainWindow::setup_notes() {
     make_tool_toggle(btn_h2, "<span size='large' weight='bold'>H2</span>", "Başlık 2");
     make_tool_toggle(btn_h3, "<span size='medium' weight='bold'>H3</span>", "Başlık 3");
 
+    auto* sep_math = Gtk::make_managed<Gtk::Separator>(Gtk::Orientation::VERTICAL);
+    sep_math->add_css_class("note-tool-sep");
+    format_toolbar.append(*sep_math);
+
+    make_tool_btn(btn_math, "<span font_family='monospace' weight='bold'>∑</span>", "Matematik Sembolleri");
+
+    auto* math_dialog = Gtk::make_managed<Gtk::Dialog>();
+    math_dialog->set_title("Matematik Sembolleri");
+    math_dialog->set_transient_for(*this);
+    math_dialog->set_modal(true);
+    math_dialog->set_default_size(540, 480);
+    math_dialog->set_hide_on_close(true);
+
+    auto* content = math_dialog->get_content_area();
+    content->set_spacing(0);
+
+    auto* math_sw = Gtk::make_managed<Gtk::ScrolledWindow>();
+    math_sw->set_vexpand(true);
+    math_sw->set_policy(Gtk::PolicyType::NEVER, Gtk::PolicyType::AUTOMATIC);
+
+    auto* math_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 6);
+    math_box->set_margin(12);
+
+    auto add_math_section = [this, math_box, math_dialog](const std::string& title, const std::vector<std::pair<std::string, std::string>>& symbols) {
+        auto* lbl = Gtk::make_managed<Gtk::Label>();
+        lbl->set_markup("<b>" + title + "</b>");
+        lbl->set_halign(Gtk::Align::START);
+        lbl->set_margin_top(4);
+        lbl->set_margin_bottom(2);
+        math_box->append(*lbl);
+
+        auto* flow = Gtk::make_managed<Gtk::FlowBox>();
+        flow->set_max_children_per_line(12);
+        flow->set_min_children_per_line(1);
+        flow->set_row_spacing(4);
+        flow->set_column_spacing(4);
+        flow->set_homogeneous(true);
+
+        for (auto& [sym, tip] : symbols) {
+            auto* b = Gtk::make_managed<Gtk::Button>(sym);
+            b->add_css_class("math-sym-btn");
+            b->set_tooltip_text(tip);
+            b->signal_clicked().connect([this, sym, math_dialog]() {
+                note_view.get_buffer()->insert_at_cursor(sym);
+                math_dialog->hide();
+            });
+            flow->append(*b);
+        }
+        math_box->append(*flow);
+    };
+
+    add_math_section("Yunan Harfleri", {
+        {"α", "alfa"}, {"β", "beta"}, {"γ", "gama"}, {"δ", "delta"}, {"ε", "epsilon"},
+        {"θ", "teta"}, {"λ", "lambda"}, {"μ", "mu"}, {"π", "pi"}, {"ρ", "ro"},
+        {"σ", "sigma"}, {"τ", "tau"}, {"φ", "fi"}, {"ψ", "psi"}, {"ω", "omega"},
+        {"Δ", "Delta"}, {"Σ", "Sigma"}, {"Ω", "Omega"}
+    });
+
+    add_math_section("İşlemciler", {
+        {"+", "toplama"}, {"−", "çıkarma"}, {"×", "çarpma"}, {"÷", "bölme"},
+        {"±", "artı/eksi"}, {"∓", "eksi/artı"}, {"⋅", "nokta çarpım"}, {"∗", "yıldız çarpım"},
+        {"⊕", "direkt toplam"}, {"⊗", "tensör çarpım"}
+    });
+
+    add_math_section("İlişki", {
+        {"=", "eşit"}, {"≠", "eşit değil"}, {"≈", "yaklaşık"}, {"≡", "denk"},
+        {"<", "küçük"}, {">", "büyük"}, {"≤", "küçük eşit"}, {"≥", "büyük eşit"},
+        {"≅", "uyumlu"}, {"∼", "orantılı"}, {"∝", "ters"}, {"≃", "asimptotik"}
+    });
+
+    add_math_section("Oklar", {
+        {"→", "sağ ok"}, {"←", "sol ok"}, {"↑", "yukarı"}, {"↓", "aşağı"},
+        {"⇒", "çift sağ"}, {"⇐", "çift sol"}, {"⇔", "çift yön"}, {"↔", "çift ok"},
+        {"⟹", "uzun çift"}, {"⟶", "uzun ok"}
+    });
+
+    add_math_section("Kalkülüs", {
+        {"∫", "integral"}, {"∬", "çift int"}, {"∮", "çember int"},
+        {"∂", "kısmi türev"}, {"∇", "nabla"}, {"∞", "sonsuz"},
+        {"∑", "toplam"}, {"∏", "çarpım"}
+    });
+
+    add_math_section("Üst/Alt Simge", {
+        {"²", "karesi"}, {"³", "küpü"}, {"¹", "birinci"},
+        {"⁰", "üzeri 0"}, {"ⁿ", "üzeri n"},
+        {"₀", "alt 0"}, {"₁", "alt 1"}, {"₂", "alt 2"}, {"₃", "alt 3"},
+        {"ᵢ", "alt i"}, {"ⱼ", "alt j"}, {"ₙ", "alt n"}
+    });
+
+    add_math_section("Mantık & Küme", {
+        {"∀", "her"}, {"∃", "vardır"}, {"∄", "yoktur"},
+        {"∧", "ve"}, {"∨", "veya"}, {"¬", "değil"},
+        {"∈", "elemanı"}, {"∉", "elemanı değil"},
+        {"⊂", "alt küme"}, {"⊆", "alt küme (=)"}, {"⊃", "üst küme"},
+        {"∪", "birleşim"}, {"∩", "kesişim"}, {"∅", "boş küme"}
+    });
+
+    add_math_section("Kök & Kesir", {
+        {"√", "karekök"}, {"∛", "küpkök"}, {"∜", "dördüncü"},
+        {"∕", "kesir çizgisi"}, {"▔", "üst çizgi"}, {"⎯", "uzun çizgi"}
+    });
+
+    add_math_section("Hazır Kesirler", {
+        {"½", "bir bölü iki"}, {"⅓", "bir bölü üç"}, {"⅔", "iki bölü üç"},
+        {"¼", "bir bölü dört"}, {"¾", "üç bölü dört"},
+        {"⅕", "bir bölü beş"}, {"⅖", "iki bölü beş"}, {"⅗", "üç bölü beş"}, {"⅘", "dört bölü beş"},
+        {"⅙", "bir bölü altı"}, {"⅚", "beş bölü altı"},
+        {"⅛", "bir bölü sekiz"}, {"⅜", "üç bölü sekiz"}, {"⅝", "beş bölü sekiz"}, {"⅞", "yedi bölü sekiz"}
+    });
+
+    // Kesir oluşturucu
+    auto* frac_lbl = Gtk::make_managed<Gtk::Label>();
+    frac_lbl->set_markup("<b>Kesir Oluştur</b>");
+    frac_lbl->set_halign(Gtk::Align::START);
+    frac_lbl->set_margin_top(8);
+    math_box->append(*frac_lbl);
+
+    auto* frac_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 6);
+    frac_box->set_halign(Gtk::Align::START);
+
+    auto* pay_entry = Gtk::make_managed<Gtk::Entry>();
+    pay_entry->set_placeholder_text("Pay");
+    pay_entry->set_max_length(4);
+    pay_entry->set_width_chars(4);
+    pay_entry->set_alignment(Gtk::Align::CENTER);
+
+    auto* frac_line = Gtk::make_managed<Gtk::Label>();
+    frac_line->set_markup("<span font_family='monospace' size='xx-large'>─</span>");
+    frac_line->set_halign(Gtk::Align::CENTER);
+
+    auto* payda_entry = Gtk::make_managed<Gtk::Entry>();
+    payda_entry->set_placeholder_text("Payda");
+    payda_entry->set_max_length(4);
+    payda_entry->set_width_chars(4);
+    payda_entry->set_alignment(Gtk::Align::CENTER);
+
+    auto* frac_ekle = Gtk::make_managed<Gtk::Button>("Ekle");
+    frac_ekle->add_css_class("math-sym-btn");
+    auto* frac_vertical_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 2);
+    frac_vertical_box->set_halign(Gtk::Align::CENTER);
+    frac_vertical_box->append(*pay_entry);
+    frac_vertical_box->append(*frac_line);
+    frac_vertical_box->append(*payda_entry);
+
+    frac_box->append(*frac_vertical_box);
+    frac_box->append(*frac_ekle);
+
+    auto digit_to_super = [](char c) -> std::string {
+        switch (c) {
+            case '0': return "\u2070"; case '1': return "\u00B9"; case '2': return "\u00B2";
+            case '3': return "\u00B3"; case '4': return "\u2074"; case '5': return "\u2075";
+            case '6': return "\u2076"; case '7': return "\u2077"; case '8': return "\u2078";
+            case '9': return "\u2079"; default: return std::string(1, c);
+        }
+    };
+    auto digit_to_sub = [](char c) -> std::string {
+        switch (c) {
+            case '0': return "\u2080"; case '1': return "\u2081"; case '2': return "\u2082";
+            case '3': return "\u2083"; case '4': return "\u2084"; case '5': return "\u2085";
+            case '6': return "\u2086"; case '7': return "\u2087"; case '8': return "\u2088";
+            case '9': return "\u2089"; default: return std::string(1, c);
+        }
+    };
+
+    frac_ekle->signal_clicked().connect([this, pay_entry, payda_entry, math_dialog, digit_to_super, digit_to_sub]() {
+        std::string pay = pay_entry->get_text();
+        std::string payda = payda_entry->get_text();
+        if (pay.empty() || payda.empty()) return;
+        std::string pay_super, payda_sub;
+        for (char c : pay) pay_super += digit_to_super(c);
+        for (char c : payda) payda_sub += digit_to_sub(c);
+        std::string frak = pay_super + "\u2044" + payda_sub;
+        note_view.get_buffer()->insert_at_cursor(frak);
+        pay_entry->set_text("");
+        payda_entry->set_text("");
+        math_dialog->hide();
+    });
+
+    math_box->append(*frac_box);
+
+    math_sw->set_child(*math_box);
+    content->append(*math_sw);
+    math_dialog->add_button("Kapat", Gtk::ResponseType::CLOSE);
+    math_dialog->signal_response().connect([math_dialog](int) { math_dialog->hide(); });
+
+    btn_math.signal_clicked().connect([math_dialog]() {
+        math_dialog->present();
+    });
+
     auto* sep2 = Gtk::make_managed<Gtk::Separator>(Gtk::Orientation::VERTICAL);
     sep2->add_css_class("note-tool-sep");
     format_toolbar.append(*sep2);

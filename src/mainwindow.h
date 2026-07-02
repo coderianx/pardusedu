@@ -225,6 +225,7 @@ private:
     Gtk::ToggleButton btn_h1;
     Gtk::ToggleButton btn_h2;
     Gtk::ToggleButton btn_h3;
+    Gtk::Button btn_math;
     Gtk::Button btn_font_inc_w;
     Gtk::Button btn_font_dec_w;
     Gtk::Box format_toolbar{Gtk::Orientation::HORIZONTAL, 4};
