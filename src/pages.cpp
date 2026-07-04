@@ -3325,10 +3325,11 @@ std::string hafta_basi_str() {
     auto* tm = std::localtime(&t);
     int current_wday = tm->tm_wday;
     if (current_wday == 0) current_wday = 7;
-    time_t monday = t - (current_wday - 1) * 86400;
-    auto* tm_monday = std::localtime(&monday);
+    tm->tm_mday -= current_wday - 1;
+    tm->tm_hour = 0; tm->tm_min = 0; tm->tm_sec = 0;
+    std::mktime(tm);
     std::ostringstream oss;
-    oss << std::put_time(tm_monday, "%Y-%m-%d");
+    oss << std::put_time(tm, "%Y-%m-%d");
     return oss.str();
 }
 
@@ -3416,7 +3417,7 @@ void MainWindow::koc_soru_kaydet() {
     auto dir = get_data_dir();
     std::ofstream f(dir + "/gunluk_soru.dat");
     for (auto& gs : gunluk_sorular) {
-        f << gs.tarih << "|" << gs.ders << "|" << gs.konu << "|"
+        f << gs.tarih << "|" << koc_escape(gs.ders) << "|" << koc_escape(gs.konu) << "|"
           << gs.dogru << "|" << gs.yanlis << "|" << gs.bos << "\n";
     }
 }
@@ -3424,20 +3425,25 @@ void MainWindow::koc_soru_kaydet() {
 void MainWindow::koc_hedef_kaydet() {
     auto dir = get_data_dir();
     std::ofstream f(dir + "/ai_koc.dat");
-    f << koc_hedef.hedef << "|" << koc_hedef.olusturma_tarihi << "|"
-      << koc_son_rapor << "|" << koc_hedef.opsiyonel_alan << "\n";
+    f << koc_escape(koc_hedef.hedef) << "|" << koc_hedef.olusturma_tarihi << "|"
+      << koc_escape(koc_son_rapor) << "|" << koc_escape(koc_hedef.opsiyonel_alan) << "\n";
 }
 
-std::string MainWindow::koc_rapor_prompt() {
-    std::string soru_logu;
+std::string MainWindow::koc_soru_logu_olustur() {
+    std::string log;
     std::string hafta_baslangici = hafta_basi_str();
     for (auto& s : gunluk_sorular) {
         if (s.tarih < hafta_baslangici) continue;
-        soru_logu += "- " + s.tarih + " | " + s.ders + " | " + s.konu +
-                     " | D:" + std::to_string(s.dogru) +
-                     " Y:" + std::to_string(s.yanlis) +
-                     " B:" + std::to_string(s.bos) + "\n";
+        log += "- " + s.tarih + " | " + s.ders + " | " + s.konu +
+               " | D:" + std::to_string(s.dogru) +
+               " Y:" + std::to_string(s.yanlis) +
+               " B:" + std::to_string(s.bos) + "\n";
     }
+    return log;
+}
+
+std::string MainWindow::koc_rapor_prompt() {
+    std::string soru_logu = koc_soru_logu_olustur();
     std::string ek = koc_hedef.opsiyonel_alan.empty()
         ? "" : "\nKullanıcının ek notu: " + koc_hedef.opsiyonel_alan + "\n";
     return
@@ -3471,22 +3477,16 @@ void MainWindow::on_koc_ai_response() {
     koc_rapor_bekliyor = false;
     pending_koc_ai_response.clear();
     koc_hedef_kaydet();
-    // Force rebuild of page on next visit
+    if (koc_rapor_lbl) {
+        koc_rapor_lbl->set_markup(md_to_pango(koc_son_rapor));
+    }
     if (pages_built.count("ai_koc")) {
         pages_built.erase("ai_koc");
     }
 }
 
 std::string MainWindow::koc_plan_prompt() {
-    std::string soru_logu;
-    std::string hafta_baslangici = hafta_basi_str();
-    for (auto& s : gunluk_sorular) {
-        if (s.tarih < hafta_baslangici) continue;
-        soru_logu += "- " + s.tarih + " | " + s.ders + " | " + s.konu +
-                     " | D:" + std::to_string(s.dogru) +
-                     " Y:" + std::to_string(s.yanlis) +
-                     " B:" + std::to_string(s.bos) + "\n";
-    }
+    std::string soru_logu = koc_soru_logu_olustur();
     std::string ek;
     std::string gunluk_ders_talimati;
     if (!koc_hedef.opsiyonel_alan.empty()) {
@@ -3563,6 +3563,16 @@ void MainWindow::on_koc_plan_response() {
     koc_plan_json = text;
     koc_plan_bekliyor = false;
     pending_koc_plan_response.clear();
+    if (koc_plan_container) {
+        while (auto* child = koc_plan_container->get_first_child())
+            koc_plan_container->remove(*child);
+        auto* new_table = koc_plan_tablosu();
+        koc_plan_container->append(*new_table);
+    }
+    if (koc_plan_btn) {
+        koc_plan_btn->set_sensitive(true);
+        koc_plan_btn->set_label("Plan Olu\u015ftur");
+    }
     if (pages_built.count("ai_koc")) {
         pages_built.erase("ai_koc");
     }
@@ -3616,6 +3626,7 @@ Gtk::Widget* MainWindow::koc_plan_tablosu() {
                 std::to_string(yanlis) + " yanl\u0131\u015f"
             );
             row->set_halign(Gtk::Align::START);
+            row->set_ellipsize(Pango::EllipsizeMode::END);
             vbox->append(*row);
         }
     }
@@ -3659,13 +3670,17 @@ Gtk::Widget* MainWindow::koc_plan_tablosu() {
                 std::string konu = item.value("konu", "");
                 int soru = item.value("soru_sayisi", 0);
 
-                auto* l_gun = Gtk::make_managed<Gtk::Label>(gun);
-                l_gun->set_halign(Gtk::Align::START);
-                auto* l_ders = Gtk::make_managed<Gtk::Label>(ders);
-                l_ders->set_halign(Gtk::Align::START);
-                auto* l_konu = Gtk::make_managed<Gtk::Label>(konu);
-                l_konu->set_halign(Gtk::Align::START);
-                auto* l_soru = Gtk::make_managed<Gtk::Label>(std::to_string(soru));
+            auto* l_gun = Gtk::make_managed<Gtk::Label>(gun);
+            l_gun->set_halign(Gtk::Align::START);
+            auto* l_ders = Gtk::make_managed<Gtk::Label>(ders);
+            l_ders->set_halign(Gtk::Align::START);
+            l_ders->set_ellipsize(Pango::EllipsizeMode::END);
+            l_ders->set_max_width_chars(16);
+            auto* l_konu = Gtk::make_managed<Gtk::Label>(konu);
+            l_konu->set_halign(Gtk::Align::START);
+            l_konu->set_ellipsize(Pango::EllipsizeMode::END);
+            l_konu->set_max_width_chars(24);
+            auto* l_soru = Gtk::make_managed<Gtk::Label>(std::to_string(soru));
                 l_soru->set_halign(Gtk::Align::START);
 
                 grid->attach(*l_gun, 0, row_idx, 1, 1);
@@ -3683,6 +3698,7 @@ Gtk::Widget* MainWindow::koc_plan_tablosu() {
         err->add_css_class("koc-muted");
         err->set_halign(Gtk::Align::START);
         err->set_wrap(true);
+        err->set_max_width_chars(80);
         vbox->append(*err);
     }
 
@@ -3720,6 +3736,7 @@ void MainWindow::koc_bugunku_listeyi_guncelle(Gtk::Box* liste) {
         );
         lbl->set_halign(Gtk::Align::START);
         lbl->set_hexpand(true);
+        lbl->set_ellipsize(Pango::EllipsizeMode::END);
 
         auto* btn_sil = Gtk::make_managed<Gtk::Button>("\u00d7");
         btn_sil->add_css_class("koc-sil-btn");
@@ -3794,6 +3811,7 @@ void MainWindow::koc_hata_analizini_doldur(Gtk::Box* liste) {
             satir += "<span foreground='#888888'>" + std::to_string(v.bos) + " bo\u015f</span>";
         row->set_markup(satir);
         row->set_halign(Gtk::Align::START);
+        row->set_ellipsize(Pango::EllipsizeMode::END);
         liste->append(*row);
     }
 
@@ -3817,6 +3835,7 @@ void MainWindow::koc_hedef_ekle() {
     dialog->set_transient_for(*this);
     dialog->set_modal(true);
     dialog->set_default_size(420, 220);
+    dialog->signal_hide().connect([dialog]() { delete dialog; });
 
     auto* content = dialog->get_content_area();
     content->set_margin(20);
@@ -3864,6 +3883,10 @@ void MainWindow::koc_hedef_ekle() {
     btn_iptal->signal_clicked().connect([dialog]() { dialog->close(); });
     btn_kaydet->signal_clicked().connect([this, dialog, entry, ops_entry]() {
         std::string h = entry->get_text();
+        auto is_space = [](unsigned char c) { return std::isspace(c); };
+        auto left = std::find_if_not(h.begin(), h.end(), is_space);
+        auto right = std::find_if_not(h.rbegin(), h.rend(), is_space);
+        h = (left < right.base()) ? std::string(left, right.base()) : std::string();
         if (!h.empty()) {
             koc_hedef.hedef = h;
             koc_hedef.olusturma_tarihi = today_str_koc();
@@ -3886,10 +3909,18 @@ void MainWindow::setup_ai_koc() {
         koc_dispatchers_connected = true;
     }
 
+    koc_rapor_lbl = nullptr;
+    koc_plan_container = nullptr;
+    koc_plan_btn = nullptr;
+
     auto* sw = Gtk::make_managed<Gtk::ScrolledWindow>();
     sw->set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
+    sw->set_vexpand(true);
+    sw->set_hexpand(true);
 
     auto* box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
+    box->set_halign(Gtk::Align::FILL);
+    box->set_hexpand(true);
     box->set_margin_start(24);
     box->set_margin_end(24);
     box->set_margin_top(20);
@@ -3899,6 +3930,7 @@ void MainWindow::setup_ai_koc() {
     // ---- HEDEF BANNER ----
     auto* hedef_card = Gtk::make_managed<Gtk::Frame>();
     hedef_card->add_css_class("koc-hedef-card");
+    hedef_card->set_hexpand(true);
 
     auto* hedef_ic = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 16);
     hedef_ic->set_margin_start(20);
@@ -3920,6 +3952,8 @@ void MainWindow::setup_ai_koc() {
             Glib::Markup::escape_text(koc_hedef.hedef) + "</span>");
     }
     hedef_lbl->set_halign(Gtk::Align::START);
+    hedef_lbl->set_ellipsize(Pango::EllipsizeMode::END);
+    hedef_lbl->set_max_width_chars(50);
     hedef_vbox->append(*hedef_lbl);
 
     auto* hedef_alt = Gtk::make_managed<Gtk::Label>("AI Ko\u00e7un sana \u00f6zel \u00e7al\u0131\u015fma plan\u0131 haz\u0131rlayacak");
@@ -3927,13 +3961,6 @@ void MainWindow::setup_ai_koc() {
     hedef_alt->set_halign(Gtk::Align::START);
     hedef_vbox->append(*hedef_alt);
 
-    if (!koc_hedef.opsiyonel_alan.empty()) {
-        auto* ops_lbl = Gtk::make_managed<Gtk::Label>("");
-        ops_lbl->set_markup("<span foreground='#f39c12'>\u2713 " +
-            Glib::Markup::escape_text(koc_hedef.opsiyonel_alan) + "</span>");
-        ops_lbl->set_halign(Gtk::Align::START);
-        hedef_vbox->append(*ops_lbl);
-    }
 
     auto* btn_hedef = Gtk::make_managed<Gtk::Button>("Hedef Belirle");
     btn_hedef->add_css_class("koc-btn");
@@ -4094,6 +4121,8 @@ void MainWindow::setup_ai_koc() {
 
     auto* ai_rapor_lbl = Gtk::make_managed<Gtk::Label>();
     ai_rapor_lbl->set_wrap(true);
+    ai_rapor_lbl->set_wrap_mode(Pango::WrapMode::WORD);
+    ai_rapor_lbl->set_max_width_chars(80);
     ai_rapor_lbl->set_halign(Gtk::Align::START);
     ai_rapor_lbl->set_selectable(true);
 
@@ -4110,19 +4139,8 @@ void MainWindow::setup_ai_koc() {
     btn_rapor->signal_clicked().connect([this, ai_rapor_lbl]() {
         if (koc_rapor_bekliyor) return;
         ai_rapor_lbl->set_text("Rapor olu\u015fturuluyor...");
+        koc_rapor_lbl = ai_rapor_lbl;
         koc_haftalik_rapor();
-        // Poll for completion
-        Glib::signal_timeout().connect([this, ai_rapor_lbl]() {
-            if (!koc_rapor_bekliyor) {
-                if (!koc_son_rapor.empty()) {
-                    ai_rapor_lbl->set_markup(md_to_pango(koc_son_rapor));
-                } else {
-                    ai_rapor_lbl->set_text("Rapor olu\u015fturulamad\u0131. L\u00fctfen daha sonra dene.");
-                }
-                return false;
-            }
-            return true;
-        }, 500);
     });
     rapor_vbox->append(*btn_rapor);
 
@@ -4149,25 +4167,13 @@ void MainWindow::setup_ai_koc() {
 
     auto* btn_plan = Gtk::make_managed<Gtk::Button>("Plan Olu\u015ftur");
     btn_plan->add_css_class("koc-btn-rapor");
+    koc_plan_btn = btn_plan;
     btn_plan->signal_clicked().connect([this, plan_ic, btn_plan]() {
         if (koc_plan_bekliyor) return;
         btn_plan->set_sensitive(false);
         btn_plan->set_label("Olu\u015fturuluyor...");
+        koc_plan_container = static_cast<Gtk::Box*>(plan_ic);
         koc_plan_olustur();
-        // Poll for completion, then rebuild page
-        // (must not capture btn_plan since it gets destroyed on rebuild)
-        Glib::signal_timeout().connect([this]() {
-            if (!koc_plan_bekliyor) {
-                auto* child = stack.get_child_by_name("ai_koc");
-                if (child) stack.remove(*child);
-                pages_built.insert("ai_koc");
-                setup_ai_koc();
-                auto* new_child = stack.get_child_by_name("ai_koc");
-                if (new_child) stack.set_visible_child(*new_child);
-                return false;
-            }
-            return true;
-        }, 500);
     });
     plan_vbox->append(*btn_plan);
 

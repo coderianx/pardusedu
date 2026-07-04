@@ -15,6 +15,33 @@
 #include "ai_client.h"
 #include "parduslab.h"
 
+// Koç data escaping for | pipe-separated files
+inline std::string koc_escape(const std::string& s) {
+    std::string r;
+    r.reserve(s.size());
+    for (char c : s) {
+        if (c == '|') r += "\\p";
+        else if (c == '\\') r += "\\\\";
+        else r += c;
+    }
+    return r;
+}
+inline std::string koc_unescape(const std::string& s) {
+    std::string r;
+    r.reserve(s.size());
+    for (size_t i = 0; i < s.size(); i++) {
+        if (s[i] == '\\' && i + 1 < s.size()) {
+            if (s[i+1] == 'p') r += '|';
+            else if (s[i+1] == '\\') r += '\\';
+            else { r += s[i]; r += s[i+1]; }
+            i++;
+        } else {
+            r += s[i];
+        }
+    }
+    return r;
+}
+
 struct Task {
     std::string title;
     std::string category;
@@ -94,7 +121,6 @@ struct GunlukSoru {
 
 struct KocHedef {
     std::string hedef;
-    std::string hedef_turu;
     std::string olusturma_tarihi;
     std::string opsiyonel_alan;
 };
@@ -456,12 +482,15 @@ private:
     Glib::Dispatcher koc_ai_dispatcher;
     std::string pending_koc_ai_response;
     std::mutex koc_ai_mutex;
+    Gtk::Label* koc_rapor_lbl = nullptr;
+    Gtk::Button* koc_plan_btn = nullptr;
 
     Glib::Dispatcher koc_plan_dispatcher;
     std::string pending_koc_plan_response;
     std::mutex koc_plan_mutex;
     bool koc_plan_bekliyor = false;
     std::string koc_plan_json;
+    Gtk::Box* koc_plan_container = nullptr;
     bool koc_dispatchers_connected = false;
 
     void setup_dersler();
@@ -506,6 +535,7 @@ private:
     void koc_haftalik_rapor();
     void koc_soru_kaydet();
     void koc_hedef_kaydet();
+    std::string koc_soru_logu_olustur();
     std::string koc_rapor_prompt();
     void on_koc_ai_response();
     void koc_plan_olustur();
