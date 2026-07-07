@@ -1,6 +1,7 @@
 #include "mainwindow.h"
 #include "ai_client.h"
 #include "calc_letter.h"
+#include "keyring.h"
 #include <fstream>
 #include <filesystem>
 #include <cstdlib>
@@ -249,35 +250,26 @@ void MainWindow::setup_data() {
         }
     }
 
-    auto akf_g = dir + "/apikey_groq.dat";
-    if (fs::exists(akf_g)) {
-        std::ifstream f(akf_g);
-        std::string line;
-        if (std::getline(f, line) && !line.empty()) {
-            ai_api_key_groq = line;
-            set_groq_api_key(line);
+    auto load_key = [&](const std::string& provider, std::string& dest, auto setter) {
+        std::string key = keyring_load(provider);
+        if (key.empty()) {
+            auto path = dir + "/apikey_" + provider + ".dat";
+            if (fs::exists(path)) {
+                std::ifstream f(path);
+                std::string line;
+                if (std::getline(f, line) && !line.empty()) key = line;
+                fs::remove(path);
+            }
         }
-    }
-
-    auto akf_o = dir + "/apikey_openrouter.dat";
-    if (fs::exists(akf_o)) {
-        std::ifstream f(akf_o);
-        std::string line;
-        if (std::getline(f, line) && !line.empty()) {
-            ai_api_key_openrouter = line;
-            set_openrouter_api_key(line);
+        if (!key.empty()) {
+            dest = key;
+            setter(key);
+            keyring_store(provider, key);
         }
-    }
-
-    auto akf_gm = dir + "/apikey_gemini.dat";
-    if (fs::exists(akf_gm)) {
-        std::ifstream f(akf_gm);
-        std::string line;
-        if (std::getline(f, line) && !line.empty()) {
-            ai_api_key_gemini = line;
-            set_gemini_api_key(line);
-        }
-    }
+    };
+    load_key("groq", ai_api_key_groq, [](const std::string& k){ set_groq_api_key(k); });
+    load_key("openrouter", ai_api_key_openrouter, [](const std::string& k){ set_openrouter_api_key(k); });
+    load_key("gemini", ai_api_key_gemini, [](const std::string& k){ set_gemini_api_key(k); });
 
     auto mf_g = dir + "/model_groq.dat";
     if (fs::exists(mf_g)) {
@@ -486,9 +478,9 @@ void MainWindow::save_data() {
               << r.ai_motivation << "\n";
         } }
     { std::ofstream f(dir + "/provider.dat"); f << (ai_provider == AIProvider::GROQ ? "groq" : ai_provider == AIProvider::OPENROUTER ? "openrouter" : ai_provider == AIProvider::GEMINI ? "gemini" : "ollama") << "\n"; }
-    { std::ofstream f(dir + "/apikey_groq.dat"); f << ai_api_key_groq << "\n"; }
-    { std::ofstream f(dir + "/apikey_openrouter.dat"); f << ai_api_key_openrouter << "\n"; }
-    { std::ofstream f(dir + "/apikey_gemini.dat"); f << ai_api_key_gemini << "\n"; }
+    keyring_store("groq", ai_api_key_groq);
+    keyring_store("openrouter", ai_api_key_openrouter);
+    keyring_store("gemini", ai_api_key_gemini);
     { std::ofstream f(dir + "/model_groq.dat"); f << ai_model_groq << "\n"; }
     { std::ofstream f(dir + "/model_openrouter.dat"); f << ai_model_openrouter << "\n"; }
     { std::ofstream f(dir + "/model_gemini.dat"); f << ai_model_gemini << "\n"; }

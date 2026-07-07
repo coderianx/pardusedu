@@ -2227,3 +2227,15 @@ vte-terminal text:selected {
     background: alpha(#e74c3c, 0.15);
     color: #e74c3c;
 }
+
+.password-toggle {
+    padding: 2px 8px;
+    border-radius: 0 6px 6px 0;
+    border-left: none;
+    min-width: 32px;
+    min-height: 28px;
+}
+.password-toggle image {
+    color: __text_color;
+    font-size: 16px;
+}

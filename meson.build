@@ -49,6 +49,7 @@ executable(
     'src/pages/parduslab_pages.cpp',
     'src/ai_client.cpp',
     'src/calc_letter.cpp',
+    'src/keyring.cpp',
     'src/parduslab.cpp'
   ],
   include_directories : src_inc,

@@ -560,6 +560,20 @@ void MainWindow::show_ai_key_dialog() {
     groq_key_entry->set_placeholder_text("gsk_...");
     groq_key_entry->set_text(ai_api_key_groq);
     groq_key_entry->set_hexpand(true);
+    groq_key_entry->set_visibility(false);
+
+    auto* groq_key_toggle = Gtk::make_managed<Gtk::ToggleButton>();
+    groq_key_toggle->set_icon_name("view-reveal-symbolic");
+    groq_key_toggle->set_tooltip_text("Anahtarı göster/gizle");
+    groq_key_toggle->add_css_class("password-toggle");
+    groq_key_toggle->signal_toggled().connect([groq_key_entry, groq_key_toggle]() {
+        groq_key_entry->set_visibility(groq_key_toggle->get_active());
+        groq_key_toggle->set_icon_name(groq_key_toggle->get_active() ? "view-conceal-symbolic" : "view-reveal-symbolic");
+    });
+
+    auto* groq_key_hbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
+    groq_key_hbox->append(*groq_key_entry);
+    groq_key_hbox->append(*groq_key_toggle);
 
     auto* groq_model_lbl = Gtk::make_managed<Gtk::Label>("Model:");
     groq_model_lbl->set_halign(Gtk::Align::START);
@@ -581,7 +595,7 @@ void MainWindow::show_ai_key_dialog() {
     groq_model_combo->set_active_id(ai_model_groq);
     groq_box->append(*groq_header);
     groq_box->append(*groq_key_lbl);
-    groq_box->append(*groq_key_entry);
+    groq_box->append(*groq_key_hbox);
     groq_box->append(*groq_model_lbl);
     groq_box->append(*groq_model_combo);
 
@@ -601,6 +615,20 @@ void MainWindow::show_ai_key_dialog() {
     or_key_entry->set_placeholder_text("sk-or-...");
     or_key_entry->set_text(ai_api_key_openrouter);
     or_key_entry->set_hexpand(true);
+    or_key_entry->set_visibility(false);
+
+    auto* or_key_toggle = Gtk::make_managed<Gtk::ToggleButton>();
+    or_key_toggle->set_icon_name("view-reveal-symbolic");
+    or_key_toggle->set_tooltip_text("Anahtarı göster/gizle");
+    or_key_toggle->add_css_class("password-toggle");
+    or_key_toggle->signal_toggled().connect([or_key_entry, or_key_toggle]() {
+        or_key_entry->set_visibility(or_key_toggle->get_active());
+        or_key_toggle->set_icon_name(or_key_toggle->get_active() ? "view-conceal-symbolic" : "view-reveal-symbolic");
+    });
+
+    auto* or_key_hbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
+    or_key_hbox->append(*or_key_entry);
+    or_key_hbox->append(*or_key_toggle);
 
     auto* or_model_lbl = Gtk::make_managed<Gtk::Label>("Model:");
     or_model_lbl->set_halign(Gtk::Align::START);
@@ -642,7 +670,7 @@ void MainWindow::show_ai_key_dialog() {
 
     or_box->append(*or_header);
     or_box->append(*or_key_lbl);
-    or_box->append(*or_key_entry);
+    or_box->append(*or_key_hbox);
     or_box->append(*or_model_lbl);
     or_box->append(*or_model_combo);
 
@@ -662,6 +690,20 @@ void MainWindow::show_ai_key_dialog() {
     gemini_key_entry->set_placeholder_text("AI...");
     gemini_key_entry->set_text(ai_api_key_gemini);
     gemini_key_entry->set_hexpand(true);
+    gemini_key_entry->set_visibility(false);
+
+    auto* gemini_key_toggle = Gtk::make_managed<Gtk::ToggleButton>();
+    gemini_key_toggle->set_icon_name("view-reveal-symbolic");
+    gemini_key_toggle->set_tooltip_text("Anahtarı göster/gizle");
+    gemini_key_toggle->add_css_class("password-toggle");
+    gemini_key_toggle->signal_toggled().connect([gemini_key_entry, gemini_key_toggle]() {
+        gemini_key_entry->set_visibility(gemini_key_toggle->get_active());
+        gemini_key_toggle->set_icon_name(gemini_key_toggle->get_active() ? "view-conceal-symbolic" : "view-reveal-symbolic");
+    });
+
+    auto* gemini_key_hbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
+    gemini_key_hbox->append(*gemini_key_entry);
+    gemini_key_hbox->append(*gemini_key_toggle);
 
     auto* gemini_model_lbl = Gtk::make_managed<Gtk::Label>("Model:");
     gemini_model_lbl->set_halign(Gtk::Align::START);
@@ -684,7 +726,7 @@ void MainWindow::show_ai_key_dialog() {
 
     gemini_box->append(*gemini_header);
     gemini_box->append(*gemini_key_lbl);
-    gemini_box->append(*gemini_key_entry);
+    gemini_box->append(*gemini_key_hbox);
     gemini_box->append(*gemini_model_lbl);
     gemini_box->append(*gemini_model_combo);
 

@@ -62,38 +62,66 @@
 - [59. Pydantic ile Veri Doğrulama](#pydantic)
 - [60. pytest ile İleri Test Teknikleri](#pytest-ileri)
 - [61. NumPy ile Sayısal Hesaplama](#numpy)
+- [62. Pandas ile Veri Analizi](#pandas)
+
+---
+
+## Bu Dokümanı Nasıl Kullanmalısınız?
+
+Bu rehber 62 bölümden oluşur. **Sakın hepsini sırayla okumaya kalkmayın!** İşte size özel okuma planı:
+
+### 🟢 Tamamen Yeni Başlayan Biriyseniz
+1 → 2 → 3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 (sadece giriş) → 15 → 16 → 18 → 22 → 34
+
+Bu rotayı bitirdiğinizde Python'un temellerini öğrenmiş olacaksınız. Sonra 13, 14, 17, 19, 20, 21, 23, 24, 25 ile devam edin.
+
+### 🔵 Biraz Deneyiminiz Varsa
+3 → 4 → 5 → 6 → 7 → 8 → 9 → 10 → 11 → 12 → 13 → 14 → 15 → 16 → 22 → 23 → 33 → 34
+
+### 🟣 Programlama Biliyor, Python'a Geçiyorsanız
+Hızla 3-4-5-6-7'yi tazeleyin, 12-15-16-22-33'e odaklanın, sonra ilginizi çeken konulara atlayın.
+
+### Her Bölümde Bunu Yapın
+1. **Kodu elle yazın** — kopyala/yapıştır YAPMAYIN, kendiniz yazın
+2. **Çalıştırın** — çıktıyı görün
+3. **Değiştirin** — sayıları, metinleri değiştirip tekrar çalıştırın
+4. **Alıştırmaları çözün** — her bölüm sonundaki soruları yapmadan geçmeyin
+
+Python öğrenmenin tek yolu **yazarak ve deneyerek** öğrenmektir. Bol bol hata yapın, hatalar arkadaşınızdır!
 
 ---
 
 ## <a id="python-nedir"></a>**Python** Nedir:
 
-- **Python**, yüksek seviyeli, yorumlanabilir, dinamik ve genel amaçlı bir programlama dilidir.
-- Guido van Rossum tarafından 1991 yılında geliştirilmeye başlanmıştır. Adını Monty Python'un Uçan Sirki'nden alır.
-- **Okunabilirlik** Python felsefesinin merkezindedir. "The Zen of Python" (`import this` ile görüntülenir) adlı 19 ilke ile özetlenir:
-  - "Beautiful is better than ugly."
-  - "Explicit is better than implicit."
-  - "Simple is better than complex."
-  - "Readability counts."
-- Python yorumlanabilir bir dildir: kod yazılır ve doğrudan çalıştırılır, derleme adımı yoktur.
-- **Dinamik tipleme** kullanır: değişkenlerin türü çalışma zamanında belirlenir, bildirim gerektirmez.
-- **Çöp toplama** (garbage collection) ile bellek yönetimini otomatik yapar.
-- **Geniş standart kütüphane** ("batteries included" felsefesi): dosya işleme, ağ protokolleri, veri sıkıştırma, web servisleri gibi birçok alanda hazır modül sunar.
-- **Kullanım alanları**:
-  - **Web geliştirme**: Django, Flask, FastAPI
-  - **Veri bilimi ve yapay zeka**: Pandas, NumPy, Scikit-learn, TensorFlow, PyTorch
-  - **Otomasyon ve script yazma**: Sistem yönetimi, dosya işleme, web scraping
-  - **Masaüstü uygulamaları**: PyQt, Tkinter, GTK (PyGObject)
-  - **Oyun geliştirme**: Pygame
-  - **Gömülü sistemler**: MicroPython, CircuitPython
-  - **Bilimsel hesaplama**: SciPy, Matplotlib
-- **Topluluk ve ekosistem**: PyPI (Python Package Index) üzerinde 500.000'den fazla paket bulunur.
-- Sürümler: Python 2 (2020'de sonlandı), Python 3 (güncel). Python 3.10+, 3.11+, 3.12+ önemli sürümlerdir.
+Haydi ilk iş olarak Python ile tanışalım. Ama önce teoriyle boğulmayın — şimdilik kısa tutuyorum:
 
-## <a id="python-kurulumu-ve-calistirma"></a>Python Kurulumu ve Çalıştırma:
+**Python**, öğrenmesi kolay, okuması rahat ve her işe yarayan bir programlama dilidir. 1991 yılında Guido van Rossum tarafından yaratılmıştır.
 
-### Kurulum
+Python'ı diğer dillerden ayıran şeyler:
+- **Basit ve okunabilir**: İngilizce gibi okunur, gereksiz semboller yoktur
+- **Yorumlanabilir**: Yazdığınız kodu hemen çalıştırabilirsiniz, derleme beklemeyin
+- **Çok yönlü**: Web sitesi, oyun, hesap makinesi, yapay zeka — aklınıza ne gelirse
+- **Geniş kütüphane desteği**: Her şey için hazır paket var (PyPI'da 500.000+ paket)
 
-- **Linux (Debian/Ubuntu)**:
+**Python nerelerde kullanılır?**
+- Web geliştirme (Django, Flask, FastAPI)
+- Veri bilimi ve yapay zeka (Pandas, TensorFlow, PyTorch)
+- Otomasyon ve script yazma
+- Masaüstü uygulamaları
+- Oyun geliştirme
+- Bilimsel hesaplama
+
+Şimdi bunları okuyup geçmeyin — **bir sonraki bölüme atlayın ve ilk Python programınızı yazın!** Okumak yetmez, yazmak gerekir.
+
+## <a id="python-kurulumu-ve-calistirma"></a>Python Kurulumu ve İlk Programın
+
+> ⚠️ **Bu bölümü atlamayın!** Python'u kurmadan ve ilk programınızı çalıştırmadan sonraki bölümlere geçmeyin.
+
+### Python'u Kurma
+
+İşletim sisteminize göre aşağıdaki adımları izleyin:
+
+- **Linux (Debian/Ubuntu/Pardus)**:
   ```bash
   sudo apt update
   sudo apt install python3 python3-pip
@@ -104,287 +132,422 @@
   brew install python3
   ```
 
-- **Windows**: python.org adresinden indirip kurun. Kurulumda "Add Python to PATH" seçeneğini işaretleyin.
+- **Windows**: [python.org](https://python.org) adresinden Python'un son sürümünü indirin. **Kurulumda "Add Python to PATH" seçeneğini işaretleyin.**
 
-### Çalıştırma
+Kurduktan sonra terminalinizde şunu yazıp çalıştığını kontrol edin:
+```bash
+python3 --version
+```
+Şuna benzer bir çıktı görmelisiniz: `Python 3.12.0`
 
-- Sürüm kontrolü:
-  ```bash
-  python --version
-  python3 --version
-  ```
+Eğer hata alıyorsanız, kurulumu tekrarlayın veya "python3" yerine "python" deneyin.
 
-- Python dosyası çalıştırma:
-  ```bash
-  python3 dosya.py
-  ```
+### Kod Editörü Kurulumu
 
-- Etkileşimli kabuk (REPL - Read-Eval-Print Loop):
-  ```bash
-  python3
-  ```
-  Çıktı:
-  ```
-  Python 3.12.0 (default, Oct 16 2023, 12:00:00)
-  [GCC 12.2.0] on linux
-  Type "help", "copyright", "credits" or "license" for more information.
-  >>>
-  ```
+Kod yazmak için bir metin editörüne ihtiyacınız var. İşte en popüler seçenekler:
 
-- REPL'de denemeler:
-  ```python
-  >>> print("Merhaba Python")
-  Merhaba Python
-  >>> 2 + 3
-  5
-  >>> exit()
-  ```
+| Editör | Ne zaman tercih edilmeli |
+|--------|------------------------|
+| **VS Code** (tavsiye edilir) | Ücretsiz, eklenti desteği, her işletim sisteminde çalışır |
+| **PyCharm Community** | Python'a özel, güçlü araçlar |
+| **IDLE** | Python ile birlikte gelir, basit ve hafif |
 
-- Python'u script olarak çalıştırma (shebang ile):
-  ```python
-  #!/usr/bin/env python3
-  print("Merhaba Dünya")
-  ```
-  ```bash
-  chmod +x dosya.py
-  ./dosya.py
-  ```
+**VS Code için**: [code.visualstudio.com](https://code.visualstudio.com/) adresinden indirin. Kurduktan sonra:
+1. Sol menüden "Extensions" (Ctrl+Shift+X) butonuna tıklayın
+2. "Python" yazın ve Microsoft'un Python eklentisini kurun
+
+### İlk Python Programınız
+
+Şimdi gerçek bir program yazma zamanı! Adım adım yapalım:
+
+**1. Adım**: VS Code'u (veya seçtiğiniz editörü) açın.
+
+**2. Adım**: Yeni bir dosya oluşturun ve `merhaba.py` olarak kaydedin.
+
+**3. Adım**: Şu kodları dosyaya yazın:
+```python
+print("Merhaba, Dünya!")
+print("Python'u öğrenmeye başladım!")
+```
+
+**4. Adım**: Terminalde şu komutu çalıştırın:
+```bash
+python3 merhaba.py
+```
+
+**5. Adım**: Çıktıyı görün:
+```
+Merhaba, Dünya!
+Python'u öğrenmeye başladım!
+```
+
+🎉 **Tebrikler! İlk Python programınızı yazdınız ve çalıştırdınız!**
+
+Şimdi dosyayı biraz değiştirin:
+```python
+print("Merhaba, Dünya!")
+print("Python'u öğrenmeye başladım!")
+print("Bugün", 2026, "yılının", "Temmuz", "ayındayız.")
+print("2 + 3 =", 2 + 3)
+print("3 * 7 =", 3 * 7)
+```
+
+Tekrar çalıştırın ve çıktıyı görün. **Gördünüz mü?** Python sizin için işlemleri yaptı!
+
+### Python'u Çalıştırma Yöntemleri
+
+#### Yöntem 1: Python dosyasını çalıştırma
+```bash
+python3 dosya.py
+```
+En yaygın yöntem budur. Bir `.py` dosyası yazıp çalıştırırsınız.
+
+#### Yöntem 2: Etkileşimli kabuk (REPL)
+```bash
+python3
+```
+Çıktı:
+```
+Python 3.12.0 (default, Oct 16 2023, 12:00:00)
+[GCC 12.2.0] on linux
+Type "help", "copyright", "credits" or "license" for more information.
+>>>
+```
+`>>>` işaretinin yanına Python kodu yazıp Enter'a basın — sonuç hemen karşınızda:
+```python
+>>> print("Merhaba Python")
+Merhaba Python
+>>> 2 + 3
+5
+>>> 10 * 5
+50
+>>> exit()   # Çıkmak için
+```
+
+REPL, küçük denemeler yapmak için harikadır. Ama gerçek programlar için dosya kullanın.
+
+#### Yöntem 3: Çalıştırılabilir script (Linux/macOS)
+Dosyanın en üstüne şunu ekleyin:
+```python
+#!/usr/bin/env python3
+print("Merhaba Dünya")
+```
+Sonra dosyayı çalıştırılabilir yapın:
+```bash
+chmod +x dosya.py
+./dosya.py
+```
 
 ### Yorum Satırları
 
+Kod yazarken açıklama eklemek için yorum satırları kullanılır. Python `#` işaretinden sonrasını yorum olarak kabul eder ve çalıştırmaz.
+
 ```python
 # Bu tek satırlık bir yorumdur
+# Programın ne yaptığını açıklamak için kullanılır
 
 """
-Bu çok satırlı bir yorumdur
-(bir string literal olarak).
-Genellikle docstring olarak kullanılır.
+Üç tırnak ile çok satırlı yorum
+yazabilirsiniz. Buna docstring denir
+ve fonksiyonları/sınıfları belgelemek için kullanılır.
 """
 
 print("Kod çalışıyor")  # Satır sonu yorum
 ```
 
-## <a id="temel-veri-tipleri"></a>Temel Veri Tipleri:
+### Bu Bölümde Öğrendikleriniz
+- ✅ Python'u kurdunuz
+- ✅ Bir kod editörü seçtiniz
+- ✅ İlk Python programınızı yazdınız
+- ✅ Python dosyasını çalıştırmayı öğrendiniz
+- ✅ REPL'de denemeler yaptınız
+- ✅ Yorum satırlarını öğrendiniz
 
-Python'da her şey bir nesnedir. Temel veri tipleri şunlardır:
+### 🛠️ Alıştırmalar
 
-### Sayısal Tipler
+**Temel (Yapmadan geçmeyin!):**
+1. `merhaba.py` dosyanıza kendi adınızı ve yaşınızı yazdıran bir satır ekleyin: `print("Benim adım ..., ... yaşındayım")`
+2. REPL'de 15 * 8 işlemini yapın, sonucu görün
+3. Yeni bir `hesap.py` dosyası oluşturun, içine 4 işlem (+, -, *, /) yaptıran kodlar yazın ve çalıştırın
 
-| Tür       | Örnek                    | Açıklama                          |
-|-----------|--------------------------|-----------------------------------|
-| `int`     | `42`, `-5`, `0`, `1_000` | Tam sayı (keyfi büyüklükte)       |
-| `float`   | `3.14`, `-0.5`, `1e3`    | Ondalıklı sayı (IEEE 754)          |
-| `complex` | `3+4j`, `complex(1,2)`   | Karmaşık sayı (j sanal birim)     |
+**Orta:**
+4. Python'un hesap makinesi gibi çalıştığını göstermek için bir program yazın: önce iki sayının toplamını, sonra farkını, sonra çarpımını, sonra bölümünü tek tek `print` ile yazdırın
+
+**İleri:**
+5. REPL'de `import this` yazın. The Zen of Python çıktısını görün. En beğendiğiniz 3 maddeyi bir dosyaya yorum satırı olarak yazın.
+
+## <a id="temel-veri-tipleri"></a>Temel Veri Tipleri
+
+> Bu bölümde sayılar, metinler ve mantıksal değerlerle tanışacaksınız. Bunlar Python'da en sık kullanacağınız veri türleridir.
+
+Python'da her değerin bir türü vardır. Şimdilik üç temel türü öğreneceğiz:
+
+| Tür | Örnek | Açıklama |
+|-----|-------|----------|
+| `int` | `42`, `-5`, `0` | Tam sayı |
+| `float` | `3.14`, `-0.5` | Ondalıklı sayı |
+| `str` | `"merhaba"`, `'python'` | Metin (string) |
+
+(Sonraki bölümlerde bool, list, dict gibi diğer türleri göreceksiniz.)
+
+### int (Tam Sayı)
 
 ```python
-# int
-a = 42
-b = -5
-c = 0
-d = 1_000_000  # okunabilirlik için alt çizgi (Python 3.6+)
-e = 0xFF       # hexadecimal (255)
-f = 0b1010     # binary (10)
-g = 0o777      # octal (511)
-
-# float
-h = 3.14
-i = -0.5
-j = 1e3        # 1000.0 (bilimsel gösterim)
-k = float('inf')  # sonsuz
-l = float('nan')  # Not a Number
-
-# complex
-m = 3 + 4j
-n = complex(1, 2)  # (1+2j)
-print(m.real)  # 3.0
-print(m.imag)  # 4.0
+ogrenci_sayisi = 25
+yil = 2026
+sifir = 0
+negatif = -10
+buyuk_sayi = 1_000_000  # Alt çizgi okunabilirlik içindir, değeri 1000000
 ```
 
-### Boolean (bool)
+### float (Ondalıklı Sayı)
 
 ```python
-dogru = True
-yanlis = False
-
-# Boolean değerler aslında int alt sınıfıdır
-print(True + True)    # 2
-print(True * 5)       # 5
-print(False == 0)     # True
-print(True == 1)      # True
-
-# False kabul edilen değerler:
-# None, False, 0, 0.0, "" (boş string), [] (boş liste), {} (boş sözlük), () (boş demet), set()
+pi = 3.14
+sicaklik = -2.5
+bilimsel = 1e3        # 1000.0 (1 çarpı 10 üzeri 3)
+kuvvet = 2.5e-4       # 0.00025
 ```
 
-### NoneType
+### str (Metin / String)
+
+Metinler tek tırnak (`'`) veya çift tırnak (`"`) ile yazılır:
 
 ```python
-bos = None
-print(bos is None)  # True (None ile karşılaştırma `is` ile yapılır, `==` ile değil)
+isim = "Ali"
+soyisim = 'Yılmaz'
+mesaj = "Merhaba, bugün hava çok güzel!"
+```
+
+Uzun metinler için üç tırnak kullanabilirsiniz:
+
+```python
+siir = """
+Korkma! Sönmez bu şafaklarda yüzen al sancak,
+Sönmeden yurdumun üstünde tüten en son ocak.
+"""
+```
+
+### type() ile Tür Kontrolü
+
+Bir değerin türünü öğrenmek için `type()` kullanılır:
+
+```python
+print(type(42))         # <class 'int'>
+print(type(3.14))       # <class 'float'>
+print(type("merhaba"))  # <class 'str'>
 ```
 
 ### Tür Dönüşümleri
+
+Bir türü başka bir türe çevirebilirsiniz:
 
 ```python
 # int -> float
 x = float(5)        # 5.0
 
-# float -> int (kesir kısmı atılır)
+# float -> int (kesir kısmı atılır!)
 y = int(3.14)       # 3
 z = int(-3.14)      # -3
 
-# string -> int/float
+# string -> int/float (sayısal metinler için)
 a = int("42")       # 42
 b = float("3.14")   # 3.14
 
 # sayı -> string
 c = str(123)        # "123"
 
-# herhangi bir tür -> bool
-d = bool(1)         # True
-e = bool(0)         # False
-f = bool("")        # False
-g = bool("abc")     # True
-
 # Tür kontrolü
-print(type(42))      # <class 'int'>
-print(isinstance(42, int))   # True
-print(isinstance(42, (int, float)))  # True
+print(type(42))
+print(isinstance(42, int))              # True
+print(isinstance(42, (int, float)))      # True
 ```
 
-## <a id="degiskenler-ve-operatorler"></a>Değişkenler ve Operatörler:
+### 🛠️ Alıştırmalar
+
+**Temel:**
+1. `merhaba.py` dosyanıza kendi adınızı ve yaşınızı yazdıran bir satır ekleyin: `print("Benim adım ..., ... yaşındayım")`
+2. REPL'de 15 * 8 işlemini yapın, sonucu görün
+3. Yeni bir `hesap.py` dosyası oluşturun, içine 4 işlem (+, -, *, /) yaptıran kodlar yazın ve çalıştırın
+
+**Orta:**
+4. Python'un hesap makinesi gibi çalıştığını göstermek için bir program yazın: önce iki sayının toplamını, sonra farkını, sonra çarpımını, sonra bölümünü tek tek `print` ile yazdırın
+
+**İleri:**
+5. REPL'de `import this` yazın. The Zen of Python çıktısını görün. En beğendiğiniz 3 maddeyi bir dosyaya yorum satırı olarak yazın.
+
+---
+
+## <a id="degiskenler-ve-operatorler"></a>Değişkenler ve Operatörler
+
+> Bu bölümde değişkenlere değer atamayı ve bu değerler üzerinde işlem yapmayı öğreneceksiniz.
+
+### Değişken Nedir?
+
+Değişken, bir değeri saklamak için kullandığınız bir "kutu" gibidir. İstediğiniz ismi verebilir, istediğiniz değeri koyabilirsiniz.
 
 ### Değişken Tanımlama
 
-```python
-# Değişkenler tür belirtilmeden tanımlanır
-x = 5
-y = "metin"
-z = 3.14
+Python'da değişken tanımlamak çok kolaydır — tür belirtmenize gerek yoktur:
 
-# Çoklu atama
+```python
+# Değişkene değer atama
+isim = "Ali"
+yas = 25
+boy = 1.78
+ogrenci_mi = True
+
+print(isim)    # Ali
+print(yas)     # 25
+```
+
+**Değişken isimlendirme kuralları:**
+- Harf, rakam ve alt çizgi (`_`) kullanılabilir
+- Sayı ile **başlayamaz** (örn: `1isim` ❌, `isim1` ✅)
+- Büyük/küçük harf duyarlıdır (`isim` ile `Isim` farklıdır)
+- Python anahtar kelimeleri kullanılamaz (`if`, `else`, `for`, `while`, `class` vb.)
+
+```python
+# Doğru isimler
+ogrenci_sayisi = 30
+_sayac = 0
+isim2 = "Ayşe"
+
+# Yanlış isimler (bunları denerseniz hata alırsınız)
+# 1ogrenci = 5    # Sayı ile başlayamaz
+# if = 10         # Anahtar kelime kullanılamaz
+# ogrenci-sayisi = 3  # Tire kullanılamaz
+```
+
+### Çoklu Atama
+
+```python
+# Aynı anda birden çok değişkene değer atama
 a, b, c = 1, 2, 3
 print(a, b, c)  # 1 2 3
 
 # Aynı değeri birden fazla değişkene atama
 x = y = z = 0
 
-# Değişken değer değiştirme (swap)
+# Değişken değerlerini takas etme (swap) — çok kullanışlı!
 a, b = b, a
-
-# Değişken isimlendirme kuralları:
-# - Harf, rakam ve alt çizgi kullanılabilir
-# - Sayı ile başlayamaz
-# - Büyük/küçük harf duyarlıdır
-# - Python anahtar kelimeleri kullanılamaz (if, else, for, while, class, etc.)
+print(a, b)  # 2 1 (değerler yer değiştirdi)
 ```
 
 ### Aritmetik Operatörler
 
 ```python
-toplam = 10 + 5        # 15
-fark = 10 - 5          # 5
-carpim = 10 * 5        # 50
-bolme = 10 / 3         # 3.3333333333333335 (float)
-tam_bolme = 10 // 3    # 3 (tam sayı bölmesi)
-mod = 10 % 3           # 1 (kalan)
-us = 2 ** 4            # 16 (üs alma, 2^4)
+toplam = 10 + 5        # 15    (toplama)
+fark = 10 - 5          # 5     (çıkarma)
+carpim = 10 * 5        # 50    (çarpma)
+bolme = 10 / 3         # 3.333 (bölme — sonuç her zaman float)
+tam_bolme = 10 // 3    # 3     (tam bölme — kesir atılır)
+kalan = 10 % 3         # 1     (mod — kalanı bulma)
+us = 2 ** 4            # 16    (üs alma — 2 üzeri 4)
 
-# Augmented assignment (işlemli atama)
+print(f"Toplam: {toplam}")
+print(f"10 / 3 = {bolme} (float)")
+print(f"10 // 3 = {tam_bolme} (tam sayı)")
+print(f"10 % 3 = {kalan} (kalan)")
+print(f"2 ** 4 = {us}")
+```
+
+**Pratik not**: `//` bölme işlemi çok kullanışlıdır. Örneğin 10 elmayı 3 kişiye paylaştırırsanız herkese 3 elma düşer (`10 // 3 = 3`), 1 elma artar (`10 % 3 = 1`).
+
+### İşlemli Atama (Augmented Assignment)
+
+```python
 x = 5
-x += 3    # x = x + 3 -> 8
-x -= 2    # 6
-x *= 2    # 12
-x /= 4    # 3.0
-x //= 2   # 1.0
-x %= 2    # 1.0
-x **= 3   # 1.0
+x += 3    # x = x + 3 → 8
+x -= 2    # x = x - 2 → 6
+x *= 2    # x = x * 2 → 12
+x /= 4    # x = x / 4 → 3.0
+print(x)
 ```
 
 ### Karşılaştırma Operatörleri
 
+Sonuç her zaman `True` veya `False` döndürür:
+
 ```python
-esit = (5 == 5)          # True
-esit_degil = (5 != 3)    # True
-buyuk = (5 > 3)          # True
-kucuk = (5 < 3)          # False
-buyuk_esit = (5 >= 5)    # True
-kucuk_esit = (5 <= 3)    # False
+print(5 == 5)    # True  (eşit mi)
+print(5 != 3)    # True  (eşit değil mi)
+print(5 > 3)     # True  (büyük mü)
+print(5 < 3)     # False (küçük mü)
+print(5 >= 5)    # True  (büyük veya eşit mi)
+print(5 <= 3)    # False (küçük veya eşit mi)
 
 # Zincirleme karşılaştırma
 x = 5
-sonuc = 1 < x < 10       # True (1 < 5 < 10)
-sonuc = 10 > x > 3       # True
+print(1 < x < 10)   # True (1 < 5 < 10)
+print(10 > x > 3)   # True
 ```
 
-### Mantıksal Operatörler
+### Mantıksal Operatörler (and, or, not)
 
 ```python
-# and, or, not
-sonuc = True and False   # False
-sonuc = True or False    # True
-sonuc = not True         # False
+# and: her ikisi de True ise sonuç True
+print(True and True)    # True
+print(True and False)   # False
 
-# Kısa devre (short-circuit) değerlendirmesi
-# and: ilk False değerde durur
-# or: ilk True değerde durur
+# or: en az biri True ise sonuç True
+print(True or False)    # True
+print(False or False)   # False
 
-# Pratik kullanım:
-isim = "" or "Varsayilan"    # "Varsayilan" ("" False olduğu için)
-isim2 = "Ali" or "Varsayilan" # "Ali"
+# not: değili
+print(not True)         # False
+print(not False)        # True
+
+# Gerçek hayat örneği
+yas = 20
+ehliyet_var = True
+print(yas >= 18 and ehliyet_var)   # True (araç kullanabilir)
 ```
 
-### Üyelik ve Kimlik Operatörleri
+### Üyelik Operatörleri (in / not in)
+
+Bir değerin bir liste veya metin içinde olup olmadığını kontrol eder:
 
 ```python
-# in / not in (üyelik)
 liste = [1, 2, 3]
-print(2 in liste)      # True
-print(5 not in liste)  # True
+print(2 in liste)       # True (2 listede var)
+print(5 not in liste)   # True (5 listede yok)
 
-# is / is not (kimlik - aynı nesne mi?)
-a = [1, 2, 3]
-b = [1, 2, 3]
-c = a
-print(a is c)     # True (aynı nesne)
-print(a is b)     # False (farklı nesne, aynı değer)
-print(a == b)     # True (aynı değer)
-```
-
-### Bitwise Operatörler
-
-```python
-a = 5   # 0b0101
-b = 3   # 0b0011
-
-print(a & b)   # AND  -> 1 (0b0001)
-print(a | b)   # OR   -> 7 (0b0111)
-print(a ^ b)   # XOR  -> 6 (0b0110)
-print(~a)      # NOT  -> -6 (bitwise complement)
-print(a << 1)  # left shift  -> 10 (0b1010)
-print(a >> 1)  # right shift -> 2 (0b0010)
+isim = "Ali"
+print("A" in isim)      # True (A harfi Ali'de var)
 ```
 
 ### Operatör Önceliği
 
 ```python
-# Öncelik sırası (yüksekten düşüğe):
-# 1. ** (üs)
-# 2. +x, -x, ~x (tekli operatörler)
-# 3. *, /, //, %
-# 4. +, - (toplama, çıkarma)
-# 5. <<, >>
-# 6. & (bitwise AND)
-# 7. ^ (bitwise XOR)
-# 8. | (bitwise OR)
-# 9. in, not in, is, is not, <, <=, >, >=, !=, ==
-# 10. not (mantıksal)
-# 11. and
-# 12. or
+# Çarpma/bölme, toplama/çıkarmadan önce gelir
+sonuc = 2 + 3 * 4   # 14 (önce 3*4=12, sonra 2+12=14)
 
-# Şüphede kalındığında parantez kullanılır:
-sonuc = (2 + 3) * 4  # 20, açık ve net
+# Şüphede kalırsanız parantez kullanın!
+sonuc = (2 + 3) * 4  # 20 (önce toplama, sonra çarpma)
 ```
+
+### Bu Bölümde Öğrendikleriniz
+- ✅ Değişken tanımlama ve isimlendirme
+- ✅ Aritmetik işlemler (+, -, *, /, //, %, **)
+- ✅ Karşılaştırma (==, !=, >, <, >=, <=)
+- ✅ Mantıksal operatörler (and, or, not)
+- ✅ Üyelik kontrolü (in, not in)
+- ✅ İşlemli atama (+=, -=, *=, /=)
+
+### 🛠️ Alıştırmalar
+
+**Temel:**
+1. İki sayı değişkeni tanımlayın (`a = 15`, `b = 4`) ve toplam, fark, çarpım, bölüm, tam bölme ve kalanını hesaplayıp yazdırın
+2. Kullanıcının adını ve doğum yılını değişkenlere atayın: `ad = "Ahmet"` ve `dogum = 2005`. Yaşını hesaplayıp `f"{ad} {yas} yaşında"` formatında yazdırın
+3. `sayi = 7` olsun. `sayi > 5 and sayi < 10` ifadesinin sonucunu tahmin edin, sonra kodla kontrol edin
+
+**Orta:**
+4. İki sayının ortalamasını hesaplayan bir program yazın (ipucu: `ortalama = (sayi1 + sayi2) / 2`)
+5. Bir sayının çift mi tek mi olduğunu `%` operatörü ile kontrol edin (ipucu: `sayi % 2 == 0` ise çifttir)
+
+**İleri:**
+6. Üç sayının (`a=8, b=12, c=5`) en büyüğünü karşılaştırma operatörleri ve `print` ile bulun. Birden fazla yol deneyin.
 
 ## <a id="string-islemleri"></a>String İşlemleri:
 
@@ -524,7 +687,34 @@ print(path)  # C:\Users\Ali\Documents
 regex = r"\d+\.\d+"  # regex için ideal
 ```
 
-## <a id="kontrol-yapilari"></a>Kontrol Yapıları:
+### Bu Bölümde Öğrendikleriniz
+- ✅ String tanımlama (tek/çift/üç tırnak)
+- ✅ Kaçış karakterleri (\n, \t, \\)
+- ✅ F-string ile değişken ekleme
+- ✅ String metodları (upper, lower, split, join, replace)
+- ✅ String dilimleme (slicing) ve indeksleme
+- ✅ String biçimlendirme yöntemleri
+
+### 🛠️ Alıştırmalar
+
+**Temel:**
+1. Adınızı ve soyadınızı iki ayrı değişkende saklayın, f-string ile birleştirip yazdırın
+2. `"Merhaba Dünya"` string'inin tüm harflerini büyütün, sonra küçültün, sonra "Dünya" kısmını "Python" ile değiştirin
+3. `"python-programlama-dili"` string'ini `-` karakterinden ayırıp bir liste yapın, sonra boşlukla birleştirin
+
+**Orta:**
+4. Kullanıcıdan alınan bir metnin uzunluğunu (`len()`) hesaplayın, ilk ve son karakterini yazdırın
+5. Bir string'in tersini yazdırın (ipucu: `[::-1]` — ters dilimleme)
+
+**İleri:**
+6. Bir cümledeki kelime sayısını hesaplayan kod yazın (ipucu: `split()` ile kelimelere ayırın, `len()` ile sayın)
+7. Palindrom kontrolü: bir string tersten okunduğunda da aynı mı? (ipucu: `metin == metin[::-1]`)
+
+---
+
+## <a id="kontrol-yapilari"></a>Kontrol Yapıları
+
+> Programınızın farklı durumlarda farklı şeyler yapmasını sağlamak için karar yapılarını kullanırsınız.
 
 ### if, elif, else
 
@@ -539,8 +729,31 @@ elif yas < 65:
     print("Yetişkin")
 else:
     print("Yaşlı")
+```
 
-# Python 3.10+ ile match/case geldi:
+**Nasıl çalışır?**
+1. Python yukarıdan aşağıya koşulları kontrol eder
+2. İlk `True` olan koşulun bloğunu çalıştırır
+3. Hiçbir koşul `True` değilse `else` bloğu çalışır
+4. `elif` istediğiniz kadar ekleyebilirsiniz, `else` isteğe bağlıdır
+
+```python
+# Sadece if
+if yas >= 18:
+    print("Reşitsiniz")
+
+# if-else
+if yas >= 18:
+    print("Reşitsiniz")
+else:
+    print("Reşit değilsiniz")
+```
+
+### match/case (Python 3.10+)
+
+Daha basit çok dallı kontroller için kullanabilirsiniz:
+
+```python
 def http_status_kodu(kod):
     match kod:
         case 200:
@@ -549,162 +762,92 @@ def http_status_kodu(kod):
             return "Not Found"
         case 500:
             return "Internal Server Error"
-        case _:
+        case _:          # _ her şeyi yakalar (default gibi)
             return "Bilinmeyen kod"
 
 print(http_status_kodu(404))  # Not Found
 ```
 
-### match/case (Python 3.10+)
+### Koşul İfadelerinde True/False
 
-```python
-# Desen eşleme (pattern matching) - switch/case'in güçlü versiyonu
-def islem_turu(deger):
-    match deger:
-        case 0:
-            print("Sıfır")
-        case 1 | 2 | 3:
-            print("Küçük sayı")
-        case int() if deger > 100:
-            print("Büyük sayı")
-        case str():
-            print(f"Metin: {deger}")
-        case [x, y] if x == y:
-            print(f"İki elemanlı liste, eşit: {x}")
-        case [a, b]:
-            print(f"İki elemanlı liste: {a}, {b}")
-        case _:
-            print("Bilinmeyen")
-
-islem_turu(0)          # Sıfır
-islem_turu(2)          # Küçük sayı
-islem_turu(200)        # Büyük sayı
-islem_turu("merhaba")  # Metin: merhaba
-islem_turu([3, 3])     # İki elemanlı liste, eşit: 3
-islem_turu([1, 2])     # İki elemanlı liste: 1, 2
-
-# Sınıf desen eşleme
-class Nokta:
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-
-def nokta_islem(nokta):
-    match nokta:
-        case Nokta(x=0, y=0):
-            print("Orijin")
-        case Nokta(x=0, y=y):
-            print(f"Y ekseninde: {y}")
-        case Nokta(x=x, y=0):
-            print(f"X ekseninde: {x}")
-        case Nokta() as n:
-            print(f"Rastgele nokta: ({n.x}, {n.y})")
-
-nokta_islem(Nokta(0, 0))  # Orijin
-nokta_islem(Nokta(0, 5))  # Y ekseninde: 5
-
-# Sözlük desen eşleme
-def api_yanit_isle(yanit):
-    match yanit:
-        case {"status": 200, "data": data}:
-            print(f"Başarılı: {data}")
-        case {"status": 404}:
-            print("Bulunamadı")
-        case {"status": status, "error": msg}:
-            print(f"Hata {status}: {msg}")
-        case _:
-            print("Bilinmeyen yanıt")
-
-api_yanit_isle({"status": 200, "data": {"isim": "Ali"}})
-# Başarılı: {'isim': 'Ali'}
-
-# Sabit desenler (guard)
-def yas_kategorisi(yas, izinli=False):
-    match yas:
-        case _ if not izinli:
-            return "İzin gerekli"
-        case n if n < 0:
-            return "Geçersiz"
-        case n if n < 13:
-            return "Çocuk"
-        case n if n < 18:
-            return "Genç"
-        case n if n < 65:
-            return "Yetişkin"
-        case _:
-            return "Yaşlı"
-
-print(yas_kategorisi(25, izinli=True))  # Yetişkin
-
-# match ile veri ayrıştırma
-def ayristir(veri: str) -> None:
-    match veri.split():
-        case [isim, yas, sehir]:
-            print(f"{isim}, {yas} yaşında, {sehir}'de yaşıyor")
-        case [isim, yas]:
-            print(f"{isim}, {yas} yaşında")
-        case _:
-            print("Geçersiz format")
-
-ayristir("Ali 25 İstanbul")   # Ali, 25 yaşında, İstanbul'da yaşıyor
-ayristir("Veli 30")            # Veli, 30 yaşında
-```
-
-### Koşul İfadelerinde Dikkat Edilmesi Gerekenler
+Bazı değerler otomatik olarak `False` kabul edilir:
 
 ```python
 # False kabul edilen değerler:
 # None, False, 0, 0.0, "" (boş string), [], (), {}, set()
 
-if []:       # False (boş liste)
-    print("Bu çalışmaz")
+isim = ""
+if isim:            # False (boş string)
+    print("İsim var")
+else:
+    print("İsim yok")  # Bu çalışır
 
-if [1, 2]:   # True (dolu liste)
-    print("Bu çalışır")
+isim = "Ali"
+if isim:            # True (dolu string)
+    print("İsim var")  # Bu çalışır
+```
 
-# Kısa koşul ifadesi (ternary)
+### Ternary (Kısa if-else)
+
+Tek satırda basit if-else yazmak için:
+
+```python
 yas = 20
 durum = "Reşit" if yas >= 18 else "Reşit değil"
 print(durum)  # Reşit
 ```
 
-### Pass, Break, Continue
+### Bu Bölümde Öğrendikleriniz
+- ✅ if / elif / else ile karar yapıları
+- ✅ match/case ile çok dallı kontroller
+- ✅ Truthy/falsy değerler (hangi değerler False)
+- ✅ Ternary ifade (tek satırda if-else)
 
+### 🛠️ Alıştırmalar
+
+**Temel:**
+1. Bir sayı değişkeni alın, 0'dan büyükse "Pozitif", küçükse "Negatif", eşitse "Sıfır" yazdıran kod yazın
+2. Kullanıcının notunu alın (0-100 arası): 90+ "AA", 80+ "BA", 70+ "BB", 60+ "CB", 50+ "CC", 50 altı "FF" yazdırın
+3. Bir sayının çift mi tek mi olduğunu if ile kontrol edin
+
+**Orta:**
+4. Kullanıcının adını ve yaşını değişkenlere atayın. 18+ ise "Oy kullanabilir", değilse "Oy kullanamaz" yazdırın. Ternary ile deneyin.
+5. İki sayıyı karşılaştırın: hangisi büyük? Eşitlerse "Eşit" yazdırın.
+
+**🎮 Mini Proje: Basit Hesap Makinesi**
+Kullanıcının girdiği iki sayı ve bir işlem (+, -, *, /) için if/elif kullanarak sonucu hesaplayan bir program yazın. Örnek:
 ```python
-# pass - boş işlem, yer tutucu
-if True:
-    pass  # henüz bir şey yapma
+sayi1 = 10
+sayi2 = 5
+islem = "+"   # Bunu değiştirerek test edin
 
-# continue - sonraki iterasyona atla
-for i in range(10):
-    if i % 2 == 0:
-        continue  # çift sayıları atla
-    print(i)  # 1, 3, 5, 7, 9
-
-# break - döngüyü kır
-for i in range(10):
-    if i == 5:
-        break
-    print(i)  # 0, 1, 2, 3, 4
+if islem == "+":
+    print(sayi1 + sayi2)
+elif islem == "-":
+    print(sayi1 - sayi2)
+elif islem == "*":
+    print(sayi1 * sayi2)
+elif islem == "/":
+    print(sayi1 / sayi2)
+else:
+    print("Geçersiz işlem")
 ```
+Farklı işlemlerle test edin!
 
-## <a id="donguler"></a>Döngüler:
+---
+
+## <a id="donguler"></a>Döngüler
+
+> Döngüler, aynı işlemi tekrar tekrar yapmanızı sağlar. Bir listedeki tüm elemanları yazdırmak veya bir işlemi 10 kez tekrarlamak için kullanılır.
 
 ### for Döngüsü
 
+`for` döngüsü, bir listedeki her eleman için bir işlem yapar:
+
 ```python
-# range() ile
+# range() ile sayı döngüsü
 for i in range(5):
     print(i)  # 0, 1, 2, 3, 4
-
-for i in range(2, 8):
-    print(i)  # 2, 3, 4, 5, 6, 7
-
-for i in range(0, 10, 2):
-    print(i)  # 0, 2, 4, 6, 8
-
-for i in range(10, 0, -1):
-    print(i)  # 10, 9, 8, ..., 1
 
 # Liste üzerinde döngü
 meyveler = ["elma", "armut", "muz"]
@@ -714,13 +857,25 @@ for meyve in meyveler:
 # String üzerinde döngü
 for harf in "Python":
     print(harf)  # P, y, t, h, o, n
+```
 
-# enumerate() ile indeks ve değer
+**range() fonksiyonu:**
+```python
+range(5)       # 0, 1, 2, 3, 4 (0'dan başla, 5'e kadar)
+range(2, 8)    # 2, 3, 4, 5, 6, 7 (2'den başla, 8'e kadar)
+range(0, 10, 2)  # 0, 2, 4, 6, 8 (0'dan 10'a, 2'şer atla)
+range(10, 0, -1) # 10, 9, 8, ..., 1 (geriye say)
+```
+
+**Kullanışlı döngü fonksiyonları:**
+```python
+meyveler = ["elma", "armut", "muz"]
+
+# enumerate() ile hem indeks hem değer
 for indeks, meyve in enumerate(meyveler):
     print(f"{indeks}: {meyve}")
-# 0: elma, 1: armut, 2: muz
 
-# zip() ile paralel döngü
+# zip() ile iki listeyi paralel döngü
 isimler = ["Ali", "Veli", "Ayşe"]
 yaslar = [25, 30, 28]
 for isim, yas in zip(isimler, yaslar):
@@ -729,57 +884,117 @@ for isim, yas in zip(isimler, yaslar):
 # reversed() ile ters döngü
 for meyve in reversed(meyveler):
     print(meyve)  # muz, armut, elma
+```
 
-# sorted() ile sıralı döngü
-for meyve in sorted(meyveler):
-    print(meyve)  # armut, elma, muz
+### break ve continue
+
+Döngülerin akışını kontrol etmek için kullanılır:
+
+```python
+# break - döngüyü tamamen durdur
+for i in range(10):
+    if i == 5:
+        break           # 5'te dur
+    print(i)            # 0, 1, 2, 3, 4
+
+# continue - sadece bu adımı atla, döngüye devam et
+for i in range(10):
+    if i % 2 == 0:
+        continue        # çift sayıları atla
+    print(i)            # 1, 3, 5, 7, 9
+```
+
+### pass (Yer Tutucu)
+
+Henüz bir şey yazmak istemiyorsanız `pass` kullanın:
+
+```python
+if True:
+    pass  # Daha sonra kod eklenecek
+
+for i in range(10):
+    pass  # Daha sonra yazılacak
 ```
 
 ### while Döngüsü
 
+Koşul `True` olduğu sürece çalışır:
+
 ```python
 # Temel while
-sayac = 0
-while sayac < 5:
+sayac = 1
+while sayac <= 5:
     print(sayac)
-    sayac += 1
+    sayac += 1   # 1, 2, 3, 4, 5
 
 # Sonsuz döngü (break ile çıkılır)
 while True:
     cevap = input("Çıkmak için 'q' girin: ")
     if cevap.lower() == 'q':
         break
-
-# while-else: else bloğu döngü normal sonlanırsa çalışır (break ile değil)
-sayac = 0
-while sayac < 3:
-    print(sayac)
-    sayac += 1
-else:
-    print("Döngü normal sonlandı")  # çalışır
-
-sayac = 0
-while sayac < 3:
-    if sayac == 2:
-        break
-    print(sayac)
-    sayac += 1
-else:
-    print("Bu çalışmaz (break ile çıkıldı)")
 ```
 
-### for-else
+### for-else ve while-else
+
+Döngü `break` ile değil de normal sonlandığında `else` bloğu çalışır:
 
 ```python
-# for-else: döngü break ile sonlanmadıysa çalışır
+# Örnek: sayılarda çift sayı var mı?
 sayilar = [1, 3, 5, 7, 9]
 for sayi in sayilar:
     if sayi % 2 == 0:
         print("Çift sayı bulundu!")
         break
 else:
-    print("Hiç çift sayı yok")
+    print("Hiç çift sayı yok")  # Bu çalışır (break olmadı)
 ```
+
+Bu, bir şey **bulunamadığında** çalıştırmak için idealdir.
+
+### Bu Bölümde Öğrendikleriniz
+- ✅ for döngüsü (range, list, string üzerinde)
+- ✅ enumerate, zip, reversed ile döngü
+- ✅ break (döngüyü durdur) ve continue (adımı atla)
+- ✅ while döngüsü
+- ✅ for-else / while-else
+- ✅ pass (yer tutucu)
+
+### 🛠️ Alıştırmalar
+
+**Temel:**
+1. 1'den 10'a kadar sayıları for döngüsü ile yazdırın
+2. `["Python", "Java", "C++"]` listesindeki her dili for ile yazdırın
+3. 1'den 20'ye kadar sadece çift sayıları yazdırın (if ve continue ile)
+
+**Orta:**
+4. 1'den 100'e kadar olan sayıların toplamını for döngüsü ile hesaplayın
+5. Kullanıcı "q" girene kadar sayı alan ve girdiği sayıların toplamını hesaplayan bir while döngüsü yazın
+
+**🎮 Mini Proje: Sayı Tahmin Oyunu**
+Bilgisayarın rastgele seçtiği 1-100 arası bir sayıyı tahmin edin:
+```python
+import random
+
+hedef = random.randint(1, 100)
+tahmin = None
+deneme = 0
+
+while tahmin != hedef:
+    tahmin = int(input("1-100 arası tahmininiz: "))
+    deneme += 1
+    if tahmin < hedef:
+        print("Daha büyük!")
+    elif tahmin > hedef:
+        print("Daha küçük!")
+    else:
+        print(f"Bildiniz! {deneme} denemede buldunuz.")
+```
+
+**Püf noktaları:**
+- `import random` ile rastgele sayı üretme kütüphanesini ekliyoruz
+- `randint(1, 100)` 1-100 arası rastgele tam sayı üretir
+- `input()` kullanıcıdan veri alır (her zaman string döner)
+- `int(input(...))` ile string'i sayıya çeviriyoruz
 
 ## <a id="listeler"></a>Listeler:
 
@@ -1128,7 +1343,71 @@ fs = frozenset([1, 2, 3, 4])
 # set'lerin aksine hashlenebilir, sözlük anahtarı olabilir
 ```
 
-## <a id="fonksiyonlar"></a>Fonksiyonlar:
+### Bu Bölümlerde (Listeler, Demetler, Sözlükler, Kümeler) Öğrendikleriniz
+- ✅ Liste oluşturma, indeksleme, dilimleme, metodlar
+- ✅ Demet (tuple) oluşturma ve kullanım alanları
+- ✅ Sözlük (dict) oluşturma, anahtar/değer işlemleri
+- ✅ Küme (set) oluşturma ve küme işlemleri (birleşim, kesişim, fark)
+- ✅ Her veri yapısının ne zaman kullanılacağı
+
+### 🛠️ Alıştırmalar
+
+**Temel:**
+1. İçinde 5 farklı meyve olan bir liste oluşturun, for ile her birini yazdırın
+2. Listenin ilk elemanını, son elemanını ve 2. elemanını dilimleme ile alın
+3. `{"elma": 5, "armut": 3, "muz": 7}` sözlüğünde her meyvenin adını ve miktarını for ile yazdırın
+
+**Orta:**
+4. İki listeyi `zip()` ile birleştirip sözlük yapın: `isimler = ["Ali", "Ayşe"]`, `yaslar = [25, 30]`
+5. Bir string'deki benzersiz harfleri bulmak için set kullanın
+6. 1'den 20'ye kadar sayıların olduğu bir listeden çift sayıları filtreleyip yeni liste yapın
+
+**🎮 Mini Proje: Alışveriş Listesi Uygulaması**
+```python
+# Alışveriş listesi: ürün adı ve miktarını bir sözlükte tutalım
+alisveris = {}
+
+while True:
+    print("\n--- ALIŞVERİŞ LİSTESİ ---")
+    print("1. Ürün ekle")
+    print("2. Ürün sil")
+    print("3. Listeyi göster")
+    print("4. Çıkış")
+    secim = input("Seçiminiz (1-4): ")
+    
+    if secim == "1":
+        urun = input("Ürün adı: ")
+        miktar = int(input("Miktar: "))
+        alisveris[urun] = alisveris.get(urun, 0) + miktar
+        print(f"{urun} eklendi!")
+    elif secim == "2":
+        urun = input("Silinecek ürün: ")
+        if urun in alisveris:
+            del alisveris[urun]
+            print(f"{urun} silindi!")
+        else:
+            print("Ürün bulunamadı!")
+    elif secim == "3":
+        if alisveris:
+            print("\nAlışveriş Listeniz:")
+            for urun, miktar in alisveris.items():
+                print(f"  - {urun}: {miktar} adet")
+        else:
+            print("Listeniz boş!")
+    elif secim == "4":
+        print("Hoşça kalın!")
+        break
+    else:
+        print("Geçersiz seçim!")
+```
+
+Bu programda `dict` (sözlük), `for` döngüsü, `if/elif/else`, `input()` ve `while` kullandık. Çalıştırın ve deneyin!
+
+---
+
+## <a id="fonksiyonlar"></a>Fonksiyonlar
+
+> ⚠️ **Yeni başlayanlar için**: Sadece "Temel Fonksiyon Tanımı", "Parametreler", "Varsayılan Parametreler" ve "return" kısımlarını okuyun. *args, **kwargs ve tip ipuçları kısımlarını sonra tekrar gelmek üzere atlayın.
 
 Fonksiyonlar, tekrar kullanılabilir kod bloklarıdır. `def` anahtar kelimesiyle tanımlanır.
 
@@ -1156,6 +1435,22 @@ def topla(a, b):
     return a + b
 
 print(topla(3, 5))  # 8
+```
+
+### return (Değer Döndürme)
+
+```python
+def kare_al(sayi):
+    return sayi ** 2
+
+sonuc = kare_al(5)
+print(sonuc)  # 25
+
+# return olmazsa fonksiyon None döndürür
+def yazdir(sayi):
+    print(sayi)
+
+print(yazdir(5))  # 5 (önce print çalışır), sonra None yazılır
 ```
 
 ### Varsayılan Parametreler
@@ -1186,6 +1481,60 @@ def dogru_ekle(eleman, liste=None):
 print(dogru_ekle(1))  # [1]
 print(dogru_ekle(2))  # [2]
 ```
+
+> 🙋‍♂️ **Pratik ipucu**: Varsayılan parametre olarak liste, sözlük gibi değiştirilebilir (mutable) türler kullanmayın. `None` kullanıp fonksiyon içinde oluşturun.
+
+### Bu Kısımda (Temel Fonksiyonlar) Öğrendikleriniz
+- ✅ Fonksiyon tanımlama (`def`)
+- ✅ Parametre ve argüman kullanımı
+- ✅ `return` ile değer döndürme
+- ✅ Varsayılan parametreler
+
+### 🛠️ Alıştırmalar (Temel Fonksiyonlar)
+
+**Temel:**
+1. Adınızı parametre olarak alıp "Merhaba, [isim]!" yazdıran bir fonksiyon yazın
+2. İki sayının çarpımını döndüren `carp(a, b)` fonksiyonu yazın
+3. Bir sayının tek mi çift mi olduğunu döndüren `tek_mi(sayi)` fonksiyonu yazın (ipucu: `return sayi % 2 == 0`)
+
+**Orta:**
+4. Bir listenin en büyük elemanını döndüren `max_bul(liste)` fonksiyonu yazın (`for` döngüsü kullanın, `max()` kullanmayın)
+5. Fahrenheit'i Celsius'a çeviren `f_to_c(f)` fonksiyonu yazın (formül: `(f - 32) * 5/9`)
+
+**🎮 Mini Proje: Dönüştürücü Hesap Makinesi**
+Birim dönüştürücü yapalım. Her dönüşüm bir fonksiyon olsun:
+```python
+def km_to_mil(km):
+    return km * 0.621371
+
+def celsius_to_fahrenheit(c):
+    return c * 9/5 + 32
+
+def litre_to_galon(litre):
+    return litre * 0.264172
+
+# Kullanıcı seçim yapsın
+print("1. Km → Mil")
+print("2. °C → °F")
+print("3. Litre → Galon")
+secim = input("Seçiminiz (1-3): ")
+deger = float(input("Değer: "))
+
+if secim == "1":
+    print(f"{deger} km = {km_to_mil(deger):.2f} mil")
+elif secim == "2":
+    print(f"{deger}°C = {celsius_to_fahrenheit(deger):.1f}°F")
+elif secim == "3":
+    print(f"{deger} litre = {litre_to_galon(deger):.2f} galon")
+else:
+    print("Geçersiz seçim!")
+```
+
+---
+
+### İleri Fonksiyon Konuları
+
+> Aşağıdaki konular başlangıç seviyesinin ötesindedir. Temel fonksiyonları iyice kavradıktan sonra dönüp bakın.
 
 ### Anahtar Kelime Argümanları
 
@@ -2065,6 +2414,30 @@ def bol(a, b):
 
 # Python -O ile çalıştırılırsa assert'ler devre dışı kalır
 ```
+
+### 🛠️ Sık Karşılaşılan Hatalar ve Çözümleri
+
+| Hata | Anlamı | Çözüm |
+|------|--------|-------|
+| `SyntaxError: invalid syntax` | Yazım hatası | Satır sonunda `:` unuttunuz mu? Parantezleri kapattınız mı? |
+| `NameError: name 'x' is not defined` | Değişken tanımlı değil | Değişkeni tanımladığınızdan emin olun, yazımı kontrol edin |
+| `TypeError: can only concatenate str...` | Yanlış türde işlem | String ile sayıyı toplamaya çalışmayın: `"a" + 5` ❌ |
+| `IndexError: list index out of range` | Liste indeksi sınır dışı | Listenin uzunluğundan büyük indeks kullanmayın |
+| `KeyError: 'anahtar'` | Sözlükte anahtar yok | `.get()` kullanın veya `in` ile kontrol edin |
+| `ValueError: invalid literal for int()` | String sayıya çevrilemiyor | `int("abc")` çalışmaz, sadece `int("42")" çalışır |
+| `ZeroDivisionError: division by zero` | Sıfıra bölme | Bölmeden önce sıfır kontrolü yapın |
+| `FileNotFoundError` | Dosya bulunamadı | Dosya yolunu kontrol edin, dizinde var mı? |
+| `AttributeError: 'int' object has no attribute...` | Yanlış türde metot çağrısı | Değişkenin türünü kontrol edin (`type()`) |
+| `ImportError: No module named '...'` | Kütüphane yüklü değil | `pip install ...` ile kurun |
+
+**Hata ile karşılaştığınızda:**
+1. Hatayı okuyun — Python hata mesajları genelde neyin yanlış olduğunu söyler
+2. Hatanın hangi satırda olduğuna bakın
+3. Google'a hatayı yazıştırın (başka birinin çözmüş olma ihtimali yüksek)
+4. ChatGPT'ye hatayı sorun
+5. Pes etmeyin — her hata sizi daha iyi bir programcı yapar!
+
+---
 
 ## <a id="logging"></a>Loglama (logging):
 
@@ -2969,6 +3342,77 @@ print(d.cevre)    # 31.4159
 d.yaricap = 10     # setter
 print(d.alan)      # 314.159
 ```
+
+### Bu Bölümde Öğrendikleriniz
+- ✅ Sınıf tanımlama ve nesne oluşturma
+- ✅ `__init__` constructor
+- ✅ Self parametresi
+- ✅ Metot tanımlama
+- ✅ Sınıf değişkenleri vs örnek değişkenleri
+- ✅ `@property` ile getter/setter
+- ✅ Magic metodlar (`__str__`, `__repr__`)
+
+### 🛠️ Alıştırmalar
+
+**Temel:**
+1. `Kitap` adında bir sınıf oluşturun: özellikleri `baslik`, `yazar`, `sayfa_sayisi` olsun. `__str__` metodu ile kitap bilgilerini yazdırın.
+2. `Kitap` sınıfından 3 farklı kitap nesnesi oluşturun ve özelliklerini yazdırın.
+3. Sınıfa `kalin_mi()` metodu ekleyin: 300 sayfadan fazlaysa True dönsün.
+
+**Orta:**
+4. Sınıfa `sayfa_sayisi` için `@property` ekleyin: negatif değer girilmesin
+5. Sınıfa bir `kutuphane` sınıf değişkeni ekleyin: her yeni kitap eklendiğinde saysın
+
+**🎮 Mini Proje: Kütüphane Yönetim Sistemi**
+```python
+class Kitap:
+    def __init__(self, baslik, yazar, sayfa, adet=1):
+        self.baslik = baslik
+        self.yazar = yazar
+        self.sayfa = sayfa
+        self.adet = adet
+    
+    def __str__(self):
+        return f"{self.baslik} - {self.yazar} ({self.sayfa} sf, {self.adet} adet)"
+
+class Kutuphane:
+    def __init__(self):
+        self.kitaplar = []
+    
+    def kitap_ekle(self, kitap):
+        self.kitaplar.append(kitap)
+        print(f"📖 {kitap.baslik} eklendi!")
+    
+    def kitaplari_listele(self):
+        if not self.kitaplar:
+            print("Kütüphane boş!")
+            return
+        print(f"\nKütüphanede {len(self.kitaplar)} kitap var:")
+        for i, kitap in enumerate(self.kitaplar, 1):
+            print(f"{i}. {kitap}")
+    
+    def ara(self, kelime):
+        sonuc = [k for k in self.kitaplar 
+                 if kelime.lower() in k.baslik.lower()]
+        if sonuc:
+            print(f"Bulunan {len(sonuc)} kitap:")
+            for k in sonuc:
+                print(f"  - {k}")
+        else:
+            print("Kitap bulunamadı!")
+
+# Kullanım
+kutup = Kutuphane()
+kutup.kitap_ekle(Kitap("Savaş ve Barış", "Tolstoy", 1225))
+kutup.kitap_ekle(Kitap("1984", "George Orwell", 328, 3))
+kutup.kitap_ekle(Kitap("Hayvan Çiftliği", "George Orwell", 152, 2))
+kutup.kitaplari_listele()
+kutup.ara("barış")
+```
+
+Çalıştırın, sonra kendiniz geliştirin: kitap silme, ödünç verme, geçmiş ekleme gibi özellikler ekleyin.
+
+---
 
 ## <a id="miras-alma"></a>Miras Alma (Inheritance):
 
@@ -14407,86 +14851,429 @@ print(np.round(mesafeler, 2))
 
 ---
 
-## <a id="ileri-adimlar"></a>İleri Adımlar:
+## <a id="pandas"></a>62. Pandas ile Veri Analizi
 
-Bu rehberde öğrendiklerinizin üzerine inşa edebileceğiniz konular:
+Pandas, Python'da veri analizi ve manipülasyonu için en popüler kütüphanedir. DataFrame ve Series adlı iki temel veri yapısı sunar.
 
-### Web Geliştirme
-- **Django REST Framework (DRF)**: Django tabanlı REST API geliştirme
-- **Turbogears / Pyramid**: Alternatif web framework'leri
-- **Starlette**: FastAPI'nin temel aldığı düşük seviyeli async framework
-- **Litestar**: Yeni nesil, tip güvenli async framework
-- **HTMX**: Sunucu taraflı hypermedia için (Flask/Django ile)
+### Kurulum
 
-### Veri Bilimi ve Yapay Zeka
-- **Pandas**: Veri analizi ve manipülasyon (DataFrame, Series)
-- **Matplotlib / Seaborn / Plotly**: Veri görselleştirme
-- **Scikit-learn**: Makine öğrenmesi (sınıflandırma, regresyon, kümeleme)
-- **TensorFlow / PyTorch**: Derin öğrenme (sinir ağları, NLP, görüntü işleme)
-- **Jupyter Notebook**: İnteraktif veri analizi
-- **Streamlit**: Hızlı veri uygulamaları
+```bash
+pip install pandas
+```
 
-### Veritabanı ve ORM
-- **SQLAlchemy**: Python'un en popüler ORM'i
-- **SQLModel**: SQLAlchemy + Pydantic (FastAPI ile uyumlu)
-- **Alembic**: Veritabanı migration yönetimi
-- **Redis**: In-memory veri yapısı deposu (önbellek, session)
-- **MongoDB / PyMongo**: NoSQL veritabanı
-- **Asyncpg / Databases**: Asenkron veritabanı erişimi
+```python
+import pandas as pd
+import numpy as np
+```
 
-### Test ve Kalite
-- **pytest**: unittest'ten daha modern ve güçlü test framework'ü
-- **pytest-cov**: Kod kapsama analizi
-- **pytest-asyncio**: Asenkron test desteği
-- **hypothesis**: Özellik tabanlı test (property-based testing)
-- **tox**: Çoklu Python sürümlerinde test
-- **nox**: tox benzeri, daha esnek
-- **mypy**: Statik tip kontrolü
-- **black / ruff / isort**: Kod formatlama ve lint
+### Series (Tek Boyutlu)
 
-### DevOps ve Dağıtım
-- **Docker**: Konteynerizasyon
-- **GitHub Actions / GitLab CI**: CI/CD pipeline
-- **Gunicorn / uWSGI**: WSGI sunucuları
-- **Nginx**: Reverse proxy
-- **Kubernetes**: Orkestrasyon (büyük ölçekli dağıtım)
+```python
+s = pd.Series([10, 20, 30, 40], index=["a", "b", "c", "d"])
+print(s["b"])        # 20
+print(s.mean())      # 25.0
 
-### İleri Python Konuları
-- **Metaclasses**: Sınıf oluşturmayı özelleştirme
-- **Descriptors**: `__get__`, `__set__`, `__delete__` protokolü
-- **Abstract Base Classes (ABC)**: Soyut sınıflar
-- **Descriptors ve `__slots__`**: İleri OOP
-- **ctype / CFFI**: C ile etkileşim
-- **Cython**: Python kodunu C'ye derleme
-- **Numba**: JIT derleme ile hızlandırma
-- **async / await**: İleri asenkron desenler
-- **Design Patterns**: Singleton, Factory, Observer, Strategy vb.
+# Sözlükten Series
+notlar = pd.Series({"Matematik": 85, "Fizik": 90, "Kimya": 78})
+print(notlar)
+```
 
-### Araçlar ve Ekosistem
-- **Poetry / uv**: Modern bağımlılık yönetimi
-- **pre-commit**: Commit öncesi otomatik kontroller
-- **Pydantic**: Veri doğrulama ve ayar yönetimi
-- **Click / Typer**: Komut satırı araçları
-- **Rich / Textual**: Terminalde zengin UI
-- **Loguru**: Gelişmiş loglama
-- **Celery / Dramatiq**: Dağıtık görev kuyruğu
-- **HTTPX**: Modern, async-destekli HTTP istemcisi
+### DataFrame (İki Boyutlu)
 
-### Proje Fikirleri (Öğrenmek için)
-1. **Kişisel blog** (Flask/Django + SQLite)
-2. **Hava durumu uygulaması** (FastAPI + harici API)
-3. **Todo uygulaması** (herhangi bir framework ile)
-4. **Web scraper** (BeautifulSoup + requests)
-5. **Veri analizi aracı** (Pandas + Matplotlib)
-6. **Telegram botu** (python-telegram-bot)
-7. **API wrapper** (herhangi bir hizmetin API'si için)
-8. **CLI aracı** (Click/argparse ile dosya işleme)
-9. **Küçük oyun** (Pygame ile)
-10. **Chat uygulaması** (WebSocket + asyncio)
+DataFrame, satır ve sütunlardan oluşan tablo yapısıdır.
 
-### Kaynaklar
+```python
+# Sözlükten DataFrame
+data = {
+    "İsim":    ["Ali", "Ayşe", "Mehmet", "Zeynep"],
+    "Yaş":     [20, 21, 19, 22],
+    "Not":     [85, 92, 78, 95],
+    "Şehir":   ["İstanbul", "Ankara", "İzmir", "İstanbul"]
+}
+df = pd.DataFrame(data)
+print(df)
+```
+
+### Veri Okuma/Yazma
+
+```python
+# CSV
+df = pd.read_csv("veri.csv")
+df.to_csv("cikti.csv", index=False)
+
+# Excel (openpyxl veya xlrd gerekebilir)
+df = pd.read_excel("veri.xlsx", sheet_name="Sayfa1")
+df.to_excel("cikti.xlsx", index=False)
+
+# JSON
+df = pd.read_json("veri.json")
+df.to_json("cikti.json", orient="records")
+
+# Clipboard (panodan yapıştır)
+df = pd.read_clipboard()
+```
+
+### Veriyi Tanıma
+
+```python
+df.head(10)          # İlk 10 satır
+df.tail(5)           # Son 5 satır
+df.info()            # Sütun tipleri, null sayısı
+df.shape             # (satır, sütun)
+df.columns           # Sütun isimleri
+df.index             # Satır indeksleri
+df.describe()        # İstatistiksel özet
+df.dtypes            # Sütun tipleri
+df.nunique()         # Benzersiz değer sayıları
+df.value_counts()    # Tekrarlı sayımlar
+```
+
+### Sütun Seçme ve İşlemler
+
+```python
+# Tek sütun
+df["İsim"]
+df.İsim              # Aynı işlem (boşluksuz isimlerde)
+
+# Birden çok sütun
+df[["İsim", "Not"]]
+
+# Yeni sütun ekleme
+df["Geçti"] = df["Not"] >= 60
+df["Yaş_kat"] = df["Yaş"] * 365
+
+# Sütun silme
+df.drop("Yaş_kat", axis=1, inplace=True)
+df.drop(columns=["Yaş_kat"], inplace=True)
+
+# Sütun yeniden adlandırma
+df.rename(columns={"Not": "Puan", "İsim": "Ad"}, inplace=True)
+```
+
+### Satır Seçme (loc / iloc)
+
+```python
+# Etiket bazlı
+df.loc[0]                # 0. indeksli satır (Series döner)
+df.loc[[0, 2, 3]]        # Belirli satırlar
+df.loc[1:3]              # 1-3 arası (3 dahil)
+df.loc[df["Not"] > 80]   # Koşullu seçim
+
+# Konum bazlı
+df.iloc[0]               # İlk satır
+df.iloc[1:4]              # 1-3 arası
+df.iloc[:, 0:2]           # İlk 2 sütun
+df.iloc[[0, 3], [1, 2]]  # Belirli satır ve sütunlar
+```
+
+### Filtreleme
+
+```python
+# Boolean indexing
+df[df["Not"] >= 90]
+df[(df["Not"] >= 80) & (df["Şehir"] == "İstanbul")]
+df[df["İsim"].str.startswith("A")]
+
+# isin
+df[df["Şehir"].isin(["İstanbul", "Ankara"])]
+
+# between
+df[df["Not"].between(80, 100)]
+
+# query (string ifade ile)
+df.query("Not >= 80 and Şehir == 'İstanbul'")
+
+# Benzersiz değerler
+df["Şehir"].unique()
+df["Şehir"].nunique()   # Benzersiz sayısı
+```
+
+### Sıralama
+
+```python
+df.sort_values("Not", ascending=False)
+df.sort_values(["Şehir", "Not"], ascending=[True, False])
+df.sort_index()
+```
+
+### Eksik Veriler (NaN)
+
+```python
+df.isnull().sum()        # Her sütundaki NaN sayısı
+df.isna().sum()          # Aynı işlem
+df.notnull().sum()       # Null olmayanlar
+
+# NaN içeren satırları sil
+df.dropna()
+df.dropna(thresh=2)      # En az 2 non-NaN değeri olanları tut
+df.dropna(subset=["Not"])
+
+# NaN doldurma
+df.fillna(0)             # Sıfır ile doldur
+df.fillna(method="ffill")  # Bir önceki değerle doldur
+df.fillna(method="bfill")  # Bir sonraki değerle doldur
+df["Not"].fillna(df["Not"].mean())  # Ortalama ile doldur
+df.interpolate()         # Doğrusal enterpolasyon
+```
+
+### GroupBy (Gruplama)
+
+```python
+# Tek sütuna göre gruplama
+df.groupby("Şehir")["Not"].mean()
+df.groupby("Şehir").agg({"Not": ["mean", "max", "min", "count"]})
+
+# Çoklu grup
+df.groupby(["Şehir", "Geçti"])["Not"].mean()
+
+# apply ile özel fonksiyon
+df.groupby("Şehir")["Not"].apply(lambda x: x.max() - x.min())
+
+# Transform
+df["not_ortalama"] = df.groupby("Şehir")["Not"].transform("mean")
+
+# Filtre (group bazlı)
+df.groupby("Şehir").filter(lambda g: g["Not"].mean() > 80)
+```
+
+### Birleştirme İşlemleri
+
+```python
+# Dikey birleştirme (satır ekleme)
+df1 = pd.DataFrame({"A": [1, 2], "B": [3, 4]})
+df2 = pd.DataFrame({"A": [5, 6], "B": [7, 8]})
+pd.concat([df1, df2], ignore_index=True)
+
+# Yatay birleştirme (sütun ekleme)
+pd.concat([df1, df2], axis=1)
+
+# Merge (SQL JOIN gibi)
+ogrenciler = pd.DataFrame({
+    "id": [1, 2, 3], "ad": ["Ali", "Ayşe", "Mehmet"]
+})
+notlar = pd.DataFrame({
+    "id": [1, 2, 4], "not": [85, 90, 75]
+})
+
+pd.merge(ogrenciler, notlar, on="id", how="inner")   # Sadece eşleşenler
+pd.merge(ogrenciler, notlar, on="id", how="left")    # Tüm öğrenciler
+pd.merge(ogrenciler, notlar, on="id", how="outer")   # Tüm kayıtlar
+pd.merge(ogrenciler, notlar, on="id", how="right")   # Tüm notlar
+```
+
+### apply ve map (Dönüşümler)
+
+```python
+# map: sözlük bazlı dönüşüm
+df["şehir_kodu"] = df["Şehir"].map({"İstanbul": 34, "Ankara": 6, "İzmir": 35})
+
+# apply: sütun bazlı fonksiyon
+df["Not"] = df["Not"].apply(lambda x: min(x + 5, 100))
+
+# apply: satır bazlı
+df["ortalama"] = df.apply(lambda row: (row["Not"] + row["Yaş"]) / 2, axis=1)
+
+# applymap: tüm DataFrame (tüm değerler)
+df[["Not", "Yaş"]].applymap(lambda x: f"{x:.1f}")
+
+# replace
+df["Şehir"].replace("İstanbul", "IST")
+```
+
+### Pivot Table ve Cross Tab
+
+```python
+# Pivot tablo
+df.pivot_table(values="Not", index="Şehir", columns="Geçti", aggfunc="mean", fill_value=0)
+
+# Cross tab (çapraz tablo)
+pd.crosstab(df["Şehir"], df["Geçti"], margins=True)
+
+# Stack / Unstack
+df.stack()    # Sütunları satıra çevir
+df.unstack()  # Satırları sütuna çevir
+```
+
+### Zaman Serileri
+
+```python
+# Tarih dönüşümü
+df["tarih"] = pd.to_datetime(df["tarih"])
+
+# İndeks olarak ayarla
+df.set_index("tarih", inplace=True)
+
+# Zaman bazlı filtreleme
+df["2024-01": "2024-06"]
+
+# Yeniden örnekleme (resample)
+df.resample("M").mean()       # Aylık ortalama
+df.resample("W").sum()        # Haftalık toplam
+df.resample("D").ffill()      # Günlük doldurma
+
+# Shift (kaydırma)
+df["dünkü_değer"] = df["değer"].shift(1)
+df["değişim"] = df["değer"] - df["değer"].shift(1)
+
+# Rolling pencere
+df["7gün_ortalama"] = df["değer"].rolling(window=7).mean()
+df["kümülatif"] = df["değer"].cumsum()
+```
+
+### Temel Görselleştirme
+
+```python
+# Çizgi grafiği
+df.plot(kind="line", y="Not", title="Not Dağılımı")
+
+# Bar grafiği
+df.groupby("Şehir")["Not"].mean().plot(kind="bar")
+df.plot(kind="bar", x="İsim", y="Not")
+
+# Histogram
+df["Not"].plot(kind="hist", bins=10)
+
+# Kutu grafiği (box plot)
+df[["Not", "Yaş"]].plot(kind="box")
+
+# Scatter plot
+df.plot(kind="scatter", x="Yaş", y="Not")
+
+# Pasta grafiği
+df["Şehir"].value_counts().plot(kind="pie", autopct="%1.1f%%")
+
+# Yoğunluk grafiği
+df["Not"].plot(kind="kde")
+```
+
+### Hafıza ve Performans İpuçları
+
+```python
+# Veri tiplerini optimize et
+df["Yaş"] = df["Yaş"].astype("int8")       # int64 yerine
+df["Not"] = df["Not"].astype("float32")    # float64 yerine
+
+# Kategorik veri
+df["Şehir"] = df["Şehir"].astype("category")
+
+# Bellek kullanımı
+print(df.memory_usage(deep=True))
+
+# Büyük CSV okuma (parça parça)
+for chunk in pd.read_csv("buyuk.csv", chunksize=10000):
+    process(chunk)
+
+# query() filtrelemesi Python ifadelerinden daha hızlıdır
+# apply() yerine vektörel işlemler tercih edilir
+
+# Paralel işlem (Swifter)
+# pip install swifter
+# df["yeni"] = df["sütun"].swifter.apply(fonksiyon)
+```
+
+### Pratik Örnek - Öğrenci Analizi
+
+```python
+import pandas as pd
+import numpy as np
+
+# Örnek veri oluştur
+np.random.seed(42)
+data = {
+    "öğrenci": [f"Öğrenci_{i}" for i in range(100)],
+    "sınıf": np.random.choice(["9A", "9B", "10A", "10B", "11A"], 100),
+    "matematik": np.random.randint(30, 100, 100),
+    "fizik": np.random.randint(30, 100, 100),
+    "kimya": np.random.randint(30, 100, 100),
+    "devamsızlık": np.random.randint(0, 20, 100)
+}
+df = pd.DataFrame(data)
+
+# Ortalama hesapla
+df["ortalama"] = df[["matematik", "fizik", "kimya"]].mean(axis=1).round(1)
+
+# Geçme durumu
+df["durum"] = df["ortalama"].apply(lambda x: "Geçti" if x >= 50 else "Kaldı")
+
+# Sınıf bazlı istatistikler
+print("=== Sınıf Bazlı Ortalamalar ===")
+print(df.groupby("sınıf")["ortalama"].agg(["mean", "max", "min"]))
+
+# En başarılı 10 öğrenci
+print("\n=== İlk 10 ===")
+print(df.nlargest(10, "ortalama")[["öğrenci", "sınıf", "ortalama"]])
+
+# Devamsızlık analizi
+print("\n=== Devamsızlık > 10 ===")
+print(df[df["devamsızlık"] > 10][["öğrenci", "sınıf", "devamsızlık"]])
+
+# Sınıf geçme yüzdeleri
+print("\n=== Geçme Yüzdeleri ===")
+gecme = df.groupby("sınıf")["durum"].value_counts(normalize=True).mul(100)
+print(gecme)
+
+# Not dağılımı (histogram)
+df["ortalama"].plot(kind="hist", bins=10, title="Not Dağılımı")
+
+# CSV'ye kaydet
+df.to_csv("ogrenci_analizi.csv", index=False)
+print("\n✅ ogrenci_analizi.csv kaydedildi")
+
+# Excel'e kaydet (farklı sayfalar)
+with pd.ExcelWriter("ogrenci_raporu.xlsx") as writer:
+    df.to_excel(writer, sheet_name="Tüm Veri", index=False)
+    df.groupby("sınıf")["ortalama"].mean().to_excel(writer, sheet_name="Sınıf Ortalamaları")
+```
+
+### Özet
+
+| İşlem | Metod |
+|---|---|
+| Veri okuma | `read_csv()`, `read_excel()`, `read_json()` |
+| Veri yazma | `to_csv()`, `to_excel()`, `to_json()` |
+| İlk satırlar | `head(n)` |
+| İstatistik | `describe()` |
+| Filtreleme | `df[kosul]`, `query()` |
+| Gruplama | `groupby()`, `pivot_table()` |
+| Eksik veri | `dropna()`, `fillna()`, `interpolate()` |
+| Birleştirme | `merge()`, `concat()`, `join()` |
+| Görselleştirme | `plot()` |
+| Sıralama | `sort_values()`, `sort_index()` |
+
+Pandas, veri bilimi iş akışının temelidir. NumPy ile birlikte öğrenildiğinde veri analizi için güçlü bir araç seti oluşturur.
+
+---
+
+## 🎉 Tebrikler! Python Yolculuğunda İlerlediniz!
+
+Bu 62 bölüm boyunca Python'un temellerinden ileri konulara kadar geniş bir yelpazede bilgi edindiniz.
+**Ama asıl öğrenme şimdi başlıyor.** Kod yazarak, hata yaparak, projeler geliştirerek öğreneceksiniz.
+
+### Size En Uygun Yolu Seçin
+
+| İlgi Alanınız | Bu Konulara Bakın | İlk Projeniz |
+|---------------|-------------------|--------------|
+| **🌐 Web Geliştirme** | Flask (B39) → FastAPI (B40) → Django (B41) | Kişisel blog |
+| **📊 Veri Bilimi** | NumPy (B61) → Pandas (B62) → Matplotlib → Scikit-learn | Veri analizi aracı |
+| **🤖 Yapay Zeka** | NumPy → Pandas → Scikit-learn → TensorFlow/PyTorch | Görüntü sınıflandırma |
+| **⚙️ Otomasyon** | subprocess (B43) → Web Scraping (B38) → threading (B28) | Dosya düzenleyici |
+| **📱 Masaüstü Uygulama** | Tkinter → PyQt → GTK (PyGObject) | Hesap makinesi |
+| **🎮 Oyun Geliştirme** | Pygame → Arcade | Basit bir oyun |
+
+### Şimdi Ne Yapmalısınız?
+
+1. **Küçük başlayın**: Günde 15-30 dakika kod yazın
+2. **Proje yapın**: Yukarıdaki proje fikirlerinden birini seçin
+3. **Hata yapın**: Hatalar öğrenme sürecinin en değerli parçasıdır
+4. **Topluluğa katılın**: Python Türkiye grupları, Stack Overflow, GitHub
+5. **Açık kaynağa katkı yapın**: Küçük bir bug fix ile başlayın
+
+### Önerilen Kaynaklar
+
 - [Python Resmi Dokümantasyonu](https://docs.python.org/3/)
-- [Real Python](https://realpython.com/)
-- [PyPI](https://pypi.org/) - Python Paket İndeksi
-- [Awesome Python](https://github.com/vinta/awesome-python)
-- [Python Packaging Guide](https://packaging.python.org/)
+- [Real Python](https://realpython.com/) — İngilizce, çok kaliteli eğitimler
+- [PyPI](https://pypi.org/) — Python Paket İndeksi (500.000+ paket)
+- [Awesome Python](https://github.com/vinta/awesome-python) — Derlenmiş kaynak listesi
+- [Python Packaging Guide](https://packaging.python.org/) — Paketleme rehberi
+
+**Unutmayın**: Her Python geliştiricisi bir zamanlar sizinle aynı noktadaydı. Yazmaya devam edin! 🚀
