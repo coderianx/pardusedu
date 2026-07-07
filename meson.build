@@ -24,17 +24,34 @@ gresource = gnome.compile_resources('resources',
   c_name : 'ogrenci'
 ) 
 
+src_inc = include_directories('src')
+
 executable(
   'student-hub',
   [
     'src/main.cpp',
     'src/data_manager.cpp',
     'src/ui_setup.cpp',
-    'src/pages.cpp',
+    'src/pages/pomodoro.cpp',
+    'src/pages/badges.cpp',
+    'src/pages/flashcards.cpp',
+    'src/pages/planner.cpp',
+    'src/pages/notes.cpp',
+    'src/pages/schedule.cpp',
+    'src/pages/focus.cpp',
+    'src/pages/ai_koc.cpp',
+    'src/pages/page_utils.cpp',
+    'src/pages/linux.cpp',
+    'src/pages/ai_chat.cpp',
+    'src/pages/python.cpp',
+    'src/pages/dersler.cpp',
+    'src/pages/weekly_analysis.cpp',
+    'src/pages/parduslab_pages.cpp',
     'src/ai_client.cpp',
     'src/calc_letter.cpp',
     'src/parduslab.cpp'
   ],
+  include_directories : src_inc,
   dependencies : [
     gtkmm_dep,
     curl_dep,
