@@ -14,6 +14,73 @@
 using json = nlohmann::json;
 
 namespace {
+int koc_days_until(const std::string& date_str) {
+    if (date_str.size() < 8) return -999;
+    std::string d = date_str;
+    // Normalize separators: replace / or - with .
+    for (auto& c : d) { if (c == '/' || c == '-') c = '.'; }
+    // Expect DD.MM.YYYY or D.M.YYYY
+    int day = 0, month = 0, year = 0;
+    if (std::sscanf(d.c_str(), "%d.%d.%d", &day, &month, &year) != 3) return -999;
+    if (year < 100) year += 2000;
+    if (month < 1 || month > 12 || day < 1 || day > 31) return -999;
+    std::tm tm = {};
+    tm.tm_year = year - 1900;
+    tm.tm_mon = month - 1;
+    tm.tm_mday = day;
+    tm.tm_hour = 12;
+    auto target = std::chrono::system_clock::from_time_t(std::mktime(&tm));
+    auto now = std::chrono::system_clock::now();
+    auto diff = std::chrono::duration_cast<std::chrono::hours>(target - now).count();
+    return static_cast<int>((diff + 12) / 24);
+}
+
+std::string koc_yaklasan_str(const std::vector<Task>& tasks, const std::string& kategori) {
+    std::ostringstream s;
+    for (auto& t : tasks) {
+        if (t.category != kategori || t.done || t.due_date.empty()) continue;
+        int days = koc_days_until(t.due_date);
+        if (days < -60) continue; // only hide tasks more than 2 months old
+        s << "- " << t.title << " (" << t.due_date;
+        if (days == -999) {
+            s << ")";
+        } else if (days < 0) {
+            s << " - " << -days << " g\u00fcn gecikti!)";
+        } else if (days == 0) {
+            s << " - BUG\u00dcN!)";
+        } else if (days == 1) {
+            s << " - YARIN!)";
+        } else {
+            s << " - " << days << " g\u00fcn kald\u0131)";
+        }
+        s << "\n";
+    }
+    return s.str();
+}
+
+std::string koc_haftalik_program_str(const std::vector<ScheduleEntry>& schedule) {
+    std::map<std::string, std::vector<std::string>> gunler;
+    for (auto& e : schedule) {
+        gunler[e.day].push_back(e.course);
+    }
+    if (gunler.empty()) return "";
+    std::ostringstream s;
+    std::vector<std::string> gun_sirasi = {"Pazartesi", "Sal\u0131", "\u00c7ar\u015famba", "Per\u015fembe", "Cuma", "Cumartesi", "Pazar"};
+    for (auto& g : gun_sirasi) {
+        if (gunler.count(g) && !gunler[g].empty()) {
+            s << "- " << g << ": ";
+            bool first = true;
+            for (auto& c : gunler[g]) {
+                if (!first) s << ", ";
+                s << c;
+                first = false;
+            }
+            s << "\n";
+        }
+    }
+    return s.str();
+}
+
 std::string hafta_basi_str() {
     auto t = std::time(nullptr);
     auto* tm = std::localtime(&t);
@@ -95,6 +162,115 @@ std::string tarih_formatla(const std::string& tarih) {
 }
 }
 
+void MainWindow::koc_gorevleriguncelle() {
+    if (!koc_gorev_container) return;
+    auto* ic = dynamic_cast<Gtk::Box*>(koc_gorev_container->get_last_child());
+    if (!ic) return;
+    while (auto* child = ic->get_first_child())
+        ic->remove(*child);
+
+    auto* lbl = Gtk::make_managed<Gtk::Label>();
+    lbl->set_wrap(true);
+    lbl->set_wrap_mode(Pango::WrapMode::WORD);
+    lbl->set_halign(Gtk::Align::START);
+    lbl->set_xalign(0.0f);
+    lbl->set_max_width_chars(68);
+
+    std::string sinav_str = koc_yaklasan_str(tasks, "S\u0131nav");
+    std::string odev_str = koc_yaklasan_str(tasks, "\u00d6dev");
+    std::string program_str = koc_haftalik_program_str(schedule);
+    std::string mk;
+    if (!sinav_str.empty())
+        mk += "<span color='#e74c3c'><b>\U0001F4DD S\u0131navlar:</b></span>\n" + sinav_str + "\n";
+    if (!odev_str.empty())
+        mk += "<span color='#3498db'><b>\U0001F4DA \u00d6devler:</b></span>\n" + odev_str + "\n";
+    if (!program_str.empty())
+        mk += "<span color='#2ecc71'><b>\U0001F4C5 Ders Program\u0131:</b></span>\n" + program_str;
+    if (mk.empty())
+        mk = "<span color='#888888'>Hen\u00fcz g\u00f6rev veya ders program\u0131 eklenmemi\u015f.</span>";
+    lbl->set_markup(mk);
+    ic->append(*lbl);
+}
+
+std::string MainWindow::koc_materyal_prompt() {
+    // Gather current week's weak topics
+    std::string hafta_bas = hafta_basi_str();
+    std::map<std::string, std::pair<int,int>> zor_konular; // konu -> (yanlis, toplam)
+    for (auto& s : gunluk_sorular) {
+        if (s.tarih < hafta_bas) continue;
+        std::string anahtar = s.ders + " / " + s.konu;
+        zor_konular[anahtar].first += s.yanlis;
+        zor_konular[anahtar].second += (s.dogru + s.yanlis + s.bos);
+    }
+    // Filter to only weak topics (>= 40% wrong)
+    std::vector<std::string> zor_liste;
+    for (auto& [k, v] : zor_konular) {
+        if (v.second > 0 && (double)v.first / v.second >= 0.4) {
+            zor_liste.push_back(k + " (" + std::to_string(v.first) + "/" + std::to_string(v.second) + " yanl\u0131\u015f)");
+        }
+    }
+    std::string zor_str;
+    for (auto& z : zor_liste) zor_str += "- " + z + "\n";
+    if (zor_str.empty()) zor_str = "(Hen\u00fcz yeterli veri yok)";
+
+    std::string hedef_str = koc_hedef.hedef.empty() ? "Belirtilmemi\u015f" : koc_hedef.hedef;
+
+    std::string provider_ek;
+    if (get_provider() == AIProvider::GEMINI) {
+        provider_ek = "Google Search'in var. Her \u00f6nerdi\u011fin kaynak i\u00e7in MUTLAKA ger\u00e7ek, "
+            "t\u0131klanabilir bir URL ver. YouTube videolar\u0131 i\u00e7in https://www.youtube.com/watch?v=... "
+            "format\u0131nda link ver. Web siteleri i\u00e7in https://... format\u0131nda link ver.\n";
+    } else {
+        provider_ek = "\u0130nternetin yok ama bildi\u011fin ger\u00e7ek e\u011fitim sitelerinin URL'lerini yaz. "
+            "\u00d6rne\u011fin:\n"
+            "- https://www.youtube.com/@KanalAd\u0131 veya https://www.youtube.com/results?search_query=...\n"
+            "- https://www.eba.gov.tr, https://ogmmateryal.eba.gov.tr\n"
+            "- https://www.khanacademy.org.tr, https://tr.khanacademy.org\n"
+            "- https://www.matematiksevgilileri.org, https://www.universitego.com\n"
+            "- Herhangi bir mobil uygulama i\u00e7in Google Play Store linki\n\n"
+            "SAKIN sahte URL \u00fcretme. Ger\u00e7ekten var oldu\u011funu bildi\u011fin siteleri yaz. "
+            "Emin de\u011filsen URL yerine arama anahtar\u0131 yaz.\n";
+    }
+
+    return
+        "Sen bir e\u011fitim ko\u00e7usun. Kullan\u0131c\u0131n\u0131n hedefi: " + hedef_str + "\n\n"
+        "Kullan\u0131c\u0131n\u0131n bu hafta en \u00e7ok zorland\u0131\u011f\u0131 konular:\n" + zor_str + "\n"
+        "Bu konular i\u00e7in \u00f6\u011frenciye \u00f6nerebilece\u011fin \u00fccretsiz kaynaklar\u0131 (YouTube kanallar\u0131/videolar\u0131, "
+        "web siteleri, uygulamalar) T\u00fcrk\u00e7e olarak \u00f6ner.\n\n"
+        + provider_ek +
+        "Her konu i\u00e7in \u015fu formatta yaz:\n"
+        "**Konu: ...**\n"
+        "- YouTube: (link veya kanal ad\u0131)\n"
+        "- Web: (link veya site ad\u0131)\n"
+        "- Mobil uygulama: (varsa ad\u0131)\n\n"
+        "Sadece T\u00fcrkiye'de eri\u015filebilir, \u00fccretsiz veya \u00fccretsiz s\u00fcr\u00fcm\u00fc olan kaynaklar\u0131 \u00f6ner. "
+        "\u00d6zellikle YouTube'da T\u00fcrk\u00e7e i\u00e7erik \u00fcreten kanallar\u0131 \u00f6nceliklendir. "
+        "Motive edici ve samimi bir dille yaz.";
+}
+
+void MainWindow::koc_materyal_oner() {
+    std::string prompt = koc_materyal_prompt();
+    koc_materyal_bekliyor = true;
+    async_call_ai(prompt, "", [this](std::string response) {
+        {
+            std::lock_guard<std::mutex> lock(koc_materyal_mutex);
+            pending_koc_materyal_response = response;
+        }
+        koc_materyal_dispatcher.emit();
+    });
+}
+
+void MainWindow::on_koc_materyal_response() {
+    std::lock_guard<std::mutex> lock(koc_materyal_mutex);
+    if (pending_koc_materyal_response.empty()) return;
+    std::string text = pending_koc_materyal_response;
+    koc_materyal_bekliyor = false;
+    pending_koc_materyal_response.clear();
+    if (koc_materyal_lbl) {
+        koc_materyal_lbl->set_markup(md_to_pango(text));
+    }
+}
+
 void MainWindow::koc_soru_ekle(const std::string& ders, const std::string& konu, int d, int y, int b) {
     GunlukSoru gs;
     gs.tarih = today_str_koc();
@@ -139,23 +315,39 @@ std::string MainWindow::koc_soru_logu_olustur() {
 std::string MainWindow::koc_rapor_prompt() {
     std::string soru_logu = koc_soru_logu_olustur();
     std::string ek = koc_hedef.opsiyonel_alan.empty()
-        ? "" : "\nKullanıcının ek notu: " + koc_hedef.opsiyonel_alan + "\n";
+        ? "" : "\nKullan\u0131c\u0131n\u0131n ek notu: " + koc_hedef.opsiyonel_alan + "\n";
+    std::string sinavlar = koc_yaklasan_str(tasks, "S\u0131nav");
+    std::string odevler = koc_yaklasan_str(tasks, "\u00d6dev");
+    std::string program = koc_haftalik_program_str(schedule);
+    std::string gorev_bilgisi;
+    if (!sinavlar.empty() || !odevler.empty() || !program.empty()) {
+        gorev_bilgisi = "\n=== KULLANICININ MEVCUT DURUMU ===\n";
+        if (!sinavlar.empty())
+            gorev_bilgisi += "\nYakla\u015fan S\u0131navlar:\n" + sinavlar;
+        if (!odevler.empty())
+            gorev_bilgisi += "\nYakla\u015fan \u00d6devler:\n" + odevler;
+        if (!program.empty())
+            gorev_bilgisi += "\nHaftal\u0131k Ders Program\u0131:\n" + program;
+    }
     return
-        "Sen bir eğitim koçusun. Kullanıcının hedefi: " + koc_hedef.hedef + "\n\n"
-        "Son 7 günün soru çözüm verileri (D: doğru, Y: yanlış, B: boş):\n" + soru_logu + "\n" + ek + "\n"
-        "Lütfen şu başlıklarda haftalık rapor ver:\n"
-        "1. **Genel Değerlendirme** - Bu hafta genel durum (doğru, yanlış ve boş sayılarını mutlaka belirt)\n"
-        "2. **En Çok Zorlanılan Konular** - En yüksek yanlış oranına sahip konular\n"
-        "3. **Çalışma İstatistiği** - Toplam soru, doğru/yanlış/boş dağılımı (boş sayısını da ekle)\n"
-        "4. **Hedefe Yönelik Öneriler** - Hedefe ulaşmak için neler yapılmalı\n"
-        "5. **Önümüzdeki Hafta İçin Tavsiyeler** - Hangi konulara ağırlık verilmeli\n\n"
-        "Raporu motive edici, samimi bir dille yaz. Kısa ve öz ol.";
+        "Sen bir e\u011fitim ko\u00e7usun. Kullan\u0131c\u0131n\u0131n hedefi: " + koc_hedef.hedef + "\n\n"
+        "Son 7 g\u00fcn\u00fcn soru \u00e7\u00f6z\u00fcm verileri (D: do\u011fru, Y: yanl\u0131\u015f, B: bo\u015f):\n" + soru_logu + "\n" + ek + "\n"
+        + gorev_bilgisi + "\n"
+        "L\u00fctfen \u015fu ba\u015fl\u0131klarda haftal\u0131k rapor ver:\n"
+        "1. **Genel De\u011ferlendirme** - Bu hafta genel durum (do\u011fru, yanl\u0131\u015f ve bo\u015f say\u0131lar\u0131n\u0131 mutlaka belirt)\n"
+        "2. **En \u00c7ok Zorlan\u0131lan Konular** - En y\u00fcksek yanl\u0131\u015f oran\u0131na sahip konular\n"
+        "3. **\u00c7al\u0131\u015fma \u0130statisti\u011fi** - Toplam soru, do\u011fru/yanl\u0131\u015f/bo\u015f da\u011f\u0131l\u0131m\u0131 (bo\u015f say\u0131s\u0131n\u0131 da ekle)\n"
+        "4. **Hedefe Y\u00f6nelik \u00d6neriler** - Hedefe ula\u015fmak i\u00e7in neler yap\u0131lmal\u0131\n"
+        "5. **\u00d6n\u00fcm\u00fczdeki Hafta \u0130\u00e7in Tavsiyeler** - Hangi konulara a\u011f\u0131rl\u0131k verilmeli\n\n"
+        "Yakla\u015fan s\u0131nav ve \u00f6devleri de g\u00f6z \u00f6n\u00fcnde bulundur. "
+        "\u00d6rne\u011fin yak\u0131nda s\u0131nav\u0131 olan derslere \u00e7al\u0131\u015fmaya daha \u00e7ok vakit ay\u0131rmas\u0131n\u0131 \u00f6ner.\n"
+        "Raporu motive edici, samimi bir dille yaz. K\u0131sa ve \u00f6z ol.";
 }
 
 void MainWindow::koc_haftalik_rapor() {
     std::string prompt = koc_rapor_prompt();
     koc_rapor_bekliyor = true;
-    async_call_ai_json(prompt, [this](std::string response) {
+    async_call_ai(prompt, "", [this](std::string response) {
         {
             std::lock_guard<std::mutex> lock(koc_ai_mutex);
             pending_koc_ai_response = response;
@@ -184,34 +376,49 @@ std::string MainWindow::koc_plan_prompt() {
     std::string ek;
     std::string gunluk_ders_talimati;
     if (!koc_hedef.opsiyonel_alan.empty()) {
-        ek = "\nKullanıcının ek notu: " + koc_hedef.opsiyonel_alan + "\n";
+        ek = "\nKullan\u0131c\u0131n\u0131n ek notu: " + koc_hedef.opsiyonel_alan + "\n";
         gunluk_ders_talimati =
-            "Kullanıcının yukarıdaki ek notuna göre günlük ders sayısını belirle. "
-            "Örneğin \"günde 3 ders\" yazıyorsa her gün için 3 farklı ders/konu ekle.\n";
+            "Kullan\u0131c\u0131n\u0131n yukar\u0131daki ek notuna g\u00f6re g\u00fcnl\u00fck ders say\u0131s\u0131n\u0131 belirle. "
+            "\u00d6rne\u011fin \"g\u00fcnde 3 ders\" yaz\u0131yorsa her g\u00fcn i\u00e7in 3 farkl\u0131 ders/konu ekle.\n";
     } else {
         gunluk_ders_talimati =
-            "Her gün için en az 1-2 ders/konu ekle.\n";
+            "Her g\u00fcn i\u00e7in en az 1-2 ders/konu ekle.\n";
     }
+    
+    std::string sinavlar = koc_yaklasan_str(tasks, "S\u0131nav");
+    std::string odevler = koc_yaklasan_str(tasks, "\u00d6dev");
+    std::string gorev_bilgisi;
+    if (!sinavlar.empty() || !odevler.empty()) {
+        gorev_bilgisi = "\n=== KULLANICININ MEVCUT G\u00d6REVLER\u0130 ===\n";
+        if (!sinavlar.empty())
+            gorev_bilgisi += "\nYakla\u015fan S\u0131navlar:\n" + sinavlar;
+        if (!odevler.empty())
+            gorev_bilgisi += "\nYakla\u015fan \u00d6devler:\n" + odevler;
+    }
+    
     return
-        "Sen bir eğitim koçusun. Kullanıcının hedefi: " + koc_hedef.hedef + "\n\n"
-        "Bu haftanın soru çözüm verileri:\n" + soru_logu + "\n" + ek + "\n"
-        "Bu verilere göre SADECE JSON çıktısı ver, başka hiçbir şey yazma.\n"
-        "JSON formatı:\n"
+        "Sen bir e\u011fitim ko\u00e7usun. Kullan\u0131c\u0131n\u0131n hedefi: " + koc_hedef.hedef + "\n\n"
+        "Bu haftan\u0131n soru \u00e7\u00f6z\u00fcm verileri:\n" + soru_logu + "\n" + ek + "\n"
+        + gorev_bilgisi + "\n"
+        "Bu verilere g\u00f6re SADECE JSON \u00e7\u0131kt\u0131s\u0131 ver, ba\u015fka hi\u00e7bir \u015fey yazma.\n"
+        "JSON format\u0131 (SADECE JSON, a\u00e7\u0131klama yazma):\n"
         "{\n"
         "  \"oncelikli_konular\": [\n"
-        "    {\"ders\": \"...\", \"konu\": \"...\", \"yanlis\": N, \"seviye\": \"yüksek/orta/düşük\"}\n"
+        "    {\"ders\": \"Matematik\", \"konu\": \"\u00dcsl\u00fc Say\u0131lar\", \"yanlis\": 12, \"seviye\": \"y\u00fcksek\"}\n"
         "  ],\n"
         "  \"haftalik_program\": [\n"
-        "    {\"gun\": \"Pazartesi\", \"ders\": \"Matematik\", \"konu\": \"...\", \"soru_sayisi\": 20},\n"
-        "    {\"gun\": \"Pazartesi\", \"ders\": \"Fen\", \"konu\": \"...\", \"soru_sayisi\": 15},\n"
-        "    {\"gun\": \"Sal\u0131\", \"ders\": \"T\u00fcrk\u00e7e\", \"konu\": \"...\", \"soru_sayisi\": 30}\n"
+        "    {\"gun\": \"Pazartesi\", \"ders\": \"Matematik\", \"konu\": \"\u00dcsl\u00fc Say\u0131lar\", \"soru_sayisi\": 20},\n"
+        "    {\"gun\": \"Sal\u0131\", \"ders\": \"Fen\", \"konu\": \"H\u00fccre B\u00f6l\u00fcnmesi\", \"soru_sayisi\": 15}\n"
         "  ]\n"
         "}\n\n"
-        "Gün adları: Pazartesi, Salı, Çarşamba, Perşembe, Cuma, Cumartesi, Pazar\n"
-        "oncelikli_konular: en çok yanlış yapılan konuları yanlış sayısına göre sırala (en fazla 5).\n"
-        "haftalik_program: Pazartesi'den Pazar'a kadar tüm 7 günü kapsamalı. "
+        "G\u00fcn adlar\u0131: Pazartesi, Sal\u0131, \u00c7ar\u015famba, Per\u015fembe, Cuma, Cumartesi, Pazar\n"
+        "oncelikli_konular: en \u00e7ok yanl\u0131\u015f yap\u0131lan konular\u0131 yanl\u0131\u015f say\u0131s\u0131na g\u00f6re s\u0131rala (en fazla 5).\n"
+        "haftalik_program: Pazartesi'den Pazar'a kadar t\u00fcm 7 g\u00fcn\u00fc kapsamal\u0131. "
         + gunluk_ders_talimati +
-        "Kullanıcının zorlandığı konulara daha çok yer ver.";
+        "Kullan\u0131c\u0131n\u0131n zorland\u0131\u011f\u0131 konulara daha \u00e7ok yer ver.\n"
+        "\u00d6NEML\u0130: Yakla\u015fan s\u0131navlar\u0131 dikkate al. "
+        "\u00d6rne\u011fin 3 g\u00fcn sonra Matematik s\u0131nav\u0131 varsa Matematik'e daha fazla yer ver. "
+        "S\u0131nav\u0131 olmayan g\u00fcnlerde zorlan\u0131lan konulara \u00e7al\u0131\u015f.";
 }
 
 void MainWindow::koc_plan_olustur() {
@@ -231,17 +438,12 @@ void MainWindow::on_koc_plan_response() {
     if (pending_koc_plan_response.empty()) return;
     std::string text = pending_koc_plan_response;
 
-    // Strip markdown code fences if present
+    // Find JSON object in response (first { to last })
     {
-        size_t start = text.find("```");
-        if (start != std::string::npos) {
-            size_t end = text.rfind("```");
-            if (end > start) {
-                start = text.find('\n', start);
-                if (start != std::string::npos) {
-                    text = text.substr(start + 1, end - start - 1);
-                }
-            }
+        size_t start = text.find('{');
+        size_t end = text.rfind('}');
+        if (start != std::string::npos && end != std::string::npos && end > start) {
+            text = text.substr(start, end - start + 1);
         }
     }
     // Trim whitespace
@@ -288,7 +490,11 @@ Gtk::Widget* MainWindow::koc_plan_tablosu() {
         j = json::parse(koc_plan_json);
     } catch (const json::parse_error&) {
         auto* lbl = Gtk::make_managed<Gtk::Label>("");
-        lbl->set_markup("<span foreground='#e74c3c'>Plan ayr\u0131\u015ft\u0131r\u0131lamad\u0131. AI yan\u0131t\u0131 ge\u00e7ersiz JSON i\u00e7eriyor.</span>");
+        std::string snippet = koc_plan_json.substr(0, 300);
+        lbl->set_markup("<span foreground='#e74c3c'>Plan ayr\u0131\u015ft\u0131r\u0131lamad\u0131.</span>\n"
+            "<span size='small' foreground='#888888'>" + Glib::Markup::escape_text(snippet) + "</span>");
+        lbl->set_wrap(true);
+        lbl->set_max_width_chars(68);
         lbl->set_halign(Gtk::Align::START);
         vbox->append(*lbl);
         return vbox;
@@ -320,7 +526,8 @@ Gtk::Widget* MainWindow::koc_plan_tablosu() {
                 std::to_string(yanlis) + " yanl\u0131\u015f"
             );
             row->set_halign(Gtk::Align::START);
-            row->set_ellipsize(Pango::EllipsizeMode::END);
+            row->set_wrap(true);
+            row->set_max_width_chars(60);
             vbox->append(*row);
         }
     }
@@ -366,16 +573,18 @@ Gtk::Widget* MainWindow::koc_plan_tablosu() {
 
             auto* l_gun = Gtk::make_managed<Gtk::Label>(gun);
             l_gun->set_halign(Gtk::Align::START);
+            l_gun->set_max_width_chars(12);
             auto* l_ders = Gtk::make_managed<Gtk::Label>(ders);
             l_ders->set_halign(Gtk::Align::START);
-            l_ders->set_ellipsize(Pango::EllipsizeMode::END);
-            l_ders->set_max_width_chars(16);
+            l_ders->set_wrap(true);
+            l_ders->set_max_width_chars(14);
             auto* l_konu = Gtk::make_managed<Gtk::Label>(konu);
             l_konu->set_halign(Gtk::Align::START);
-            l_konu->set_ellipsize(Pango::EllipsizeMode::END);
-            l_konu->set_max_width_chars(24);
+            l_konu->set_wrap(true);
+            l_konu->set_max_width_chars(20);
             auto* l_soru = Gtk::make_managed<Gtk::Label>(std::to_string(soru));
                 l_soru->set_halign(Gtk::Align::START);
+                l_soru->set_max_width_chars(4);
 
                 grid->attach(*l_gun, 0, row_idx, 1, 1);
                 grid->attach(*l_ders, 1, row_idx, 1, 1);
@@ -483,6 +692,8 @@ void MainWindow::koc_hata_analizini_doldur(Gtk::Box* liste) {
             "\u00b7  Toplam " + std::to_string(toplam_d + toplam_y + toplam_b) + " soru"
         );
         ozet->set_halign(Gtk::Align::START);
+        ozet->set_wrap(true);
+        ozet->set_max_width_chars(60);
         ozet->set_margin_bottom(6);
         liste->append(*ozet);
     }
@@ -505,7 +716,8 @@ void MainWindow::koc_hata_analizini_doldur(Gtk::Box* liste) {
             satir += "<span foreground='#888888'>" + std::to_string(v.bos) + " bo\u015f</span>";
         row->set_markup(satir);
         row->set_halign(Gtk::Align::START);
-        row->set_ellipsize(Pango::EllipsizeMode::END);
+        row->set_wrap(true);
+        row->set_max_width_chars(60);
         liste->append(*row);
     }
 
@@ -600,12 +812,15 @@ void MainWindow::setup_ai_koc() {
     if (!koc_dispatchers_connected) {
         koc_ai_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_koc_ai_response));
         koc_plan_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_koc_plan_response));
+        koc_materyal_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_koc_materyal_response));
         koc_dispatchers_connected = true;
     }
 
     koc_rapor_lbl = nullptr;
     koc_plan_container = nullptr;
     koc_plan_btn = nullptr;
+    koc_materyal_lbl = nullptr;
+    koc_materyal_bekliyor = false;
 
     auto* sw = Gtk::make_managed<Gtk::ScrolledWindow>();
     sw->set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
@@ -665,6 +880,32 @@ void MainWindow::setup_ai_koc() {
     hedef_ic->append(*btn_hedef);
     hedef_card->set_child(*hedef_ic);
     box->append(*hedef_card);
+
+    // ---- YAKLAŞAN SINAVLAR & ÖDEVLER KARTI ----
+    auto* gorev_card = Gtk::make_managed<Gtk::Frame>();
+    gorev_card->add_css_class("card");
+
+    koc_gorev_container = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 10);
+    koc_gorev_container->set_margin_start(20);
+    koc_gorev_container->set_margin_end(20);
+    koc_gorev_container->set_margin_top(20);
+    koc_gorev_container->set_margin_bottom(20);
+
+    {
+        auto* baslik = Gtk::make_managed<Gtk::Label>("");
+        baslik->set_markup("<b>\u00d6\u011frencinin Durumu</b>");
+        baslik->set_halign(Gtk::Align::START);
+        baslik->add_css_class("koc-section-title");
+        koc_gorev_container->append(*baslik);
+    }
+
+    auto* gorev_ic = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 4);
+    gorev_ic->set_hexpand(true);
+    koc_gorev_container->append(*gorev_ic);
+    koc_gorevleriguncelle();
+
+    gorev_card->set_child(*koc_gorev_container);
+    box->append(*gorev_card);
 
     auto* soru_card = Gtk::make_managed<Gtk::Frame>();
     soru_card->add_css_class("card");
@@ -874,6 +1115,56 @@ void MainWindow::setup_ai_koc() {
     plan_kart->set_child(*plan_vbox);
     box->append(*plan_kart);
 
+    // ---- MATERYAL ÖNERİ KARTI ----
+    auto* materyal_kart = Gtk::make_managed<Gtk::Frame>();
+    materyal_kart->add_css_class("card");
+
+    auto* materyal_vbox = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 12);
+    materyal_vbox->set_margin_start(20);
+    materyal_vbox->set_margin_end(20);
+    materyal_vbox->set_margin_top(20);
+    materyal_vbox->set_margin_bottom(20);
+
+    auto* materyal_baslik = Gtk::make_managed<Gtk::Label>("");
+    materyal_baslik->set_markup("<b>\U0001F4F9 Materyal \u00d6nerileri</b>");
+    materyal_baslik->set_halign(Gtk::Align::START);
+    materyal_vbox->append(*materyal_baslik);
+
+    auto* materyal_lbl = Gtk::make_managed<Gtk::Label>();
+    materyal_lbl->set_wrap(true);
+    materyal_lbl->set_wrap_mode(Pango::WrapMode::WORD);
+    materyal_lbl->set_max_width_chars(80);
+    materyal_lbl->set_halign(Gtk::Align::START);
+    materyal_lbl->set_selectable(true);
+    materyal_lbl->set_text(
+        "Zorland\u0131\u011f\u0131n konular i\u00e7in AI sana \u00f6zel kaynak \u00f6nersin.\n"
+        "YouTube kanallar\u0131, web siteleri, mobil uygulamalar...");
+    koc_materyal_lbl = materyal_lbl;
+    materyal_vbox->append(*materyal_lbl);
+
+    auto* btn_materyal = Gtk::make_managed<Gtk::Button>("\u00d6neri Al");
+    btn_materyal->add_css_class("koc-btn-rapor");
+    btn_materyal->signal_clicked().connect([this, materyal_lbl]() {
+        if (koc_materyal_bekliyor) return;
+        materyal_lbl->set_text("Kaynaklar ara\u015ft\u0131r\u0131l\u0131yor...");
+        koc_materyal_lbl = materyal_lbl;
+        koc_materyal_oner();
+    });
+    materyal_vbox->append(*btn_materyal);
+
+    materyal_kart->set_child(*materyal_vbox);
+    box->append(*materyal_kart);
+
     sw->set_child(*box);
     stack.add(*sw, "ai_koc");
+
+    static bool gorev_signal_connected = false;
+    if (!gorev_signal_connected) {
+        gorev_signal_connected = true;
+        stack.property_visible_child().signal_changed().connect([this]() {
+            if (stack.get_visible_child_name() == "ai_koc") {
+                koc_gorevleriguncelle();
+            }
+        });
+    }
 }

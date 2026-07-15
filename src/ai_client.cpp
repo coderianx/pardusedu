@@ -803,6 +803,7 @@ std::string call_ai(
                     {"topP", 0.9},
                     {"maxOutputTokens", max_tokens}
                 }},
+                {"tools", json::array({json{{"google_search", json::object()}}})}
             };
         }
         else
@@ -927,7 +928,7 @@ std::string call_ai_json(const std::string& prompt) {
     messages.push_back({{"role", "user"}, {"content", prompt}});
 
     json body;
-    int json_max_tokens = (global_provider == AIProvider::OPENROUTER) ? 256 : 1024;
+    int json_max_tokens = (global_provider == AIProvider::OPENROUTER) ? 2048 : 4096;
     if (is_gemini) {
         body = {
             {"contents", json::array({json{{"parts", json::array({json{{"text", prompt}}})}}})},

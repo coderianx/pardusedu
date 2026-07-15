@@ -491,7 +491,14 @@ private:
     bool koc_plan_bekliyor = false;
     std::string koc_plan_json;
     Gtk::Box* koc_plan_container = nullptr;
+    Gtk::Box* koc_gorev_container = nullptr;
     bool koc_dispatchers_connected = false;
+
+    Glib::Dispatcher koc_materyal_dispatcher;
+    std::string pending_koc_materyal_response;
+    std::mutex koc_materyal_mutex;
+    bool koc_materyal_bekliyor = false;
+    Gtk::Label* koc_materyal_lbl = nullptr;
 
     void setup_dersler();
     void dersler_show_grades();
@@ -541,6 +548,10 @@ private:
     void koc_plan_olustur();
     std::string koc_plan_prompt();
     void on_koc_plan_response();
+    void koc_gorevleriguncelle();
+    void koc_materyal_oner();
+    std::string koc_materyal_prompt();
+    void on_koc_materyal_response();
     Gtk::Widget* koc_plan_tablosu();
     void koc_bugunku_listeyi_guncelle(Gtk::Box* liste);
     void koc_hata_analizini_doldur(Gtk::Box* liste);

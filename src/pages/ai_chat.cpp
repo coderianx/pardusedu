@@ -496,7 +496,7 @@ void MainWindow::setup_ai_chat() {
     ai_input.signal_activate().connect(send_message);
     btn_ai_send.signal_clicked().connect(send_message);
 
-    // ─── Sayfayı birleştir ────────────────────────────────────────
+    // Sayfayı birleştir 
     page->append(*header_box);
     page->append(ai_scroll);
     page->append(ai_image_preview_box);
