@@ -1,6 +1,46 @@
 {
   "challenges": [
     {
+      "id": "merhaba_echo",
+      "title": "Merhaba Linux",
+      "description": "echo komutunu kullanarak 'merhaba' yazdır.",
+      "hint": "echo 'merhaba' yazmayı dene",
+      "command_to_test": "echo 'merhaba'",
+      "expected_output": "merhaba",
+      "badge_id": "linux_merhaba",
+      "xp": 10
+    },
+    {
+      "id": "kullanici_bulma",
+      "title": "Kimim Ben?",
+      "description": "whoami komutu ile hangi kullanıcı olduğunu öğren.",
+      "hint": "whoami komutunu çalıştır",
+      "command_to_test": "whoami",
+      "expected_output": "parduslab",
+      "badge_id": "kendini_tani",
+      "xp": 15
+    },
+    {
+      "id": "sistem_adi",
+      "title": "Sistem Adı",
+      "description": "uname komutu ile işletim sistemi adını öğren.",
+      "hint": "uname yaz ve Enter'a bas",
+      "command_to_test": "uname",
+      "expected_output": "Linux",
+      "badge_id": "sistem_ogren",
+      "xp": 10
+    },
+    {
+      "id": "klasor_listeleme",
+      "title": "Klasörleri Gör",
+      "description": "ls komutu ile /home dizinindeki kullanıcı klasörlerini listele.",
+      "hint": "ls /home yazmayı dene",
+      "command_to_test": "ls /home",
+      "expected_output": "parduslab",
+      "badge_id": "kesifci",
+      "xp": 20
+    },
+    {
       "id": "find_gizli_dosya",
       "title": "Gizli Dosyayı Bul",
       "description": "Container içinde /home dizininde bir gizli dosya var. Onu bul ve içeriğini oku.",

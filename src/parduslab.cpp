@@ -70,6 +70,7 @@ std::string PardusLab::start_container(const std::string& image) {
         f << "fi\n";
         f << "EOF\n";
         f << "chown parduslab:parduslab /home/parduslab/.bashrc\n";
+        f << "echo 'tebrikler_buldun' > /home/.gizli\n";
         f << "touch /tmp/setup_done\n";
         f.close();
     }

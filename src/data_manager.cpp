@@ -307,6 +307,15 @@ void MainWindow::setup_data() {
         }
     }
 
+    auto chf = dir + "/challenges.dat";
+    if (fs::exists(chf)) {
+        std::ifstream f(chf);
+        std::string line;
+        while (std::getline(f, line)) {
+            if (!line.empty()) completed_challenges.insert(line);
+        }
+    }
+
     auto sif = dir + "/sidebar_icons.dat";
     if (fs::exists(sif)) {
         std::ifstream f(sif);
@@ -487,6 +496,7 @@ void MainWindow::save_data() {
     { std::ofstream f(dir + "/model_ollama.dat"); f << ai_model_ollama << "\n"; }
     { std::ofstream f(dir + "/ollama_url.dat"); f << ai_ollama_url << "\n"; }
     { std::ofstream f(dir + "/sidebar_icons.dat"); f << (sidebar_icons ? "1" : "0") << "\n"; }
+    { std::ofstream f(dir + "/challenges.dat"); for (auto& id : completed_challenges) f << id << "\n"; }
     { std::ofstream f(dir + "/weekly.dat"); f << weekly_pomo_sessions << "|" << weekly_pomo_minutes << "|" << current_week_start << "\n"; }
     { std::ofstream f(dir + "/ai_koc.dat");
         f << koc_escape(koc_hedef.hedef) << "|" << koc_hedef.olusturma_tarihi << "|"

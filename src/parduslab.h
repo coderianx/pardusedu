@@ -58,6 +58,7 @@ public:
 
     void cleanup_all();
 
+    const std::vector<Challenge>& get_challenges() const { return challenges; }
     std::string exec_podman(const std::string& args);
 
 private:

@@ -17,31 +17,32 @@ void MainWindow::setup_parduslab() {
     parduslab = new PardusLab();
     lab_ready = false;
 
+    // Challenges'i yükle (podman gerektirmez, hızlı)
+    GBytes* bytes = g_resources_lookup_data(
+        "/org/ogrenci/merkezi/assets/parduslab/challenges.json",
+        G_RESOURCE_LOOKUP_FLAGS_NONE, nullptr);
+    if (bytes) {
+        gsize size = 0;
+        const char* data = static_cast<const char*>(g_bytes_get_data(bytes, &size));
+        std::string tmp = "/tmp/parduslab_challenges.json";
+        std::ofstream f(tmp);
+        if (f.is_open()) {
+            f.write(data, size);
+            f.close();
+            parduslab->load_challenges(tmp);
+        }
+        g_bytes_unref(bytes);
+    }
+
+    // Podman kontrolü idle'da (UI bloklamasın)
     Glib::signal_idle().connect_once([this]() {
         if (!parduslab->podman_available()) {
             if (lab_warning)
                 lab_warning->set_text("Podman kurulu deil. PardusLab iin: sudo apt install podman");
+            lab_ready = false;
             return;
         }
         lab_ready = true;
-        parduslab->cleanup_all();
-
-        GBytes* bytes = g_resources_lookup_data(
-            "/org/ogrenci/merkezi/assets/parduslab/challenges.json",
-            G_RESOURCE_LOOKUP_FLAGS_NONE, nullptr);
-        if (bytes) {
-            gsize size = 0;
-            const char* data = static_cast<const char*>(g_bytes_get_data(bytes, &size));
-            std::string tmp = "/tmp/parduslab_challenges.json";
-            std::ofstream f(tmp);
-            if (f.is_open()) {
-                f.write(data, size);
-                f.close();
-                parduslab->load_challenges(tmp);
-            }
-            g_bytes_unref(bytes);
-        }
-
         if (lab_warning)
             lab_warning->set_visible(false);
     });

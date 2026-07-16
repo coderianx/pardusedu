@@ -276,6 +276,8 @@ private:
     std::unordered_set<std::string> pages_built{"dashboard"};
     void ensure_page_built(const std::string& name);
 
+    std::unordered_set<std::string> completed_challenges;
+
     std::string lab_cwd = "~";
     std::string lab_hostname = "parduslab";
     std::string lab_username = "root";

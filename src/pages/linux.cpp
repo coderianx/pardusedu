@@ -36,6 +36,155 @@ void MainWindow::setup_linux() {
     }
     lab_warning->set_margin_bottom(8);
 
+    // --- Challenge Section ---
+    Gtk::Label* xp_lbl = nullptr;
+    if (parduslab) {
+        auto& challenges = parduslab->get_challenges();
+        if (!challenges.empty()) {
+            auto* chall_header = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 0);
+            chall_header->set_margin_top(16);
+            chall_header->set_margin_bottom(4);
+
+            auto* chall_title = Gtk::make_managed<Gtk::Label>("Meydan Okumalar");
+            chall_title->add_css_class("page-title");
+            chall_title->set_halign(Gtk::Align::START);
+            chall_title->set_hexpand(true);
+
+            {
+                int total_xp = 0;
+                for (auto& ch : challenges) {
+                    if (completed_challenges.count(ch.id))
+                        total_xp += ch.xp;
+                }
+                xp_lbl = Gtk::make_managed<Gtk::Label>("");
+                xp_lbl->set_markup("<b>Toplam XP: " + std::to_string(total_xp) + "</b>");
+                xp_lbl->set_halign(Gtk::Align::END);
+            }
+
+            chall_header->append(*chall_title);
+            chall_header->append(*xp_lbl);
+            linux_commands.append(*chall_header);
+
+            for (auto& ch : challenges) {
+                auto* card = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 4);
+                card->add_css_class("cmd-card");
+                card->set_margin_bottom(8);
+
+                auto* name_lbl = Gtk::make_managed<Gtk::Label>("");
+                name_lbl->set_markup("<b>" + ch.title + "</b>  <span foreground='#888'>[" + std::to_string(ch.xp) + " XP]</span>");
+                name_lbl->set_halign(Gtk::Align::START);
+                name_lbl->add_css_class("cmd-name");
+
+                auto* desc_lbl = Gtk::make_managed<Gtk::Label>(ch.description);
+                desc_lbl->set_halign(Gtk::Align::START);
+                desc_lbl->set_wrap(true);
+                desc_lbl->set_margin_top(4);
+
+                auto* hint_rev = Gtk::make_managed<Gtk::Revealer>();
+                hint_rev->set_transition_type(Gtk::RevealerTransitionType::SLIDE_DOWN);
+                auto* hint_lbl = Gtk::make_managed<Gtk::Label>("");
+                hint_lbl->set_markup("<i>İpucu: " + ch.hint + "</i>");
+                hint_lbl->set_halign(Gtk::Align::START);
+                hint_lbl->set_wrap(true);
+                hint_lbl->set_margin_top(4);
+                hint_rev->set_child(*hint_lbl);
+
+                auto* status_lbl = Gtk::make_managed<Gtk::Label>("");
+                status_lbl->set_halign(Gtk::Align::START);
+                status_lbl->set_margin_top(4);
+                bool done = completed_challenges.count(ch.id);
+                if (done) {
+                    status_lbl->set_markup("<span foreground='green'>✓ Tamamlandı</span>");
+                }
+
+                auto* row = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
+                row->set_margin_top(6);
+
+                auto* btn_hint = Gtk::make_managed<Gtk::Button>("İpucu Göster");
+                btn_hint->add_css_class("lab-btn-try");
+                btn_hint->signal_clicked().connect([hint_rev, btn_hint]() {
+                    bool vis = hint_rev->get_child_revealed();
+                    hint_rev->set_reveal_child(!vis);
+                    btn_hint->set_label(vis ? "İpucu Göster" : "İpucu Gizle");
+                });
+
+                auto* btn_terminal = Gtk::make_managed<Gtk::Button>("Terminal");
+                btn_terminal->add_css_class("lab-btn-terminal");
+                btn_terminal->signal_clicked().connect([this, ch_id = ch.id]() {
+                    on_lab_open_terminal("Meydan okuma: " + ch_id);
+                });
+
+                auto* btn_check = Gtk::make_managed<Gtk::Button>("Kontrol Et");
+                btn_check->add_css_class("lab-btn-try");
+                btn_check->signal_clicked().connect([this, ch, card, status_lbl, btn_check, done, xp_lbl]() mutable {
+                    if (!lab_ready) {
+                        show_lab_error("PardusLab hazır değil",
+                            "Podman kurulu değil veya container başlatılmamış.");
+                        return;
+                    }
+                    if (current_lab_container_id.empty()) {
+                        current_lab_container_id = parduslab->start_container();
+                        if (current_lab_container_id.empty()) {
+                            show_lab_error("Container başlatılamadı",
+                                "Podman ile container başlatılamadı.");
+                            return;
+                        }
+                        lab_ready = true;
+                    }
+                    bool ok = parduslab->check_challenge(current_lab_container_id, ch.id);
+                    if (ok) {
+                        status_lbl->set_markup("<span foreground='green'>✓ Doğru! +" + std::to_string(ch.xp) + " XP</span>");
+                        completed_challenges.insert(ch.id);
+                        save_data();
+                        if (xp_lbl) {
+                            int total = 0;
+                            for (auto& c : parduslab->get_challenges()) {
+                                if (completed_challenges.count(c.id))
+                                    total += c.xp;
+                            }
+                            xp_lbl->set_markup("<b>Toplam XP: " + std::to_string(total) + "</b>");
+                        }
+                    } else {
+                        // Kurulum hala devam ediyor olabilir; 3sn sonra tekrar dene
+                        status_lbl->set_markup("<span foreground='orange'>⟳ Kurulum devam ediyor, tekrar deneniyor...</span>");
+                        btn_check->set_sensitive(false);
+                        Glib::signal_timeout().connect_once([this, ch, status_lbl, btn_check, xp_lbl]() {
+                            if (current_lab_container_id.empty()) return;
+                            bool ok2 = parduslab->check_challenge(current_lab_container_id, ch.id);
+                            if (ok2) {
+                                status_lbl->set_markup("<span foreground='green'>✓ Doğru! +" + std::to_string(ch.xp) + " XP</span>");
+                                completed_challenges.insert(ch.id);
+                                save_data();
+                                if (xp_lbl) {
+                                    int total = 0;
+                                    for (auto& c : parduslab->get_challenges()) {
+                                        if (completed_challenges.count(c.id))
+                                            total += c.xp;
+                                    }
+                                    xp_lbl->set_markup("<b>Toplam XP: " + std::to_string(total) + "</b>");
+                                }
+                            } else {
+                                status_lbl->set_markup("<span foreground='red'>✗ Yanlış. İpucunu dene: " + ch.hint + "</span>");
+                            }
+                            btn_check->set_sensitive(true);
+                        }, 3000);
+                    }
+                });
+
+                row->append(*btn_hint);
+                row->append(*btn_terminal);
+                row->append(*btn_check);
+
+                card->append(*name_lbl);
+                card->append(*desc_lbl);
+                card->append(*hint_rev);
+                card->append(*status_lbl);
+                card->append(*row);
+                linux_commands.append(*card);
+            }
+        }
+    }
+
     struct Cmd { std::string cmd, desc, ex, detail; };
     std::vector<Cmd> cmds = {
         {"ls", "Dizin listele", "ls -la /home",
@@ -1606,14 +1755,736 @@ void MainWindow::setup_linux() {
          "  last     → Son oturum açma geçmişi\n"
          "  lastlog  → Her kullanıcının son girişi\n"
          "  finger   → Kullanıcı detay bilgisi\n\n"
+          "Örnekler:\n"
+          "  who                → kullanici  tty7   2026-06-24 10:15 (:0)\n"
+          "  who -b             → system boot  2026-06-20 08:30\n"
+          "  who -uH            → Detaylı + başlık\n"
+          "  who -q             → kullanici root (2 users)\n"
+          "  w                  → Detaylı kullanıcı durumu\n\n"
+          "İpucu: who ve w sysadmin'ler için vazgeçilmez komutlardır."},
+        {"echo", "Metin yazdır", "echo 'Merhaba Dünya'",
+         "Standart çıktıya (stdout) metin yazdırır. Kabuk scriptlerinin temel yapı taşıdır.\n\n"
+         "Seçenekler:\n"
+         "  -n  Satır sonu eklemez (newline yok)\n"
+         "  -e  Kaçış karakterlerini yorumla (\\n, \\t, \\a)\n"
+         "  -E  Kaçış karakterlerini yorumlama (varsayılan)\n\n"
+         "Kaçış karakterleri (-e ile):\n"
+         "  \\n  Yeni satır\n"
+         "  \\t  Tab (sekme)\n"
+         "  \\a  Uyarı sesi (bell)\n"
+         "  \\\\  Ters bölü (backslash)\n"
+         "  \\e  Escape karakteri\n\n"
          "Örnekler:\n"
-         "  who                → kullanici  tty7   2026-06-24 10:15 (:0)\n"
-         "  who -b             → system boot  2026-06-20 08:30\n"
-         "  who -uH            → Detaylı + başlık\n"
-         "  who -q             → kullanici root (2 users)\n"
-         "  w                  → Detaylı kullanıcı durumu\n\n"
-         "İpucu: who ve w sysadmin'ler için vazgeçilmez komutlardır."},
-     };
+         "  echo 'Merhaba Dünya'           → Merhaba Dünya\n"
+         "  echo -n 'giriş'                → 'giriş' (satır atlamaz)\n"
+         "  echo -e 'Satır1\\nSatır2'      → İki satır\n"
+         "  echo \"Deger: $HOME\"            → Değişken genişletme\n"
+         "  echo $?                         → Son komutun çıkış kodu\n\n"
+         "İpucu: Tek tırnak değişken genişletmez, çift tırnak genişletir."},
+        {"date", "Tarih ve saat", "date +%Y-%m-%d",
+         "Sistem tarih ve saatini gösterir veya ayarlar.\n\n"
+         "Format belirteçleri:\n"
+         "  %Y  2026 (yıl)\n"
+         "  %m  01-12 (ay)\n"
+         "  %d  01-31 (gün)\n"
+         "  %H  00-23 (saat)\n"
+         "  %M  00-59 (dakika)\n"
+         "  %S  00-59 (saniye)\n"
+         "  %A  Pazartesi...Pazar (tam gün adı)\n"
+         "  %B  Ocak...Aralık (tam ay adı)\n"
+         "  %u  1-7 (haftanın günü, 1=Pazartesi)\n"
+         "  %W  Yılın haftası (00-53)\n"
+         "  %j  Yılın günü (001-366)\n"
+         "  %s  Unix zaman damgası (saniye)\n\n"
+         "Seçenekler:\n"
+         "  -d 'string'  Gelecek/geçmiş tarih göster\n"
+         "  -u           UTC saat diliminde göster\n"
+         "  -r dosya     Dosyanın son değişiklik zamanı\n\n"
+         "Örnekler:\n"
+         "  date                            → Pzt 24 Haz 10:15:00 +03 2026\n"
+         "  date +%Y-%m-%d                  → 2026-06-24\n"
+         "  date -d 'yesterday' +%A         → Dünün gün adı\n"
+         "  date -d 'next friday' +%d.%m.%Y → Gelecek Cuma\n"
+         "  date -r metin.txt               → Dosyanın zamanı\n"
+         "  date +%s                        → Unix timestamp\n\n"
+         "İpucu:  Tarih hesaplama için date -d '@zaman_damgası' kullanın."},
+        {"cal", "Takvim göster", "cal 2026",
+         "Terminalde takvim görüntüler. Basit ve kullanışlı bir takvim aracı.\n\n"
+         "Seçenekler:\n"
+         "  -1       Tek aylık gösterim (varsayılan)\n"
+         "  -3       Üç aylık (önceki/bu/sonraki ay)\n"
+         "  -y       Tüm yıl gösterimi\n"
+         "  -j       Jülyen takvimi (yılın günü)\n"
+         "  -m       Pazartesi gün başlangıcı\n"
+         "  -s       Pazar gün başlangıcı (varsayılan)\n"
+         "  -w       Hafta numaralarını göster\n\n"
+         "Örnekler:\n"
+         "  cal                     → Bu ay\n"
+         "  cal 2026                → 2026 yılı takvimi\n"
+         "  cal -3                  → 3 aylık görünüm\n"
+         "  cal -A 1 -B 1           → Önceki/sonraki ay ile\n"
+         "  cal 5 1995              → Mayıs 1995\n"
+         "  ncal                    → Dikey takvim (alternatif)\n\n"
+         "İpucu: cal -3 haftalık planlama için idealdir."},
+        {"bc", "Hesap makinesi", "echo '3.14 * 5^2' | bc",
+         "Komut satırı hesap makinesi. Karmaşık matematiksel işlemler yapabilir.\n\n"
+         "Temel işlemler:\n"
+         "  +    Toplama\n"
+         "  -    Çıkarma\n"
+         "  *    Çarpma\n"
+         "  /    Bölme\n"
+         "  ^    Üs alma\n"
+         "  %    Mod alma (kalan)\n\n"
+         "Fonksiyonlar (-l ile):\n"
+         "  s(x)  Sinüs (radyan)\n"
+         "  c(x)  Kosinüs (radyan)\n"
+         "  a(x)  Arktanjant\n"
+         "  l(x)  Doğal logaritma\n"
+         "  e(x)  Üstel fonksiyon\n"
+         "  sqrt(x) Karekök\n\n"
+         "Özel değişkenler:\n"
+         "  scale  Ondalık basamak sayısı\n"
+         "  ibase  Giriş tabanı (2-16)\n"
+         "  obase  Çıkış tabanı (2-16)\n\n"
+         "Örnekler:\n"
+         "  echo 'scale=2; 22/7' | bc       → 3.14\n"
+         "  echo 'obase=2; 255' | bc         → 11111111 (binary)\n"
+         "  echo 'sqrt(144)' | bc -l         → 12\n"
+         "  bc <<< 'scale=4; (3+5)*2'       → 16 (heredoc ile)\n\n"
+         "İpucu: bc -l ile matematiğe başlayın."},
+        {"seq", "Sayı dizisi", "seq 1 5",
+         "Ardışık sayılardan oluşan bir dizi üretir. Döngülerde ve testlerde kullanılır.\n\n"
+         "Kullanım:\n"
+         "  seq SON               → 1'den SON'a kadar\n"
+         "  seq BAŞLA SON          → BAŞLA'dan SON'a kadar\n"
+         "  seq BAŞLA ADIM SON     → BAŞLA'dan SON'a ADIM atlayarak\n\n"
+         "Seçenekler:\n"
+         "  -s 'string'  Sayılar arasına string koy (varsayılan: \\n)\n"
+         "  -w           Sıfır ile sağa hizala (eşit genişlik)\n"
+         "  -f 'format'  printf benzeri format belirt\n\n"
+         "Örnekler:\n"
+         "  seq 5                      → 1 2 3 4 5\n"
+         "  seq 0 2 10                 → 0 2 4 6 8 10\n"
+         "  seq -s ', ' 1 5            → 1, 2, 3, 4, 5\n"
+         "  seq -w 1 10                → 01 02 03 ... 10\n"
+         "  seq -f '%.2f' 1 0.5 3     → 1.00 1.50 ... 3.00\n"
+         "  for i in $(seq 1 10); do echo $i; done\n\n"
+         "İpucu: Bash'te {1..5} de benzer iş yapar ama seq daha esnektir."},
+        {"tr", "Karakter dönüştür", "echo 'merhaba' | tr 'a' 'e'",
+         "Karakterleri değiştirir, siler veya sıkıştırır. Boru hattında metin dönüşümü için idealdir.\n\n"
+         "Kullanım:\n"
+         "  tr KÜME1 KÜME2          → KÜME1'deki karakterleri KÜME2'ye çevir\n"
+         "  tr -d KÜME              → KÜME'deki karakterleri sil\n"
+         "  tr -s KÜME              → Tekrarlanan karakterleri tekle\n\n"
+         "Seçenekler:\n"
+         "  -d  Silme modu\n"
+         "  -s  Sıkıştırma (tekrarları tekle)\n"
+         "  -c  KÜME'nin tümleyeni (tersi)\n"
+         "  -t  Kümeleri eşit uzunluğa kırp\n\n"
+         "Özel ifadeler:\n"
+         "  [:lower:]  Küçük harfler\n"
+         "  [:upper:]  Büyük harfler\n"
+         "  [:digit:]  Rakamlar\n"
+         "  [:space:]  Boşluk karakterleri\n"
+         "  [:alpha:]  Harfler\n"
+         "  [:punct:]  Noktalama işaretleri\n\n"
+         "Örnekler:\n"
+         "  echo 'merhaba' | tr 'a' 'e'             → merhebe\n"
+         "  echo 'MERHABA' | tr 'A-Z' 'a-z'         → merhaba\n"
+         "  echo 'Merhaba   Dünya' | tr -s ' '      → Merhaba Dünya\n"
+         "  echo 'user:pass:123' | tr -d ':'        → userpass123\n"
+         "  cat metin.txt | tr -d '\\r'              → Windows satır sonu temizle\n"
+         "  echo 'hello' | tr '[:lower:]' '[:upper:]' → HELLO\n\n"
+         "İpucu: tr -d '\\n' ile satırları birleştirebilirsiniz."},
+        {"tac", "Tersine cat", "tac dosya.txt",
+         "Dosyayı satırlarını ters çevirerek gösterir (cat'in tersi).\n\n"
+         "Seçenekler:\n"
+         "  -b       Ayırıcıyı satır başına koy (varsayılan: satır sonu)\n"
+         "  -r       Ayırıcıyı regex olarak yorumla\n"
+         "  -s AYIRICI  Ayırıcı belirt (varsayılan: \\n)\n\n"
+         "Örnekler:\n"
+         "  tac log.txt                → En son satır ilk sırada\n"
+         "  tac dosya.txt | head -n 5  → Son 5 satır\n"
+         "  seq 1 5 | tac              → 5 4 3 2 1\n"
+         "  tac -s ':' /etc/passwd     → ':' ayırıcısına göre ters çevir\n\n"
+         "Pratik kullanım:\n"
+         "  Son log kayıtlarını görmek için: tac /var/log/syslog | less\n"
+         "  Bir CSV'yi ters sıralamak için: tac veri.csv\n\n"
+         "İpucu: Son satırı görmek için tail yerine tac | head de kullanılabilir."},
+        {"nl", "Satır numarala", "nl -ba dosya.txt",
+         "Dosya satırlarını numaralandırır. Kod ve metin belgeleri için idealdir.\n\n"
+         "Seçenekler:\n"
+         "  -b st       Sadece boş olmayan satırları numarala (varsayılan)\n"
+         "  -b a        Tüm satırları numarala\n"
+         "  -f st       Dipnot stilleri (footer)\n"
+         "  -h st       Başlık stilleri (header)\n"
+         "  -i SAYI     Artış miktarı (varsayılan: 1)\n"
+         "  -l SAYI     Kaç satırda bir numarala\n"
+         "  -n ln       Sola hizala\n"
+         "  -n rn       Sağa hizala (varsayılan)\n"
+         "  -n rz       Sıfırla doldur (001, 002...)\n"
+         "  -p          Sayfalar arası numaralamayı sıfırlama\n"
+         "  -s STRING   Numaradan sonraki ayırıcı\n"
+         "  -w SAYI     Numaralandırma genişliği\n\n"
+         "Örnekler:\n"
+         "  nl dosya.txt                → Varsayılan numaralama\n"
+         "  nl -ba dosya.txt            → Tüm satırları numarala\n"
+         "  nl -n rz -w 3 dosya.txt     → 001, 002... formatında\n"
+         "  nl -s '. ' -w 2 dosya.txt   → 1. madde, 2. madde...\n"
+         "  cat -n dosya.txt            → nl -b a ile aynı (cat'in -n'i)\n\n"
+         "İpucu: Kaynak kod dökümanlarında satır referansı için kullanın."},
+        {"column", "Sütunlara ayır", "column -t -s ':' /etc/passwd",
+         "Metni sütunlu tablo halinde düzenler. Çıktıyı okunabilir hale getirir.\n\n"
+         "Seçenekler:\n"
+         "  -t          Tablo formatında düzenle\n"
+         "  -s AYIRICI  Sütun ayırıcı (varsayılan: boşluk)\n"
+         "  -c SAYI     Ekran genişliği (sütun sayısı)\n"
+         "  -x          Sütunları doldur (satır bazlı değil)\n"
+         "  -n          Boş girişleri atla\n\n"
+         "Örnekler:\n"
+         "  column -t -s ':' /etc/passwd     → /etc/passwd'yi düzenli göster\n"
+         "  mount | column -t                → mount çıktısını düzenle\n"
+         "  ps aux | column -t               → Süreç listesini düzenle\n"
+         "  cat veri.csv | column -t -s ','  → CSV'yi tablo olarak göster\n"
+         "  df -h | column -t                → Disk kullanım tablosu\n"
+         "  ls -la | column -t               → Dosya listesini düzenle\n\n"
+         "İpucu: Herhangi bir komutun çıktısını güzelleştirmek için pipe ile kullanın."},
+        {"paste", "Satırları birleştir", "paste -d ',' dosya1 dosya2",
+         "Birden fazla dosyayı satır satır birleştirir.\n\n"
+         "Seçenekler:\n"
+         "  -d AYIRICI  Sütun ayırıcı (varsayılan: tab)\n"
+         "  -s          Dosyaları alt alta değil, yan yana birleştir\n"
+         "  -z          Null ile sonlandırılmış girdi\n\n"
+         "Örnekler:\n"
+         "  paste isimler.txt maaslar.txt        → İki dosyayı yan yana\n"
+         "  paste -d ',' ad soyad eposta         → CSV oluştur\n"
+         "  paste -d '|' *.txt                    → Pipe ile ayırarak birleştir\n"
+         "  seq 1 5 | paste -s -d '+'            → 1+2+3+4+5 (toplamaya hazır)\n"
+         "  paste -s -d '\\t' dosya.txt           → Tüm satırları tek satır yap\n\n"
+         "Pratik:\n"
+         "  seq 1 10 | paste -s -d '+' | bc      → 1'den 10'a toplam\n\n"
+         "İpucu: paste, pr ve column ile birlikte metin düzenleme araçlarının temelidir."},
+        {"expand", "Sekmeleri boşluğa çevir", "expand -t 4 dosya.txt",
+         "Sekme (tab) karakterlerini boşluk karakterlerine dönüştürür.\n\n"
+         "Seçenekler:\n"
+         "  -t N      Sekme duraklarını N sütunda bir ayarla (varsayılan: 8)\n"
+         "  -t L1,L2  Özel sekme durakları belirt\n"
+         "  -i        Sadece satır başındaki sekmeleri dönüştür\n"
+         "  --initial -i ile aynı\n\n"
+         "Tersi: unexpand (boşlukları sekmeye çevirir)\n"
+         "  unexpand -t 4 dosya.txt              → 4'lük boşlukları sekmeye çevir\n\n"
+         "Örnekler:\n"
+         "  expand -t 4 kod.c                   → 4 boşluk = 1 sekme\n"
+         "  expand -t 1,5,9 dosya.txt            → Özel sekme durakları\n"
+         "  expand -i yorum.txt                  → Sadece satır başı sekmeler\n"
+         "  cat dosya.txt | unexpand -a          → Tüm boşlukları sekmeye çevir\n\n"
+         "İpucu: Kod paylaşırken sekmeleri boşluğa çevirmek uyumluluğu artırır."},
+        {"dd", "Dosya kopyala/dönüştür", "dd if=/dev/zero of=dosya bs=1M count=10",
+         "Düşük seviyeli dosya kopyalama ve dönüştürme aracı. Blok bazlı çalışır.\n\n"
+         "Parametreler:\n"
+         "  if=GIRDI   Kaynak dosya (input file)\n"
+         "  of=CIKTI   Hedef dosya (output file)\n"
+         "  bs=BOYUT   Blok boyutu (512, 1K, 1M, 1G)\n"
+         "  count=N    Kopyalanacak blok sayısı\n"
+         "  skip=N     Kaynakta N blok atla\n"
+         "  seek=N     Hedefte N blok atla\n"
+         "  conv=...   Dönüştürme seçenekleri\n\n"
+         "conv seçenekleri:\n"
+         "  conv=notrunc  Hedefi kesme (truncate yapma)\n"
+         "  conv=fsync    Fiziksel yazmayı bekle\n"
+         "  conv=noerror  Hataları yoksay (kurtarma için)\n"
+         "  conv=sync     Her bloğu tam doldur\n\n"
+         "Blok boyutları:\n"
+         "  512   512 bayt (1 sektör)\n"
+         "  1K    1024 bayt\n"
+         "  1M    1048576 bayt\n\n"
+         "Örnekler:\n"
+         "  dd if=/dev/zero of=dosya bs=1M count=10  → 10MB dosya oluştur\n"
+         "  dd if=/dev/sda of=disk_yedek.img bs=4M   → Disk yedekle\n"
+         "  dd if=disk_yedek.img of=/dev/sda bs=4M   → Diski geri yükle\n"
+         "  dd if=/dev/urandom of=guvenli_dosya bs=1M count=1  → Rastgele veri\n"
+         "  dd if=disk.img bs=512 count=1 | hexdump  → MBR'ı oku\n\n"
+         "⚠️ UYARI: dd ile disk yazarken çok dikkatli olun, yanlış hedef tüm veriyi silebilir!"},
+        {"shred", "Güvenli sil", "shred -n 3 gizli_dosya.txt",
+         "Dosyayı üzerine rastgele veriler yazarak güvenli şekilde siler. Geri getirilemez hale getirir.\n\n"
+         "Seçenekler:\n"
+         "  -n N       Dosyayı N defa üzerine yaz (varsayılan: 3)\n"
+         "  -z         Son olarak sıfır yazar (gizleme)\n"
+         "  -u         Silme işleminden sonra dosyayı da sil\n"
+         "  -f         Salt okunur dosyaları zorla sil\n"
+         "  -s BOYUT   Son parçayı belirtilen boyuta kes\n"
+         "  -v         İşlem detaylarını göster\n\n"
+         "Örnekler:\n"
+         "  shred gizli.txt                     → 3 defa üzerine yaz\n"
+         "  shred -n 5 -z -u hesap.txt          → 5 defa + sıfır + sil\n"
+         "  shred -v -n 2 *.log                 → Log dosyalarını güvenli sil\n"
+         "  find . -name '*.secret' -exec shred -u {} \\;  → Tüm gizli dosyaları temizle\n\n"
+         "⚠️ NOT: SSD'lerde wear-leveling nedeniyle tam silme garantisi yoktur.\n"
+         "Gerçekten güvenli silme için: sudo blkdiscard /dev/sda (SSD için).\n\n"
+         "İpucu: rm'den farkı, veriyi kurtarılamaz hale getirmesidir."},
+        {"split", "Dosya böl", "split -l 10 buyuk_dosya.txt bolum_",
+         "Büyük dosyaları daha küçük parçalara böler.\n\n"
+         "Seçenekler:\n"
+         "  -l N       Her parçaya N satır (varsayılan: 1000)\n"
+         "  -b BOYUT   Boyuta göre böl (1K, 1M, 1G)\n"
+         "  -n N       N sayıda parçaya böl\n"
+         "  -d         Sayısal ek kullan (aa, ab yerine 00, 01)\n"
+         "  -e         Boş parçaları atla\n"
+         "  -a N       Ek uzunluğu (varsayılan: 2)\n\n"
+         "Birleştirme:\n"
+         "  cat bolum_* > orijinal_dosya   → Parçaları birleştir\n\n"
+         "Örnekler:\n"
+         "  split -l 50 buyuk.csv parca_          → 50'şer satırlık parçalar\n"
+         "  split -b 100M video.mp4 parcavideo_   → 100MB'lık parçalar\n"
+         "  split -n 5 dosya.txt parca_           → 5 eşit parça\n"
+         "  split -d -a 3 log.txt log_            → log_000, log_001...\n"
+         "  cat parca_* > birlesik.txt            → Parçaları birleştir\n\n"
+         "İpucu: Büyük log dosyalarını veya CSV'leri bölmek için idealdir."},
+        {"env", "Ortam değişkenleri", "env | grep PATH",
+         "Tüm ortam değişkenlerini listeler veya belirli bir ortamda komut çalıştırır.\n\n"
+         "Kullanım:\n"
+         "  env                    → Tüm değişkenleri listele\n"
+         "  env DEĞİŞKEN=değer komut  → Değişken ekleyerek komut çalıştır\n"
+         "  env -i komut           → Temiz ortamda çalıştır\n"
+         "  env -u DEĞİŞKEN komut  → Değişkeni kaldırarak çalıştır\n\n"
+         "Önemli değişkenler:\n"
+         "  HOME     → Ev dizini\n"
+         "  PATH     → Komut arama yolları\n"
+         "  USER     → Kullanıcı adı\n"
+         "  SHELL    → Varsayılan kabuk\n"
+         "  LANG     → Dil ayarı\n"
+         "  PWD      → Geçerli dizin\n"
+         "  TERM     → Terminal türü\n\n"
+         "Örnekler:\n"
+         "  env | grep -i path                → PATH değişkenini bul\n"
+         "  env LANG=tr_TR.UTF-8 cal          → Türkçe takvim\n"
+         "  env -i bash                       → Sıfır ortamla bash başlat\n"
+         "  env | sort                        → Alfabetik sıralı liste\n"
+         "  env | wc -l                       → Değişken sayısı\n\n"
+         "İpucu: printenv env ile aynı işi yapar."},
+        {"id", "Kullanıcı kimliği", "id",
+         "Geçerli kullanıcının UID, GID ve grup üyeliklerini gösterir.\n\n"
+         "Seçenekler:\n"
+         "  -u       Sadece UID göster\n"
+         "  -g       Sadece birincil GID göster\n"
+         "  -G       Tüm grup ID'lerini göster\n"
+         "  -n       Sayısal değer yerine isim göster (-u, -g, -G ile)\n"
+         "  -r       Gerçek (real) kimlik (etkin değil)\n"
+         "  -Z       SELinux güvenlik bağlamı\n\n"
+         "Örnekler:\n"
+         "  id                          → uid=1000(kullanici) gid=1000(...) grupları=...\n"
+         "  id -u                       → 1000\n"
+         "  id -un                      → kullanici\n"
+         "  id root                     → uid=0(root) gid=0(root) grupları=0(root)\n"
+         "  id -nG kullanici            → kullanici sudo adm ...\n\n"
+         "İpucu: whoami sadece kullanıcı adını, id tüm detayları gösterir."},
+        {"groups", "Kullanıcı grupları", "groups kullanici",
+         "Bir kullanıcının ait olduğu grupları listeler.\n\n"
+         "Kullanım:\n"
+         "  groups              → Geçerli kullanıcının grupları\n"
+         "  groups kullanici    → Belirtilen kullanıcının grupları\n\n"
+         "İlgili komutlar:\n"
+         "  id              → UID, GID ve grupları detaylı gösterir\n"
+         "  groupadd        → Yeni grup oluştur\n"
+         "  groupdel        → Grup sil\n"
+         "  usermod -aG     → Kullanıcıyı gruba ekle\n"
+         "  gpasswd -d      → Kullanıcıyı gruptan çıkar\n\n"
+         "Örnekler:\n"
+         "  groups                       → kullanici sudo adm dip ...\n"
+         "  groups root                  → root\n"
+         "  groups www-data              → www-data\n"
+         "  id -nG kullanici             → groups ile aynı\n\n"
+         "İpucu: Bir kullanıcının hangi yetkilere sahip olduğunu anlamak için groups kullanın."},
+        {"last", "Son giriş kayıtları", "last -n 10",
+         "Sisteme en son giriş yapan kullanıcıları listeler. Güvenlik denetimi için önemlidir.\n\n"
+         "Seçenekler:\n"
+         "  -n SAYI     Gösterilecek kayıt sayısı\n"
+         "  -i          IP adresini sayısal göster\n"
+         "  -R          Hostname gizle\n"
+         "  -x          Sistem açılış/kapanış kayıtları\n"
+         "  -d          IP'yi DNS'e çözümle\n"
+         "  -f dosya    Belirtilen log dosyasını oku (wtmp)\n"
+         "  -p ZAMAN    Belirtilen zamandaki kullanıcıyı göster\n"
+         "  -s ZAMAN    Belirtilen zamandan itibaren\n"
+         "  -t ZAMAN    Belirtilen zamana kadar\n\n"
+         "Sütunlar:\n"
+         "  Kullanıcı adı, terminal, IP/hostname, giriş zamanı, çıkış zamanı, oturum süresi\n\n"
+         "Örnekler:\n"
+         "  last -n 5                   → Son 5 giriş\n"
+         "  last -x                     → Sistem açılış/kapanış kayıtları\n"
+         "  last -i                     → IP'leri sayısal göster\n"
+         "  last reboot                 → Sadece yeniden başlatmalar\n"
+         "  last kullanici              → Belirli kullanıcının kayıtları\n"
+         "  last -s yesterday           → Dünden beri\n\n"
+         "İlgili: lastb (başarısız giriş denemeleri), w (şu anki kullanıcılar)."},
+        {"w", "Kim çevrimiçi", "w",
+         "Sisteme giriş yapmış kullanıcıları ve ne yaptıklarını gösterir. who'dan daha detaylıdır.\n\n"
+         "Çıktı sütunları:\n"
+         "  USER      Kullanıcı adı\n"
+         "  TTY       Terminal\n"
+         "  FROM      Uzak IP (uzaktan bağlandıysa)\n"
+         "  LOGIN@    Giriş zamanı\n"
+         "  IDLE      Boşta kalma süresi\n"
+         "  JCPU      Tüm süreçlerin CPU süresi\n"
+         "  PCPU      Mevcut sürecin CPU süresi\n"
+         "  WHAT      Şu an çalıştırdığı komut\n\n"
+         "Seçenekler:\n"
+         "  -h        Başlık satırını gizle\n"
+         "  -s        Kısa format (IDLE/LOGIN/JCPU/PCPU yok)\n"
+         "  -i        IP adresini sayısal göster\n"
+         "  -u        Kullanıcı adına göre filtrele\n"
+         "  -o        Eski (kısa) format\n\n"
+         "Örnekler:\n"
+         "  w                           → Tüm kullanıcılar\n"
+         "  w -s                        → Kısa format\n"
+         "  w kullanici                 → Belirli kullanıcı\n"
+         "  w -h                        → Başlıksız (script için)\n\n"
+         "İpucu: who sadece kullanıcı listesi, w kullanıcıların aktivitelerini gösterir."},
+        {"sleep", "Bekle", "sleep 5",
+         "Belirtilen süre kadar bekler (işlemi duraklatır). Scriptlerde zamanlama için kullanılır.\n\n"
+         "Süre birimleri:\n"
+         "  sleep 5         5 saniye (varsayılan)\n"
+         "  sleep 5s        5 saniye\n"
+         "  sleep 2m        2 dakika\n"
+         "  sleep 3h        3 saat\n"
+         "  sleep 1d        1 gün\n"
+         "  sleep 0.5       0.5 saniye\n\n"
+         "Seçenek:\n"
+         "  sleep --help    Yardım\n\n"
+         "Örnekler:\n"
+         "  sleep 5 && echo '5 saniye geçti'       → 5sn bekle, mesaj yazdır\n"
+         "  sleep 0.1                              → 100ms bekle\n"
+         "  while true; do sleep 1; uptime; done    → Her saniye uptime göster\n"
+         "  for i in {1..5}; do echo $i; sleep 1; done  → 5'e kadar say\n"
+         "  sleep $((RANDOM%10))                    → Rastgele bekle (0-9sn)\n\n"
+         "İpucu: Scriptlerde sleep yerine timeout da kullanılabilir."},
+        {"yes", "Evet de", "yes | apt-get install paket",
+         "Sürekli olarak 'y' veya belirtilen metni yazdırır. Otomasyon için kullanılır.\n\n"
+         "Kullanım:\n"
+         "  yes                 → Sürekli 'y' yazdırır (Ctrl+C ile durur)\n"
+         "  yes 'metin'         → Sürekli 'metin' yazdırır\n"
+         "  yes | komut         → Komuta sürekli 'y' gönderir\n\n"
+         "Seçenek:\n"
+         "  --help      Yardım\n\n"
+         "Örnekler:\n"
+         "  yes | apt-get install paket         → Tüm sorulara 'y' yanıtı\n"
+         "  yes 'Evet' | head -n 5              → 5 defa 'Evet' yaz\n"
+         "  yes '' | head -n 100                → 100 boş satır\n"
+         "  yes | dpkg --configure -a           → Paket yapılandırmasını otomatikleştir\n"
+         "  tr '\\n' ',' < <(yes '1' | head -n 5) → 1,1,1,1,1 üret\n\n"
+         "⚠️ DİKKAT: yes | dangerous_komut ciddi hasara yol açabilir!\n\n"
+         "İpucu: echo 'y\\ny\\ny' | komut ile de aynı iş yapılabilir."},
+        {"shuf", "Rastgele sırala", "shuf -n 3 dosya.txt",
+         "Girdiyi rastgele sıralar veya rastgele seçim yapar. Karma (shuffle) işlemi için idealdir.\n\n"
+         "Seçenekler:\n"
+         "  -n SAYI     Seçilecek satır sayısı\n"
+         "  -e arg...   Argümanları girdi olarak kullan\n"
+         "  -i BAS-SON  Sayı aralığı (shuf -i 1-10 gibi)\n"
+         "  -o DOSYA    Çıktıyı dosyaya yaz\n"
+         "  -r          Tekrarlı seçime izin ver\n"
+         "  --random-source DOSYA  Rastgelelik kaynağı\n\n"
+         "Örnekler:\n"
+         "  shuf dosya.txt                      → Satırları karıştır\n"
+         "  shuf -n 1 dosya.txt                 → Rastgele bir satır seç\n"
+         "  shuf -e kırmızı mavi yeşil          → Renkleri karıştır\n"
+         "  shuf -i 1-50 -n 6                   → 1-50 arası 6 rastgele sayı\n"
+         "  shuf -r -n 10 -e A B C D            → 10 kere rastgele seç\n"
+         "  sort -R dosya.txt                   → shuf alternatifi\n\n"
+         "Pratik:\n"
+         "  Öğrenci listesini karıştırmak: shuf ogrenciler.txt\n"
+         "  Rastgele şifre: tr -dc A-Za-z0-9 < /dev/urandom | head -c 12\n\n"
+         "İpucu: Oyunlarda ve çekilişlerde rastgele seçim için idealdir."},
+        {"strings", "Metinleri çıkar", "strings /bin/ls | head -20",
+         "Binary dosyalardan okunabilir metin dizelerini çıkarır.\n\n"
+         "Seçenekler:\n"
+         "  -n UZUNLUK  Minimum string uzunluğu (varsayılan: 4)\n"
+         "  -f          Dosya adını da göster\n"
+         "  -e KODLAMA  Karakter kodlaması (s, S, b, l, L)\n"
+         "  -o          Offset (dosya içindeki konum) göster\n"
+         "  -t RADİKS   Offset formatı (d=decimal, o=octal, x=hex)\n"
+         "  -a          Tüm dosyayı tara (varsayılan)\n"
+         "  --help      Yardım\n\n"
+         "Örnekler:\n"
+         "  strings program                     → Binary'deki metinleri göster\n"
+         "  strings /bin/ls | grep -i error     → Hata mesajlarını bul\n"
+         "  strings -n 10 program               → En az 10 karakterli string'ler\n"
+         "  strings -o program | head           → Offset'leri ile göster\n"
+         "  strings library.so | grep version   → Kütüphane sürümünü bul\n\n"
+         "Pratik kullanım:\n"
+         "  Sürüm bilgisi: strings program | grep -i 'version\\|sürüm'\n"
+         "  Gizli anahtar: strings program | grep -i 'key\\|secret\\|token'\n"
+         "  Yardım metni: strings -n 20 program | grep -E '^[A-Z]'\n\n"
+         "İpucu: Bir binary'nin ne işe yaradığını anlamak için strings kullanın."},
+        {"lscpu", "İşlemci bilgisi", "lscpu",
+         "CPU/işlemci mimarisi ve özellikleri hakkında detaylı bilgi verir.\n\n"
+         "Gösterilen bilgiler:\n"
+         "  Architecture      x86_64, aarch64, armv7l\n"
+         "  CPU op-modes      32-bit, 64-bit\n"
+         "  CPU(s)            Toplam çekirdek sayısı\n"
+         "  Thread(s) per core  Her çekirdekteki iş parçacığı\n"
+         "  Core(s) per socket  Her soketteki çekirdek sayısı\n"
+         "  Socket(s)         Fiziksel işlemci sayısı\n"
+         "  CPU MHz           İşlemci hızı\n"
+         "  L1d, L1i, L2, L3  Önbellek boyutları\n"
+         "  Vendor ID         Intel, AMD, ARM\n"
+         "  Model name        İşlemci model adı\n\n"
+         "Seçenekler:\n"
+         "  -e              İnsan okunabilir format (pretty)\n"
+         "  -p              CSV formatında çıktı\n"
+         "  -x              XML formatında çıktı\n"
+         "  -y              JSON formatında çıktı\n\n"
+         "Örnekler:\n"
+         "  lscpu                       → Tüm CPU bilgileri\n"
+         "  lscpu | grep 'Model name'   → İşlemci modeli\n"
+         "  lscpu | grep 'CPU(s)'       → Çekirdek sayısı\n"
+         "  lscpu -e                    → İnsan okunabilir\n"
+         "  lscpu -J                    → JSON çıktı\n\n"
+         "İpucu: nproc komutu sadece çekirdek sayısını, lscpu tüm detayları verir."},
+        {"lsusb", "USB aygıtları", "lsusb",
+         "USB veriyoluna bağlı tüm aygıtları listeler.\n\n"
+         "Seçenekler:\n"
+         "  -v            Detaylı bilgi (verbose)\n"
+         "  -t            Ağaç yapısında göster\n"
+         "  -s VERIYOLU:CIHAZ  Belirli cihazı göster\n"
+         "  -d VERICI:URUN  Belirli ürün ID'sine göre filtrele\n"
+         "  -D /dev/bus/usb/...  Belirli dosyayı oku\n\n"
+         "Çıktı formatı:\n"
+         "  Bus 001 Device 003: ID 8087:0024 Intel Corp. Integrated Rate Matching Hub\n"
+         "  (Bus=Veriyolu, Device=Cihaz, ID=Üretici:Ürün, Açıklama)\n\n"
+         "Örnekler:\n"
+         "  lsusb                       → Tüm USB cihazları\n"
+         "  lsusb -t                    → Ağaç görünümü\n"
+         "  lsusb -v | grep -E 'iManufacturer|iProduct'  → Detaylı bilgi\n"
+         "  lsusb -d 046d:c077          → Belirli bir Logitech fareyi sorgula\n"
+         "  sudo lsusb -v               → Root ile tüm detaylar\n\n"
+         "İpucu: USB aygıt tanıma sorunlarında lsusb ile başlayın."},
+        {"lspci", "PCI aygıtları", "lspci",
+         "PCI veriyoluna bağlı tüm aygıtları listeler (ekran kartı, ses kartı, ağ kartı vb.)\n\n"
+         "Seçenekler:\n"
+         "  -v            Detaylı bilgi\n"
+         "  -vv           Çok detaylı bilgi\n"
+         "  -k            Çekirdek sürücüsünü göster\n"
+         "  -t            Ağaç yapısında göster\n"
+         "  -nn           Üretici/ürün ID'lerini sayısal göster\n"
+         "  -s [[[[<domain>]:]<bus>]:][<slot>][.[<func>]]  Belirli aygıt\n"
+         "  -d <vendor>:<device>  Belirli ürün ID'sine göre\n"
+         "  -D            DNS çözümlemesi yapma (hızlı)\n\n"
+         "Örnekler:\n"
+         "  lspci                       → Tüm PCI aygıtları\n"
+         "  lspci | grep -i vga         → Ekran kartı bilgisi\n"
+         "  lspci -k                    → Sürücü bilgisi ile\n"
+         "  lspci -t                    → Ağaç görünümü\n"
+         "  lspci -s 00:02.0 -v         → Belirli aygıtın detayı\n"
+         "  lspci -v | grep -A 20 'VGA' → Ekran kartı detayları\n\n"
+         "İpucu: Ekran kartı modelini öğrenmek için lspci | grep -i vga."},
+        {"dmesg", "Çekirdek mesajları", "dmesg | tail -20",
+         "Linux çekirdek halka tamponunu (ring buffer) görüntüler. Sistem açılışındaki mesajları ve donanım algılama bilgilerini içerir.\n\n"
+         "Seçenekler:\n"
+         "  -H          İnsan okunabilir format (zaman damgalı)\n"
+         "  -T          İnsan okunabilir zaman (--ctime ile aynı)\n"
+         "  -l SEVİYE   Seviyeye göre filtrele (emerg, alert, crit, err, warn, notice, info, debug)\n"
+         "  -f TÜR      Türüne göre filtrele (kern, user, mail, daemon)\n"
+         "  -L          Son mesajları renkli göster\n"
+         "  -w          Canlı takip (tail -f gibi)\n"
+         "  -n SEVİYE   Konsol log seviyesini ayarla\n"
+         "  -S          Tampon boyutunu göster\n\n"
+         "Seviyeler:\n"
+         "  0 (emerg)   Sistem kullanılamaz\n"
+         "  1 (alert)   Hemen müdahale gerekli\n"
+         "  2 (crit)    Kritik durum\n"
+         "  3 (err)     Hata\n"
+         "  4 (warn)    Uyarı\n"
+         "  5 (notice)  Önemli bilgi\n"
+         "  6 (info)    Bilgi mesajı\n"
+         "  7 (debug)   Hata ayıklama\n\n"
+         "Örnekler:\n"
+         "  dmesg | tail -20                → Son 20 mesaj\n"
+         "  dmesg -T                        → İnsan okunabilir zamanla\n"
+         "  dmesg -l err,warn               → Hata ve uyarılar\n"
+         "  dmesg -w                        → Canlı takip\n"
+         "  dmesg | grep -i usb             → USB ile ilgili mesajlar\n"
+         "  dmesg | grep -i error           → Hataları bul\n\n"
+         "İpucu: Yeni donanım taktığınızda dmesg -w ile canlı izleyin."},
+        {"passwd", "Şifre değiştir", "passwd",
+         "Kullanıcı şifresini değiştirir veya yönetir.\n\n"
+         "Kullanım:\n"
+         "  passwd                  → Kendi şifreni değiştir\n"
+         "  passwd kullanıcı        → Başka kullanıcının şifresini değiştir (root)\n"
+         "  passwd -l kullanıcı     → Hesabı kilitle\n"
+         "  passwd -u kullanıcı     → Hesabı aç\n"
+         "  passwd -d kullanıcı     → Şifreyi sil (şifresiz giriş)\n"
+         "  passwd -S kullanıcı     → Hesap durumunu göster\n"
+         "  passwd -e kullanıcı     → Şifrenin hemen sonlanmasını sağla\n"
+         "  passwd -n GÜN           → Şifre değiştirme arası minimum gün\n"
+         "  passwd -x GÜN           → Şifre geçerlilik süresi (gün)\n"
+         "  passwd -w GÜN           → Uyarı süresi (gün)\n"
+         "  passwd -i GÜN           → Hesap kapatma süresi (gün)\n\n"
+         "Örnekler:\n"
+         "  passwd                           → Yeni şifre sorar\n"
+         "  sudo passwd -l testuser          → Kullanıcıyı kilitle\n"
+         "  sudo passwd -S root              → Root hesap durumu\n"
+         "  sudo passwd -x 90 kullanici      → 90 günde şifre değiştirme zorunluluğu\n\n"
+         "İpucu: passwd --help ile tüm seçenekleri görebilirsiniz."},
+        {"usermod", "Kullanıcı değiştir", "usermod -aG sudo kullanici",
+         "Mevcut bir kullanıcı hesabını değiştirir (günceller).\n\n"
+         "Seçenekler:\n"
+         "  -aG GRUP    Kullanıcıyı gruba ekle (append)\n"
+         "  -l YENI_AD  Kullanıcı adını değiştir\n"
+         "  -d /yeni/ev  Ev dizinini değiştir\n"
+         "  -m          Ev dizini içeriğini taşı (-d ile)\n"
+         "  -s /bin/bash  Varsayılan kabuğu değiştir\n"
+         "  -c 'Açıklama'  Açıklama ekle/değiştir\n"
+         "  -e YYYY-AA-GG  Hesap bitiş tarihi\n"
+         "  -L          Hesabı kilitle (şifreyi devre dışı bırak)\n"
+         "  -U          Hesabı aç\n"
+         "  -g GRUP     Birincil grup değiştir\n"
+         "  -G GRUPLAR  Ek grupları belirle\n"
+         "  -u UID      UID değiştir\n\n"
+         "Örnekler:\n"
+         "  sudo usermod -aG sudo kullanici   → sudo yetkisi ver\n"
+         "  sudo usermod -l yeniad eskiad     → Kullanıcı adını değiştir\n"
+         "  sudo usermod -d /home/yeni -m kullanici → Ev dizinini taşı\n"
+         "  sudo usermod -s /bin/zsh kullanici  → Kabuk değiştir\n"
+         "  sudo usermod -L kullanici         → Hesabı kilitle\n"
+         "  sudo usermod -e 2026-12-31 kullanici → Süreli hesap\n\n"
+         "⚠️ Kullanıcı adı değiştirirken oturumu kapalı olmalıdır.\n\n"
+         "İpucu: useradd yeni kullanıcı oluşturur, usermod mevcut kullanıcıyı değiştirir."},
+        {"groupadd", "Grup oluştur", "sudo groupadd yeni_grup",
+         "Sisteme yeni bir grup ekler.\n\n"
+         "Seçenekler:\n"
+         "  -g GID       Belirli bir grup ID'si ata\n"
+         "  -r           Sistem grubu oluştur (GID < 1000)\n"
+         "  -f           Grup zaten varsa hata verme\n"
+         "  -p PAROLA    Grup parolası belirle (güvenli değil)\n\n"
+         "İlgili komutlar:\n"
+         "  groupdel GRUP       → Grubu sil\n"
+         "  groupmod -n YENI AD  → Grup adını değiştir\n"
+         "  usermod -aG GRUP KUL  → Kullanıcıyı gruba ekle\n"
+         "  gpasswd GRUP        → Grup yöneticisi\n"
+         "  groups KULLANICI    → Kullanıcının gruplarını göster\n\n"
+         "Örnekler:\n"
+         "  sudo groupadd developers           → developers grubu oluştur\n"
+         "  sudo groupadd -g 2000 proje_grubu  → Belirli GID ile\n"
+         "  sudo groupadd -r sysgroup          → Sistem grubu\n"
+         "  sudo usermod -aG developers kullanici  → Kullanıcıyı ekle\n\n"
+         "İpucu: Gruplar dosya izinleri ve yetkilendirme için kullanılır."},
+        {"iconv", "Karakter kodlaması dönüştür", "iconv -f UTF-8 -t ISO-8859-9 dosya.txt",
+         "Metin dosyalarının karakter kodlamasını dönüştürür.\n\n"
+         "Seçenekler:\n"
+         "  -f KODLAMA  Kaynak kodlama\n"
+         "  -t KODLAMA  Hedef kodlama\n"
+         "  -l          Tüm desteklenen kodlamaları listele\n"
+         "  -o DOSYA    Çıktıyı dosyaya yaz\n"
+         "  -c          Geçersiz karakterleri yoksay\n"
+         "  -s          Hata mesajlarını gizle\n\n"
+         "Yaygın kodlamalar:\n"
+         "  UTF-8       Evrensel kodlama (Linux varsayılanı)\n"
+         "  ISO-8859-9  Latin-5 (Türkçe)\n"
+         "  ISO-8859-1  Latin-1 (Batı Avrupa)\n"
+         "  Windows-1254  Türkçe Windows kodlaması\n"
+         "  ASCII       7-bit temel kodlama\n"
+         "  UTF-16      16-bit Unicode\n\n"
+         "Örnekler:\n"
+         "  iconv -f UTF-8 -t ISO-8859-9 metin.txt -o metin_latin5.txt\n"
+         "  iconv -f Windows-1254 -t UTF-8 windows_dosyasi.txt > linux_dosyasi.txt\n"
+         "  iconv -l | grep -i turkish        → Türkçe kodlamaları listele\n"
+         "  cat sorunlu.txt | iconv -f UTF-8 -t UTF-8 -c    → Geçersiz karakterleri temizle\n\n"
+         "İpucu: dos2unix komutu da satır sonlarını dönüştürür (LF/CRLF)."},
+        {"od", "Octal (sekizlik) döküm", "od -c dosya.txt",
+         "Dosyayı çeşitli formatlarda dökümler (octal, hex, ASCII). Binary dosyaları incelemek için kullanılır.\n\n"
+         "Seçenekler:\n"
+         "  -c          ASCII karakterleriyle göster\n"
+         "  -x          16'lık (hex) döküm\n"
+         "  -o          8'lik (octal) döküm (varsayılan)\n"
+         "  -d          10'luk (decimal) döküm\n"
+         "  -A RADİKS   Adres formatı (o=octal, x=hex, d=decimal, n=yok)\n"
+         "  -j BAŞLA    Başlangıç atlama (offset)\n"
+         "  -N BYTE     Byte sayısı\n"
+         "  -w N        Satır başına N byte\n"
+         "  -t FMT      Format belirt\n\n"
+         "Format türleri:\n"
+         "  a           Adlandırılmış karakterler\n"
+         "  c           ASCII karakterleri\n"
+         "  d           Decimal (işaretli)\n"
+         "  u           Decimal (işaretsiz)\n"
+         "  o           Octal\n"
+         "  x           Hexadecimal\n"
+         "  f           Floating point (kayan noktalı)\n\n"
+         "Örnekler:\n"
+         "  od -c dosya.txt              → Karakter bazında göster\n"
+         "  od -x dosya.bin              → Hex döküm\n"
+         "  od -A x -t x1z dosya.bin     → Adres+hex+ASCII (xxd benzeri)\n"
+         "  head -c 512 /dev/sda | od -A x -t x1z  → MBR'ın ilk 512 baytı\n"
+         "  od -N 100 -c dosya           → İlk 100 karakter\n\n"
+         "İpucu: xxd veya hexdump daha modern alternatiflerdir."},
+        {"xxd", "Hex dökümü", "xxd dosya.bin",
+         "Dosyayı hexadecimal (16'lık) döküm halinde gösterir veya tersine çevirir.\n\n"
+         "Seçenekler:\n"
+         "  -b          Binary (ikilik) döküm\n"
+         "  -c N        Satır başına N byte (varsayılan: 16)\n"
+         "  -l N        Sadece N byte göster\n"
+         "  -s BAŞLA    Başlangıç atlama\n"
+         "  -e          Little-endian düzeninde\n"
+         "  -u          Büyük harfli hex\n"
+         "  -r          Tersine çevir (hex → binary)\n"
+         "  -p          Plain (düz) format, adres ve ASCII olmadan\n"
+         "  -i          C include formatında çıktı\n\n"
+         "Örnekler:\n"
+         "  xxd dosya.bin                     → Standart hex döküm\n"
+         "  xxd -l 100 dosya.bin              → İlk 100 byte\n"
+         "  echo 'Merhaba' | xxd              → String'in hex değeri\n"
+         "  echo '4d657268616261' | xxd -r -p  → Hex'ten metne çevir\n"
+         "  xxd -i dosya.bin > dizi.h          → C dizisi oluştur\n"
+         "  xxd -s 1024 -l 512 /dev/sda        → Belirli konumu oku\n\n"
+         "Pratik:\n"
+         "  Hex'ten ASCII'ye: echo '48656c6c6f' | xxd -r -p\n"
+         "  ASCII'den Hex'e: echo -n 'Hello' | xxd -p\n\n"
+         "İpucu: xxd -i ile binary dosyaları C koduna gömebilirsiniz."},
+        {"md5sum", "MD5 hash hesapla", "md5sum dosya.txt",
+         "Dosyanın MD5 özetini (hash) hesaplar. Dosya bütünlüğü kontrolü için kullanılır.\n\n"
+         "Benzer komutlar:\n"
+         "  md5sum    → 128-bit MD5 (32 karakter hex)\n"
+         "  sha1sum   → 160-bit SHA-1 (40 karakter)\n"
+         "  sha256sum → 256-bit SHA-2 (64 karakter) [ÖNERİLEN]\n"
+         "  sha512sum → 512-bit SHA-2 (128 karakter)\n"
+         "  b2sum     → BLAKE2 (hızlı ve güvenli)\n\n"
+         "Seçenekler:\n"
+         "  -c          Kontrol modu (özet dosyasını doğrula)\n"
+         "  -t          Metin modu (varsayılan)\n"
+         "  -b          Binary modu\n"
+         "  -w          Geçersiz satırlar için uyar\n"
+         "  --strict    Sıkı doğrulama\n"
+         "  --quiet     Sadece hataları göster\n\n"
+         "Örnekler:\n"
+         "  md5sum dosya.txt                        → Özet hesapla\n"
+         "  sha256sum dosya.txt                     → SHA-256 özeti\n"
+         "  md5sum * > toplam.md5                   → Tüm dosyaların özetini kaydet\n"
+         "  md5sum -c toplam.md5                    → Özetleri doğrula\n"
+         "  echo -n 'metin' | md5sum                → String'in özeti\n"
+         "  find . -type f -exec sha256sum {} \\; > checksums.sha256\n\n"
+         "Pratik:\n"
+         "  İndirdiğiniz ISO'nun doğruluğunu kontrol edin:\n"
+         "    sha256sum indirilen.iso (üreticinin verdiği özetle karşılaştırın)\n\n"
+         "İpucu: Güvenlik için MD5 yerine SHA-256 kullanmanız önerilir."},
+        {"base64", "Base64 kodla/çöz", "echo 'Merhaba' | base64",
+         "Veriyi Base64 formatında kodlar veya çözer. E-posta ekleri, JWT token'lar ve API'lerde yaygındır.\n\n"
+         "Seçenekler:\n"
+         "  -d          Çöz (decode)\n"
+         "  -i          Sessiz mod (geçersiz karakterleri yoksay)\n"
+         "  -w N        Satır genişliği (0=sarma yok, varsayılan: 76)\n"
+         "  --help      Yardım\n\n"
+         "Örnekler:\n"
+         "  echo -n 'Merhaba' | base64              → TWVyaGFiYQ==\n"
+         "  echo -n 'TWVyaGFiYQ==' | base64 -d      → Merhaba\n"
+         "  base64 dosya.bin > dosya.b64            → Binary dosyayı kodla\n"
+         "  base64 -d dosya.b64 > dosya.bin         → Çöz\n"
+         "  echo -n 'kullanici:sifre' | base64      → Basic Auth header\n"
+         "  cat resim.jpg | base64                  → Resmi base64'e çevir\n\n"
+         "Pratik:\n"
+         "  JWT token çözme: echo 'token_payload' | base64 -d 2>/dev/null || echo 'padding ekle'\n"
+         "  Dosyayı inline CSS'e gömme: base64 resim.png | tr -d '\\n'\n\n"
+         "İpucu: base32 ile de benzer işlem yapılabilir (daha kısa çıktı)."},
+      };
 
     for (auto& c : cmds) {
         auto* outer = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
