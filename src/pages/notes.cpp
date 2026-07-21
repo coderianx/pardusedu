@@ -70,7 +70,6 @@ void MainWindow::setup_notes() {
     sep->set_margin_bottom(8);
     note_editor_box.append(*sep);
 
-    // Rich text tags
     auto nbuf = note_view.get_buffer();
     auto ttable = nbuf->get_tag_table();
 
@@ -108,7 +107,6 @@ void MainWindow::setup_notes() {
     tag_font_inc = make_font_tag("font_inc", 1.3);
     tag_font_dec = make_font_tag("font_dec", 0.8);
 
-    // Format toolbar — tüm butonlar tek bir cam çerçeve içinde
     format_toolbar.set_halign(Gtk::Align::START);
     format_toolbar.add_css_class("note-toolbar-glass");
 
@@ -255,7 +253,6 @@ void MainWindow::setup_notes() {
         {"⅛", "bir bölü sekiz"}, {"⅜", "üç bölü sekiz"}, {"⅝", "beş bölü sekiz"}, {"⅞", "yedi bölü sekiz"}
     });
 
-    // Kesir oluşturucu
     auto* frac_lbl = Gtk::make_managed<Gtk::Label>();
     frac_lbl->set_markup("<b>Kesir Oluştur</b>");
     frac_lbl->set_halign(Gtk::Align::START);
@@ -368,10 +365,8 @@ void MainWindow::setup_notes() {
             buf->apply_tag(tag_font_dec, buf->get_insert()->get_iter(), buf->get_insert()->get_iter());
     });
 
-    // Apply active formatting to newly inserted text
     nbuf->signal_insert().connect([this](const Gtk::TextIter& pos, const Glib::ustring&, int length) {
         if (length <= 0 || note_loading || selected_note_index < 0) return;
-        // signal_insert fires AFTER insertion; pos points AFTER the inserted text
         int soff = pos.get_offset() - length;
         if (soff < 0) return;
         auto buf = note_view.get_buffer();

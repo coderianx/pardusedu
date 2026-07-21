@@ -1,0 +1,777 @@
+╔══════════════════════════════════════════════════════════════════════════════╗
+║                     PARDUSEDU — DETAYLI PROJE ANALİZİ                       ║
+║              TEKNOFEST 2026 — Pardus Öneri ve Geliştirme Kategorisi          ║
+╚══════════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 1. PROJE KİMLİK BİLGİSİ                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Proje Adı          : PardusEdu (Öğrenci Merkezi / student-hub)
+  Amaç               : Pardus Linux için öğrencilerin tüm akademik ihtiyaçlarını
+                       tek bir çatı altında toplayan GTK4 masaüstü uygulaması
+  Yarışma            : TEKNOFEST 2026
+  Kategori           : Pardus Öneri ve Geliştirme
+  Lisans             : GNU General Public License v3.0
+  Platform           : Linux (Pardus başta olmak üzere Debian/Ubuntu/Arch)
+  Geliştirici        : Coderian (https://github.com/coderianx)
+  Depo               : pardusedu/
+  Dil                : C++17
+  GUI Çatısı         : GTK4 + gtkmm-4.0
+  Build Sistemi      : Meson + Ninja
+  Test Çerçevesi     : Google Test (15/15 test geçiyor)
+  Durum              : Tamamlanmış, çalışır durumda
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 2. DİZİN YAPISI                                                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  pardusedu/
+  ├── .gitignore                        # Git yok sayma kuralları
+  ├── LICENCE                            # GPLv3 lisans metni
+  ├── README.md                          # Proje dokümantasyonu (374 satır)
+  ├── meson.build                        # Ana derleme yapılandırması (67 satır)
+  ├── resources.gresource.xml            # GResource bildirimi (117 satır)
+  │
+  ├── assets/                            # UI varlıkları (grafik, stil, içerik)
+  │   ├── style.css                      # Ana GTK stil dosyası (2.241 satır)
+  │   ├── pardus.png / pardus.svg / pardus_symbol.svg  # Pardus logosu
+  │   ├── sun.svg / moon.svg / moon2.svg              # Tema ikonları
+  │   ├── send.svg / send1.svg                        # Gönder butonu
+  │   ├── save.svg / save_dark.svg                     # Kaydet butonu
+  │   ├── share.svg / share_dark.svg                   # Paylaş butonu
+  │   ├── settings.svg / settings_dark.svg             # Ayarlar butonu
+  │   ├── image.svg / image_dark.svg                   # Görsel yükleme
+  │   ├── duckduckgo.svg                               # DuckDuckGo ikonu
+  │   ├── streak.svg / pomo.svg / timer.svg            # Panel istatistik ikonları
+  │   ├── sidebar_*.svg / sidebar_*_dark.svg           # 24 sidebar ikonu
+  │   │                                                # (12 sayfa × 2 tema)
+  │   ├── dersler/                                     # Ders içerikleri (54 dosya)
+  │   │   ├── dersler.json                             # Ders kataloğu
+  │   │   └── *_5_*.md / *_6_*.md                      # 5. ve 6. sınıf dersleri
+  │   │                                                # (mat, fen, turkce, sosyal,
+  │   │                                                #  ingilizce)
+  │   ├── rozet/                                       # Rozet görselleri (9 PNG)
+  │   │   ├── 5days.png ... 365days.png                # 5-365 gün rozetleri
+  │   └── parduslab/                                   # PardusLab challenge dosyaları
+  │       ├── challenges.json                          # 6 Linux challenge tanımı
+  │       └── files/                                   # Challenge dosyaları
+  │
+  ├── src/                                # C++ kaynak kodu
+  │   ├── main.cpp                        # Giriş noktası + crash handler (30 s)
+  │   ├── mainwindow.h                    # Ana sınıf bildirimi (566 satır)
+  │   ├── ui_setup.cpp                    # UI kurulumu (555 satır)
+  │   ├── data_manager.cpp                # Veri yönetimi (574 satır)
+  │   ├── pages.cpp                       # Sayfa yönlendirme (7 satır)
+  │   ├── ai_client.cpp                   # AI istemci (1.074 satır)
+  │   ├── ai_client.h                     # AI header (39 satır)
+  │   ├── calc_letter.cpp                 # Harf notu hesaplama (9 satır)
+  │   ├── calc_letter.h                   # Not header (6 satır)
+  │   ├── keyring.cpp                     # GNOME Keyring (38 satır)
+  │   ├── keyring.h                       # Keyring header (6 satır)
+  │   ├── parduslab.cpp                   # Podman container (205 satır)
+  │   ├── parduslab.h                     # PardusLab header (71 satır)
+  │   │
+  │   └── pages/                          # Modül sayfaları (15 dosya)
+  │       ├── page_utils.cpp              # Tembel yükleme (21 satır)
+  │       ├── pomodoro.cpp                # Pomodoro zamanlayıcı (172 satır)
+  │       ├── planner.cpp                 # Görev yöneticisi (137 satır)
+  │       ├── notes.cpp                   # Not düzenleyici (1.020 satır)
+  │       ├── schedule.cpp                # Ders programı (283 satır)
+  │       ├── focus.cpp                   # Dikkat modu (108 satır)
+  │       ├── linux.cpp                   # Linux komutları (2.605 satır)
+  │       ├── ai_chat.cpp                 # AI sohbet (884 satır)
+  │       ├── ai_koc.cpp                  # AI koç (1.170 satır)
+  │       ├── python.cpp                  # Python eğitimi (127 satır)
+  │       ├── dersler.cpp                 # Ders içeriği (495 satır)
+  │       ├── flashcards.cpp              # Flashcard sistemi (1.470 satır)
+  │       ├── badges.cpp                  # Rozet sistemi (151 satır)
+  │       ├── weekly_analysis.cpp         # Haftalık analiz (527 satır)
+  │       └── parduslab_pages.cpp         # PardusLab UI (405 satır)
+  │
+  ├── tests/                              # Birim testleri
+  │   ├── meson.build                     # Test derleme yapılandırması (23 s)
+  │   ├── test_calc_letter.cpp            # Not hesaplama testleri (47 satır, 7 test)
+  │   └── test_extract_ai_reply.cpp       # AI yanıt ayrıştırma (74 satır, 8 test)
+  │
+  ├── docs/python/                        # Python eğitim dokümanı
+  │   └── python.md                       # 15.279 satır, 61 bölüm
+  │
+  ├── server/                             # Not paylaşım sunucusu (Python)
+  │   ├── main.py                         # FastAPI + SQLite + Redis (194 satır)
+  │   ├── models.py                       # Pydantic model (5 satır)
+  │   └── templates/
+  │       ├── note.html                   # Not görüntüleme (528 satır)
+  │       └── 404.html                    # Hata sayfası (32 satır)
+  │
+  ├── web/                                # Web sitesi (landing page)
+  │   ├── index.html                      # Ana sayfa (686 satır)
+  │   ├── model.html                      # AI model karşılaştırma (1.048 satır)
+  │   ├── screenshots.html                # Ekran görüntüleri (267 satır)
+  │   ├── LICENCE                         # Web lisansı
+  │   ├── css/style.css                   # Web stili (1.251 satır)
+  │   ├── css/gallery.css                 # Galeri stili (314 satır)
+  │   ├── js/main.js                      # Web JS (274 satır)
+  │   ├── js/gallery.js                   # Galeri JS (60 satır)
+  │   └── img/                            # 15 PNG ekran görüntüsü
+  │
+  └── PARDUSEDU_DETAYLI_ANALIZ.txt        # Bu dosya
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 3. KULLANILAN TEKNOLOJİLER                                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Dil            : C++17 (std::filesystem, std::optional, structured bindings)
+
+  GUI            : GTK4 + gtkmm-4.0 (C++ bağlamaları)
+                   - Gtk::ApplicationWindow, Gtk::Stack, Gtk::Paned
+                   - Gtk::ListBox (sidebar), Gtk::Grid (program)
+                   - Gtk::TextView (zengin metin düzenleyici)
+                   - Gtk::ProgressBar, Gtk::SpinButton
+                   - Glib::Dispatcher (asenkron UI güncelleme)
+
+  Web Görünüm    : WebKitGTK 6.0 (WebKitWebView)
+                   - Python eğitimi için Markdown → HTML render
+                   - Ders içeriklerini görüntüleme
+
+  Terminal       : VTE 2.91 GTK4 (GtkWidget)
+                   - PardusLab için gömülü terminal emülatörü
+
+  HTTP İstemci   : libcurl (std::thread ile asenkron wrapper)
+                   - AI API çağrıları
+                   - DuckDuckGo arama
+                   - YouTube transkript çekme
+                   - Wikipedia entegrasyonu
+                   - Not paylaşımı
+
+  JSON           : nlohmann/json (modern C++, header-only)
+                   - AI yanıt ayrıştırma
+                   - Veri serileştirme (flashcard'lar JSON Lines)
+                   - Not formatları JSON dizisi
+
+  Markdown       : md4c-html
+                   - Python dokümanını HTML'e dönüştürme
+                   - Ders içeriklerini render etme
+
+  QR Kod         : libqrencode
+                   - Not paylaşımında QR kod oluşturma
+
+  Build          : Meson + Ninja
+                   - GResource ile varlıkları binary'e gömme
+                   - Derleme: meson setup build && ninja -C build
+
+  Test           : Google Test (gtest)
+                   - 2 test suite: calc_letter (7), extract_ai_reply (8)
+
+  Konteyner      : Podman
+                   - PardusLab için Ubuntu container yönetimi
+                   - Rootsuz çalıştırma
+
+  Keyring        : secret-tool (libsecret / GNOME Keyring)
+                   - AI API anahtarlarını güvenli saklama
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 4. DESTEKLENEN AI SAĞLAYICILARI                                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  1. GROQ Cloud
+     - Hızlı inference, bulut tabanlı
+     - Modeller: llama-3.3-70b-versatile, mixtral-8x7b, gemma2-9b
+
+  2. OpenRouter
+     - Birleşik API (30+ modele erişim)
+     - Modeller: openai/gpt-4o-mini, qwen-2.5-72b, claude-3.5-sonnet
+
+  3. Google Gemini
+     - Gemini 2.0 Flash, 1.5 Pro
+     - Google Search entegrasyonu (groundingMetadata)
+
+  4. Ollama (Yerel)
+     - İnternet gerektirmez, tamamen yerel
+     - Modeller: llama3.2, mistral (kullanıcı seçimi)
+     - Varsayılan URL: http://localhost:11434
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 5. MİMARİ VE TASARIM DESENLERİ                                              │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  5.1. KATMANLI MİMARI
+
+    ┌───────────────────────────────────────────────┐
+    │            Kullanıcı Arayüzü (UI)              │
+    │  Gtk::ApplicationWindow, Sidebar, Stack        │
+    │  13 sayfa modülü (her biri ayrı .cpp dosyası)  │
+    ├───────────────────────────────────────────────┤
+    │           Veri Yönetimi (data_manager)          │
+    │  setup_data() / save_data()                    │
+    │  XDG_DATA_HOME/ogrenci-merkezi/ (.dat dosyaları)│
+    ├───────────────────────────────────────────────┤
+    │           AI İstemci (ai_client)               │
+    │  std::thread + Glib::Dispatcher                │
+    │  4 provider, 30+ model                         │
+    ├───────────────────────────────────────────────┤
+    │          PardusLab (parduslab)                 │
+    │  Podman CLI wrapper + VTE terminal             │
+    └───────────────────────────────────────────────┘
+
+  5.2. TEMEL TASARIM DESENLERİ
+
+    • Singleton benzeri Küresel Durum:
+      - ai_client.cpp'de static değişkenler (API anahtarları, model adları)
+
+    • Tembel Yükleme (Lazy Initialization):
+      - page_utils.cpp: ensure_page_built() ile her sayfa ilk
+        ziyarette oluşturulur
+
+    • Gözlemci (Observer / Signal-Slot):
+      - GTK sinyalleri (signal_clicked, signal_row_selected)
+      - Glib::Dispatcher ile thread → UI iletişimi
+
+    • İş Parçacığı (std::thread):
+      - AI API çağrıları ayrı thread'lerde
+      - Not paylaşımında HTTP istekleri
+
+    • Veri Saklama (Repository Pattern):
+      - data_manager.cpp: tüm veri yükleme/kaydetme işlemleri
+        tek bir sınıfta toplanmış
+
+    • SM-2 Algoritması (Spaced Repetition):
+      - Flashcards modülünde uzun aralıklı tekrar
+
+    • CRUD:
+      - Notlar, görevler, flashcard'lar, ders programı için
+        oluşturma/okuma/güncelleme/silme işlemleri
+
+  5.3. VERİ AKIŞI
+
+    Kullanıcı Etkileşimi
+         │
+         ▼
+    UI Sinyali (GTK callback)
+         │
+         ▼
+    İşlem (hesaplama/doğrulama)
+         │
+         ▼
+    Veri Modeli Güncelleme (vector, map)
+         │
+         ▼
+    save_data() → .dat dosyaları (XDG)
+         │
+         ▼
+    UI Güncelleme (GTK widget'ları)
+
+    AI isteklerinde:
+    Kullanıcı → ai_client (thread) → HTTP (libcurl) → AI API
+                                                   │
+                                                   ▼
+    UI ← Glib::Dispatcher ← thread ← JSON parse ← Yanıt
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 6. VERİ KALICILIĞI                                                          │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Temel Dizin : $XDG_DATA_HOME/ogrenci-merkezi/
+                (genelde ~/.local/share/ogrenci-merkezi/)
+
+  Format      : Çoğunlukla pipe (|) ile ayrılmış .dat dosyaları
+                Flashcard'lar JSON Lines (.dat uzantılı)
+                Not içerikleri .txt, formatları _fmt.dat
+
+  Dosyalar:
+
+    Dosya                     İçerik
+    ─────────────────────────────────────────────────────────────
+    tasks.dat                 Görev listesi (başlık|kategori|tarih|durum|öncelik)
+    pomodoro.dat              Tamamlanan oturum/dakika
+    streak.dat                Çalışma serisi ve son tarih
+    notes.dat                 Ders listesi
+    note_{n}.txt               n. dersin not içeriği
+    note_{n}_fmt.dat           n. dersin biçimlendirme verisi (JSON)
+    grades.dat                Not girişleri (ders|vize|final)
+    schedule.dat              Ders programı (gün|saat|ders|lokasyon)
+    schedule_times.dat        Özelleştirilmiş saat dilimleri
+    decks.dat                 Flashcard desteleri
+    cards.dat                 Flashcard kartları (JSON Lines)
+    reports.dat               Haftalık analiz raporları
+    provider.dat              Seçili AI sağlayıcı
+    model_*.dat               Sağlayıcı bazında model seçimi
+    ollama_url.dat            Ollama sunucu adresi
+    apikey_*.dat              Eski API anahtarları (taşınıyor keyring'e)
+    sidebar_icons.dat         Sidebar ikon tercihi
+    challenges.dat            Tamamlanan PardusLab challenge'ları
+    weekly.dat                Haftalık pomodoro istatistikleri
+    ai_koc.dat                AI Koç hedef ve raporları
+    gunluk_soru.dat           Günlük soru kayıtları
+    anki_export/*.tsv         Anki TSV dışa aktarımları
+
+  API Anahtarları: GNOME Keyring (secret-tool) ile saklanır,
+                   yoksa dosyadan okunup keyring'e taşınır
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 7. MODÜLLER — DETAYLI İNCELEME                                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  7.1. PANEL (Dashboard) — ui_setup.cpp:386-475
+  ────────────────────────────────────────────────────────────────────────────
+  • Hoş geldin mesajı (kullanıcı adı ile)
+  • Pardus logosu
+  • 3 istatistik kartı: Çalışma Serisi (gün), Pomodoro sayısı, Toplam Çalışma Süresi
+  • Haftalık Analiz butonuna kısayol
+  • Telif hakkı bilgisi
+  • Veri: study_streak, pomodoro_completed, pomodoro_minutes
+
+  7.2. DERSLER (Course Content) — pages/dersler.cpp (495 satır)
+  ────────────────────────────────────────────────────────────────────────────
+  • 5. ve 6. sınıf Türk müfredatı
+  • 5 ders: Matematik, Fen Bilimleri, Türkçe, Sosyal Bilgiler, İngilizce
+  • Drill-down: Sınıf → Ders → Ünite → İçerik (Markdown)
+  • WebKitWebView ile içerik render
+  • assets/dersler/dersler.json'da katalog
+  • Markdown dosyaları: *_5_*.md / *_6_*.md (54 dosya)
+
+  7.3. ROZETLER (Badges) — pages/badges.cpp (151 satır)
+  ────────────────────────────────────────────────────────────────────────────
+  • 9 seviyeli seri rozet sistemi: 5, 7, 14, 21, 30, 60, 90, 180, 365 gün
+  • Her rozet için PNG görsel (assets/rozet/)
+  • İlerleme çubuğu ile bir sonraki rozete kalan gün
+  • Veri: study_streak (streak.dat)
+
+  7.4. FLASHCARDS — pages/flashcards.cpp (1.470 satır)
+  ────────────────────────────────────────────────────────────────────────────
+  • SM-2 aralıklı tekrar algoritması
+  • Deck yönetimi (ekleme/silme/düzenleme)
+  • Kart CRUD: ön yüz, arka yüz, ipucu, etiketler
+  • AI ile kart oluşturma (notlardan)
+  • 0-5 arası derecelendirme ile tekrar
+  • Ease factor, interval, lapses takibi
+  • Anki TSV dışa aktarımı
+  • Zayıf kart analizi ve leech tespiti
+  • JSON Lines formatında kart saklama
+  • Veri: decks.dat (pipe-delimited), cards.dat (JSON Lines)
+
+  7.5. POMODORO — pages/pomodoro.cpp (172 satır)
+  ────────────────────────────────────────────────────────────────────────────
+  • Özelleştirilebilir çalışma süresi (1-120 dk) ve mola (1-30 dk)
+  • Başlat/Duraklat, Sıfırla, Atla kontrolleri
+  • Görsel ilerleme çubuğu
+  • Otomatik kaydetme
+  • Haftalık istatistik toplama
+  • Glib::signal_timeout() ile saniyede bir güncelleme
+  • Veri: pomodoro.dat, weekly.dat
+
+  7.6. GÖREVLER (Planner/Tasks) — pages/planner.cpp (137 satır)
+  ────────────────────────────────────────────────────────────────────────────
+  • 5 kategori: Genel, Ders Çalışma, Proje, Sınav, Ödev
+  • 3 öncelik seviyesi: Düşük, Orta, Yüksek
+  • Son tarih girişi
+  • Tamamlandı işaretleme ve silme
+  • Canlı istatistik: toplam/tamamlanan/kalan
+  • Veri: tasks.dat
+
+  7.7. NOTLAR (Notes) — pages/notes.cpp (1.020 satır)
+  ────────────────────────────────────────────────────────────────────────────
+  • Ders bazlı not sistemi (sol: liste, sağ: düzenleyici)
+  • Zengin metin düzenleyici (Gtk::TextView + TextTag)
+  • Biçimlendirme: Kalın, İtalik, Altı Çizili, Üstü Çizili, H1/H2/H3
+  • Font büyütme/küçültme
+  • Matematik sembolleri dialogu (Yunan harfleri, işlemciler, oklar,
+    kalkülüs, kesirler, mantık/küme, üst/alt simge)
+  • Kesir oluşturucu (pay/payda → süper/subscript Unicode)
+  • Klavye kısayolları (Ctrl+B/I/U/S)
+  • Otomatik karakter/kelime sayacı
+  • Biçimlendirme kalıcılığı (JSON formatında)
+  • Not paylaşımı (FastAPI sunucuya HTTP POST, QR kod gösterimi)
+  • Link notu ekleme (URL'den içerik çekme)
+  • Harf notu hesaplama (vize %40, final %60)
+  • Veri: notes.dat, note_{n}.txt, note_{n}_fmt.dat, grades.dat
+
+  7.8. DERS PROGRAMI (Schedule) — pages/schedule.cpp (283 satır)
+  ────────────────────────────────────────────────────────────────────────────
+  • Pazartesi-Cuma haftalık zaman çizelgesi
+  • 8 varsayılan saat dilimi (08:30-16:00)
+  • Özelleştirilebilir saat dilimleri
+  • Hücreye tıklayarak ekleme/düzenleme/silme
+  • Toplu temizleme
+  • Renk kodlu bloklar (ileri/orta/arka plan)
+  • Gtk::Grid ile 5×8 tablo
+  • Veri: schedule.dat, schedule_times.dat
+
+  7.9. DİKKAT MODU (Focus) — pages/focus.cpp (108 satır)
+  ────────────────────────────────────────────────────────────────────────────
+  • 17+ siteyi /etc/hosts üzerinden engelleme
+  • Engellenen siteler: Instagram, Twitter/X, Facebook, TikTok, Reddit,
+    Netflix, Discord, Twitch
+  • pkexec ile güvenli yetki yükseltme
+  • Bağımsız odak süresi sayacı
+  • Başlat/Durdur kontrolleri
+  • Veri: fokus.dat
+
+  7.10. LİNUX KOMUTLARI — pages/linux.cpp (2.605 satır)
+  ────────────────────────────────────────────────────────────────────────────
+  • 85 temel Linux komutu, 7 kategoride
+  • Kategoriler: Dosya İşlemleri, Metin İşleme, Sistem Yönetimi,
+    Ağ, Sıkıştırma/Yedekleme, İzin/Sahiplik, Diğer
+  • Her komut: açıklama, seçenekler, örnekler
+  • Canlı arama filtresi
+  • Tüm veri sabit kodlanmış (C++ string dizileri)
+
+  7.11. YAPAY ZEKA ASİSTANI (AI Chat) — pages/ai_chat.cpp (884 satır)
+  ────────────────────────────────────────────────────────────────────────────
+  • 4 sağlayıcı desteği (Groq, OpenRouter, Gemini, Ollama)
+  • Model seçici (her sağlayıcı için ayrı)
+  • API anahtarı yönetimi (keyring ile)
+  • DuckDuckGo arama toggle'ı
+  • YouTube transkript çıkarma
+  • Görsel yükleme (base64)
+  • Konuşma geçmişi (token yönetimi)
+  • Asenkron çağrılar (UI bloklamaz)
+  • AI ile not CRUD işlemleri
+  • Wikipedia entegrasyonu
+  • Markdown render
+
+  7.12. AI KOÇ — pages/ai_koc.cpp (1.170 satır)
+  ────────────────────────────────────────────────────────────────────────────
+  • Kişisel AI eğitim koçu
+  • Hedef belirleme ve takibi (serbest metin)
+  • Günlük soru kaydı (ders/konu bazında doğru/yanlış/boş)
+  • Haftalık AI raporu (performans değerlendirmesi)
+  • Haftalık çalışma planı (JSON tablosu, Pazartesi-Pazar)
+  • Opsiyonel ek not alanı (AI'ya yönlendirme)
+  • Materyal önerme (zayıf konulara göre)
+  • Hata analizi (bu haftanın özeti)
+  • 4 ayrı Glib::Dispatcher (rapor, plan, materyal, görev)
+  • Veri: ai_koc.dat, gunluk_soru.dat
+  • Kaçış: pipe karakteri | için \p, ters bölü için \\ (koc_escape/unescape)
+
+  7.13. PYTHON ÖĞREN — pages/python.cpp (127 satır)
+  ────────────────────────────────────────────────────────────────────────────
+  • Uygulama içi Python eğitimi
+  • 61 bölüm, ~14.500 satır döküman
+  • WebKit WebView ile render
+  • md4c ile Markdown → HTML dönüşümü
+  • Karanlık/aydınlık tema desteği
+  • Bölümler arası gezinme
+  • Konular: Temel veri tipleri → Kontrol yapıları → Fonksiyonlar →
+    OOP → NumPy/Pandas → Flask/FastAPI → Asenkron programlama →
+    Test yazma → Veritabanları
+
+  7.14. HAFTALIK ANALİZ — pages/weekly_analysis.cpp (527 satır)
+  ────────────────────────────────────────────────────────────────────────────
+  • Pomodoro, görev, flashcard ve odak verilerini toplama
+  • AI destekli özet, öneri ve motivasyon
+  • Çalışma skoru hesaplama (0-100)
+  • Zayıf kart belirleme ve çalışma oturumu
+  • Leech kart tespiti
+  • Zayıf deck oluşturma
+  • Basit çizelge görselleştirme
+  • WeeklyReport yapısı (19+ alan)
+
+  7.15. PARDUSLAB — pages/parduslab_pages.cpp + parduslab.cpp
+  ────────────────────────────────────────────────────────────────────────────
+  • Podman container yönetimi
+  • Ubuntu tabanlı container oluşturma/başlatma/durdurma/temizleme
+  • VTE terminal emülatörü (GTK4 gömülü)
+  • Çoklu kullanıcı desteği
+  • Komut sandbox (güvenli çalıştırma)
+  • Challenge sistemi (6 Linux alıştırması)
+  • Challenge doğrulama
+  • Snapshot alma
+  • pkexec ile yetki yükseltme
+  • Container IP alma
+  • Dosya kopyalama (host ↔ container)
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 8. VERİ MODELLERİ (mainwindow.h)                                           │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Task            : {title, category, due_date, done(bool), priority(int)}
+  CourseNote      : {course, content}
+  GradeEntry      : {course, midterm, final, average, letter}
+  ScheduleEntry   : {day, time, course, location}
+  FlashDeck       : {id, title, description, source_note, source_course,
+                     card_count, new_count, due_count, review_count,
+                     created_at, last_reviewed_at}
+  FlashCard       : {id, deck_id, front, back, hint, tags,
+                     interval, repetitions, ease_factor, lapses,
+                     next_review_at, last_reviewed_at}
+  DailyStats      : {date, pomo_sessions, focus_minutes, cards_reviewed,
+                     cards_correct, cards_wrong, tasks_done, tasks_total}
+  GunlukSoru      : {tarih, ders, konu, dogru, yanlis, bos}
+  KocHedef         : {hedef, olusturma_tarihi, opsiyonel_alan}
+  WeeklyReport    : {week_start, week_end, total_pomo_sessions,
+                     total_focus_minutes, cards_reviewed, cards_correct,
+                     cards_wrong, tasks_completed, tasks_total,
+                     streak_count, notes_created, study_score,
+                     best_deck_id, worst_deck_id, weak_deck_id, created_at,
+                     ai_summary, ai_advice, ai_motivation,
+                     daily_stats[], wrong_card_ids[], leech_card_ids[]}
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 9. AI İSTEMCİ MİMARİSİ (ai_client.cpp)                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  • Küresel static değişkenler:
+    - conversation_history (std::vector<Message>)
+    - API anahtarları (groq, openrouter, gemini)
+    - global_provider (enum AIProvider)
+    - global_model, global_ollama_model, global_ollama_url
+
+  • Fonksiyonlar:
+    - set/get_groq/openrouter/gemini_api_key()
+    - set/get_provider(), get_provider_name()
+    - set/get_model(), set/get_ollama_model/url()
+    - extract_ai_reply() — JSON yanıt ayrıştırma
+      * Gemini (candidates → content → parts → text)
+      * Standart (choices → message → content)
+    - append_grounding_sources() — Google Search kaynak ekleme
+    - remove_markdown() — regex ile temizleme
+    - ai_chat() — ana asenkron çağrı (callback fonksiyonu ile)
+    - ai_chat_stream() — streaming için (buffer biriktirme)
+    - search_duckduckgo() — web araması
+    - fetch_youtube_transcript() — YouTube transkript
+    - fetch_wikipedia() — Wikipedia özeti
+
+  • Provider API URL'leri:
+    - Groq: https://api.groq.com/openai/v1/chat/completions
+    - OpenRouter: https://openrouter.ai/api/v1/chat/completions
+    - Gemini: https://generativelanguage.googleapis.com/v1beta/models/
+              {model}:generateContent
+    - Ollama: {url}/api/chat
+
+  • curl WriteCallback ile yanıt toplama
+  • std::thread ile UI bloklamadan HTTP isteği
+  • Bağlam yönetimi: conversation_history'yi token limitine göre kırpma
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 10. PARDUSLAB MİMARİSİ (parduslab.cpp/h)                                   │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Sınıf: PardusLab
+  Metotlar:
+    - exec_podman(args) → string (popen wrapper)
+    - generate_id() → timestamp tabanlı ID
+    - start_container(image) → container ID
+    - container_running(id) → bool
+    - exec_command(id, cmd) → çıktı
+    - copy_to_container(id, source, dest) → bool
+    - stop_container(id) → bool
+    - remove_container(id) → bool
+    - cleanup_all() → tüm container'ları temizle
+    - get_container_ip(id) → IP adresi
+    - create_user(id, username) → bool
+    - install_packages(id, packages) → bool
+    - check_challenge(id, challenge_id) → bool
+    - snapshot_container(id) → commit
+
+  Yardımcı:
+    - container_exists(id) → bool
+    - get_container_info(id) → JSON
+
+  Veri Yapıları (parduslab.h):
+    struct ContainerInfo { string id, image, status, ip, created_at; }
+    struct Challenge { string id, title, description, hint, flag, file; };
+
+  Challenge Sistemi:
+    - challenges.json'da 6 Linux challenge
+    - Örnek: gizli dosya bulma, yetki yükseltme, vs.
+    - Her challenge'ın flag dosyası assets/parduslab/files/ altında
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 11. SUNUCU (server/)                                                       │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Framework   : FastAPI (Python)
+  Port        : 8000
+  Veritabanı  : SQLite (notes.db)
+  Önbellek    : Redis (rate limiting)
+  Şablon      : Jinja2
+
+  Uç Noktalar:
+    POST /notes         → Not oluşturma (title, content)
+                          Dönen: {link, web_viewer_link}
+    GET /n/{id}         → JSON not getirme
+    GET /n/view/{id}    → HTML sayfa (Jinja2 şablon)
+    GET /               → Sunucu durumu
+
+  Rate Limiting:
+    - Her IP için dakikada 10 istek
+    - Redis list + ltrim ile pencere takibi
+    - 429 Too Many Requests hatası
+
+  Not Özellikleri:
+    - 7 gün sonra otomatik silme (expires_at)
+    - Başlık: 1-100 karakter
+    - İçerik: maksimum 500KB
+    - ID: 16 karakter rastgele (string.ascii_letters + digits)
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 12. WEB SİTESİ (web/)                                                      │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  • index.html: Uygulama landing page
+    - Hero bölümü, 13 modül tanıtımı
+    - Duyarlı tasarım (responsive)
+    - Karanlık/aydınlık tema geçişi
+
+  • model.html: AI model karşılaştırma sayfası (1.048 satır)
+    - 4 sağlayıcı, tüm modeller listelenmiş
+    - Özellik karşılaştırma tabloları
+
+  • screenshots.html: 15 PNG ekran görüntüsü galerisi
+    - Lightbox desteği (gallery.js)
+
+  • CSS: style.css (1.251 s) + gallery.css (314 s)
+    - CSS custom properties ile tema yönetimi
+
+  • JS: main.js (274 s) + gallery.js (60 s)
+    - Navbar scroll efekti, mobil menü, tema değiştirme
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 13. TESTLER                                                                │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Test Suite              #Test   Durum
+  ───────────────────────────────────────
+  CalcLetterTest            7     ✅ PASS
+  ExtractAiReplyTest        8     ✅ PASS
+  ───────────────────────────────────────
+  Toplam                   15     ✅ ALL PASS
+
+  calc_letter testleri:
+    • A_grade: 100, 95, 90 → 'A'
+    • B_grade: 89, 85, 80 → 'B'
+    • C_grade: 79, 75, 70 → 'C'
+    • D_grade: 69, 65, 60 → 'D'
+    • F_grade: 59, 30, 0, -10 → 'F'
+    • BoundaryValues: sınır değerleri
+    • EdgeBelowBoundary: 89.999, 69.999, 59.999, 49.999
+
+  extract_ai_reply testleri:
+    • EmptyResponse: boş dize
+    • NonJsonResponse: düz metin
+    • ValidJsonResponse: geçerli JSON
+    • MultipleChoicesUsesFirst: birden çok choices
+    • TurkishCharacters: Türkçe karakterler
+    • MissingChoices: choices alanı yok
+    • EmptyChoicesArray: boş dizi
+    • InvalidJson: bozuk JSON
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 14. GÜVENLİK                                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  • API Anahtarları: GNOME Keyring (secret-tool) ile şifrelenmiş
+    depolama. Eski dosya tabanlı depolamadan keyring'e taşıma.
+
+  • Dikkat Modu: Sadece /etc/hosts dosyasını değiştirir,
+    pkexec ile kullanıcı onayı ister.
+
+  • PardusLab: Podman rootsuz container'da çalışır,
+    sudo yetkisi sadece container içinde.
+
+  • Sunucu: Rate limiting (Redis), 7 gün TTL,
+    içerik boyut sınırı (500KB), input validasyonu.
+
+  • Crash Handler: SIGSEGV, SIGABRT, SIGILL, SIGFPE sinyallerini
+    yakalar, backtrace basar ve temiz çıkış yapar.
+
+  • Veri Kaçışı: Pipeline ayrılmış dosyalarda | karakteri \p ile
+    kaçırılır (koc_escape/koc_unescape).
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 15. PERFORMANS VE OPTİMİZASYON                                             │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  • Tembel Sayfa Yükleme: 13 modülden sadece Panel başlangıçta
+    yüklenir, diğer sayfalar ilk ziyarette oluşturulur.
+
+  • GResource: Tüm varlıklar (CSS, SVG, PNG, JSON, Markdown)
+    derleme zamanında binary'e gömülür → hızlı erişim.
+
+  • Asenkron AI: std::thread + Glib::Dispatcher ile UI
+    bloklanmaz, kullanıcı beklemez.
+
+  • CSS Önbellekleme: css_provider_dark/light referansları
+    tutulur, sadece ilk seferde derlenir.
+
+  • JSON Lines: Flashcard'lar her kart bir satır JSON olacak
+    şekilde saklanır → stream okuma mümkün.
+
+  • Veri Boyutu: Tüm veri dosyaları küçük (birkaç KB - birkaç MB),
+    tamamı belleğe yüklenir.
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 16. BAĞIMLILIKLAR VE KURULUM                                               │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Debian/Ubuntu/Pardus:
+    build-essential, meson, ninja-build
+    libgtkmm-4.0-dev, libwebkitgtk-6.0-dev
+    libcurl4-openssl-dev, nlohmann-json3-dev
+    libmd4c-html-dev, libgtest-dev
+    libvte-2.91-gtk4-dev, libqrencode-dev
+    secret-tool (libsecret-tools)
+
+  Arch Linux:
+    base-devel, meson, ninja, gtkmm4
+    webkitgtk-6.0, curl, nlohmann-json
+    md4c, gtest, vte4, qrencode
+
+  Derleme:
+    meson setup build
+    ninja -C build
+    sudo ninja -C build install  (gerekirse)
+
+  Test:
+    ninja -C build test
+
+  Çalıştırma:
+    ./build/student-hub
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 17. GELEGCE GELİŞTİRME POTANSİYELİ                                         │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  • Daha fazla ders içeriği (7-12. sınıflar, üniversite)
+  • Sınav takvimi ve hatırlatıcılar
+  • Çalışma grupları (peer-to-peer)
+  • Mobil uygulama (GTK4 → Android/iOS taşıma)
+  • Bulut senkronizasyon (Nextcloud, Google Drive)
+  • Daha fazla AI sağlayıcısı (Anthropic Claude, Mistral AI)
+  • Sesli asistan desteği
+  • PDF/OCR desteği (sınav kağıdı okuma)
+  • Çoklu dil desteği (İngilizce, Almanca)
+  • Ders programı için takvim ihracatı (ICS)
+  • Pomodoro için istatistik grafikleri
+  • Daha kapsamlı test kapsamı
+  • Flatpak/Snap paketleme
+
+┌──────────────────────────────────────────────────────────────────────────────┐
+│ 18. İSTATİSTİKSEL ÖZET                                                     │
+└──────────────────────────────────────────────────────────────────────────────┘
+
+  Toplam Kaynak Dosyası    : ~60 (C++, Python, HTML, CSS, JS, MD, JSON, XML)
+  Toplam Kod Satırı        : ~37.000
+  C++ Kaynak Kod           : ~10.500 satır (21 .cpp + 3 .h dosyası)
+  CSS                      : ~3.800 satır (GTK + Web)
+  HTML                     : ~2.000 satır
+  JavaScript               : ~334 satır
+  Python (sunucu)          : ~200 satır
+  Markdown (ders/Python)   : ~15.500 satır
+  JSON/XML/Yapılandırma    : ~200 satır
+  Test                     : ~144 satır (15 test)
+
+  Modül Sayısı             : 13 (Panel + 12 özellik)
+  AI Sağlayıcı             : 4
+  Test Geçme Oranı         : 15/15 (%100)
+
+  Ana Sınıf (MainWindow)   : 566 satır bildirim
+  En Büyük Kaynak          : pages/linux.cpp (2.605 satır)
+  En Büyük Veri            : docs/python/python.md (15.279 satır)
+  En Karmaşık Modül        : flashcards.cpp (1.470 satır, SM-2 algoritması)
+  En Yoğun AI Kullanımı    : ai_koc.cpp (1.170 satır, 4 dispatcher)
+
+═══════════════════════════════════════════════════════════════════════════════
+  © 2026 — Coderian — TEKNOFEST Pardus Öneri ve Geliştirme Kategorisi
+═══════════════════════════════════════════════════════════════════════════════

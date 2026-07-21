@@ -563,14 +563,12 @@ void MainWindow::flash_show_deck_detail(const std::string& deck_id) {
 }
 
 void MainWindow::flash_show_review(const std::string& deck_id) {
-    // Clear reusable member containers from previous review
     while (auto* child = flash_rate_box.get_first_child())
         flash_rate_box.remove(*child);
 
     auto* old_review = flash_stack.get_child_by_name("review");
     if (old_review) flash_stack.remove(*old_review);
 
-    // Ensure member widgets are unparented before re-use
     auto unparent = [](Gtk::Widget* w) {
         if (w->get_parent()) w->unparent();
     };

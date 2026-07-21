@@ -128,7 +128,6 @@ void MainWindow::on_ai_response() {
 void MainWindow::setup_ai_chat() {
     ai_dispatcher.connect(sigc::mem_fun(*this, &MainWindow::on_ai_response));
 
-    // Ana sayfa (dış scroll sadece sayfa taşarsa diye)
     auto* sw = Gtk::make_managed<Gtk::ScrolledWindow>();
     sw->set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
     sw->set_vexpand(true);
@@ -139,7 +138,6 @@ void MainWindow::setup_ai_chat() {
     page->set_margin_top(20);
     page->set_margin_bottom(20);
 
-    // ─── Header: Başlık + Model rozeti + Ayarlar ───────────────────────
     auto* header_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
     header_box->add_css_class("ai-header-box");
 
@@ -148,7 +146,6 @@ void MainWindow::setup_ai_chat() {
     title->set_halign(Gtk::Align::START);
     title->set_hexpand(false);
 
-    // Model rozeti - model ID'yi okunabilir hale getir
     auto format_model_name = [](const std::string& id) -> std::string {
         std::string name = id;
         auto slash = name.find('/');
@@ -183,7 +180,6 @@ void MainWindow::setup_ai_chat() {
     header_box->append(*spacer);
     header_box->append(btn_ai_key);
 
-    // ─── Chat mesaj alanı ──────────────────────────────────────────
     ai_chat_box.set_orientation(Gtk::Orientation::VERTICAL);
     ai_chat_box.set_spacing(6);
     ai_chat_box.set_vexpand(true);
@@ -193,7 +189,6 @@ void MainWindow::setup_ai_chat() {
     ai_scroll.set_vexpand(true);
     ai_scroll.set_child(ai_chat_box);
 
-    // ─── Input alanı (ChatGPT tarzı bileşik) ──────────────────────
     ai_input.set_placeholder_text("PardusEdu Asistana soru sor...");
 
     auto* send_icon = Gtk::make_managed<Gtk::Image>();
@@ -212,7 +207,6 @@ void MainWindow::setup_ai_chat() {
     btn_ai_ddg.set_tooltip_text("Aktifse mesaj gönderiminde DuckDuckGo araştırması yapılıp AI analiz eder");
     btn_ai_ddg.add_css_class("ai-ddg-btn");
 
-    // ─── Fotoğraf ekleme butonu ────────────────────────────────────
     auto* image_icon = Gtk::make_managed<Gtk::Image>();
     image_icon->set_from_resource(dark_mode
         ? "/org/ogrenci/merkezi/assets/image_dark.svg"
@@ -223,7 +217,6 @@ void MainWindow::setup_ai_chat() {
     btn_ai_image.set_tooltip_text("Soru fotoğrafı ekle");
     btn_ai_image.add_css_class("ai-image-btn");
 
-    // Görsel seçme dialogu
     btn_ai_image.signal_clicked().connect([this]() {
         auto file_dialog = Gtk::FileDialog::create();
         file_dialog->set_title("Soru fotoğrafı seç");
@@ -237,7 +230,12 @@ void MainWindow::setup_ai_chat() {
         file_dialog->set_filters(filters);
         file_dialog->set_default_filter(filter);
         file_dialog->open(*this, [this, file_dialog](const Glib::RefPtr<Gio::AsyncResult>& result) {
-            auto file = file_dialog->open_finish(result);
+            Glib::RefPtr<Gio::File> file;
+            try {
+                file = file_dialog->open_finish(result);
+            } catch (const Glib::Error&) {
+                return;
+            }
             if (file) {
                 ai_image_path = file->get_path();
                 ai_image_mime = "image/png";
@@ -273,7 +271,6 @@ void MainWindow::setup_ai_chat() {
         });
     });
 
-    // Görsel kaldırma (Label + gesture, çerçevesiz yuvarlak)
     auto* remove_lbl = Gtk::make_managed<Gtk::Label>("✕");
     remove_lbl->add_css_class("ai-image-remove-btn");
     remove_lbl->set_size_request(24, 24);
@@ -299,7 +296,6 @@ void MainWindow::setup_ai_chat() {
     input_container->append(btn_ai_ddg);
     input_container->append(btn_ai_send);
 
-    // Focus - container'ın border'ı tüm genişliği kaplasın
     auto fc = Gtk::EventControllerFocus::create();
     fc->signal_enter().connect([input_container]() {
         input_container->add_css_class("focused");
@@ -309,14 +305,12 @@ void MainWindow::setup_ai_chat() {
     });
     ai_input.add_controller(fc);
 
-    // ─── Send mesaj (DDG toggle aktifse araştırma + AI) ────────────
     auto send_message = [this]() {
         if (ai_waiting) return;
         std::string text = ai_input.get_text();
         bool has_image = !ai_image_base64.empty();
         if (text.empty() && !has_image) return;
 
-        // Görsel yalnızca Gemini veya Groq vision modellerinde çalışır
         if (has_image && ai_provider != AIProvider::GEMINI) {
             std::string model = get_model();
             bool is_groq_vision = (ai_provider == AIProvider::GROQ && (
@@ -496,7 +490,6 @@ void MainWindow::setup_ai_chat() {
     ai_input.signal_activate().connect(send_message);
     btn_ai_send.signal_clicked().connect(send_message);
 
-    // Sayfayı birleştir 
     page->append(*header_box);
     page->append(ai_scroll);
     page->append(ai_image_preview_box);
@@ -524,7 +517,6 @@ void MainWindow::show_ai_key_dialog() {
     content->set_margin(16);
     content->set_spacing(12);
 
-    // Sağlayıcı seçimi
     auto* provider_lbl = Gtk::make_managed<Gtk::Label>("Sağlayıcı:");
     provider_lbl->set_halign(Gtk::Align::START);
 
@@ -544,7 +536,6 @@ void MainWindow::show_ai_key_dialog() {
     sep->set_margin_bottom(8);
     content->append(*sep);
 
-    // Groq Cloud bölümü
     auto* groq_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 8);
 
     auto* groq_header = Gtk::make_managed<Gtk::Label>("");
@@ -599,7 +590,6 @@ void MainWindow::show_ai_key_dialog() {
     groq_box->append(*groq_model_lbl);
     groq_box->append(*groq_model_combo);
 
-    // OpenRouter bölümü
     auto* or_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 8);
 
     auto* or_header = Gtk::make_managed<Gtk::Label>("");
@@ -634,32 +624,25 @@ void MainWindow::show_ai_key_dialog() {
     or_model_lbl->set_halign(Gtk::Align::START);
 
     auto* or_model_combo = Gtk::make_managed<Gtk::ComboBoxText>();
-    // Google
     or_model_combo->append("google/gemma-4-31b-it", "Google Gemma 4 31B");
     or_model_combo->append("google/gemini-3.5-flash", "Gemini 3.5 Flash");
     or_model_combo->append("google/gemini-2.5-flash", "Gemini 2.5 Flash");
     or_model_combo->append("google/gemini-3.1-flash-lite", "Gemini 3.1 Flash Lite");
     or_model_combo->append("google/gemini-2.5-pro", "Gemini 2.5 Pro");
     or_model_combo->append("google/gemini-3.1-pro-preview", "Gemini 3.1 Pro");
-    // Qwen
     or_model_combo->append("qwen/qwen3.6-flash", "Qwen 3.6 Flash");
     or_model_combo->append("qwen/qwen3-coder", "Qwen 3 Coder");
     or_model_combo->append("qwen/qwen3.7-max", "Qwen 3.7 Max");
     or_model_combo->append("qwen/qwen3-next-80b-a3b-instruct:free", "Qwen3 Next Free");
     or_model_combo->append("qwen/qwen3.6-flash", "Qwen 3.6 Flash");
-    // Deepseek
     or_model_combo->append("deepseek/deepseek-r1", "Deepseek R1");
     or_model_combo->append("deepseek/deepseek-v4-pro", "Deepseek V4 Pro");
     or_model_combo->append("deepseek/deepseek-v4-flash:nitro", "Deepseek V4 Flash Nitro");
-    // Mistral
     or_model_combo->append("mistralai/mistral-small-2603", "Mistral Small 4");
-    // Kimi
     or_model_combo->append("moonshotai/kimi-k2-thinking", "Kimi K2");
     or_model_combo->append("moonshotai/kimi-k2.6", "Kimi K2.6");
-    // Claude
     or_model_combo->append("anthropic/claude-haiku-4.5", "Claude Haiku 4.5");
     or_model_combo->append("anthropic/claude-sonnet-4.6", "Claude Sonnet 4.6");
-    // GPT
     or_model_combo->append("openai/gpt-5-mini", "ChatGPT 5 Mini");
     or_model_combo->append("openai/gpt-4o-mini", "ChatGPT 4o Mini");
     or_model_combo->append("openai/gpt-4.1-mini", "ChatGPT 4.1 Mini");
@@ -674,7 +657,6 @@ void MainWindow::show_ai_key_dialog() {
     or_box->append(*or_model_lbl);
     or_box->append(*or_model_combo);
 
-    // Google Gemini bölümü
     auto* gemini_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 8);
 
     auto* gemini_header = Gtk::make_managed<Gtk::Label>("");
@@ -710,13 +692,10 @@ void MainWindow::show_ai_key_dialog() {
 
     auto* gemini_model_combo = Gtk::make_managed<Gtk::ComboBoxText>();  
         
-    // Gemini Flash Lite Models
     gemini_model_combo->append("gemini-2.5-flash-lite", "Gemini 2.5 Flash Lite");
     gemini_model_combo->append("gemini-3.1-flash-lite", "Gemini 3.1 Flash Lite");
-    // Gemini Flash Models
     gemini_model_combo->append("gemini-2.5-flash", "Gemini 2.5 Flash");
     gemini_model_combo->append("gemini-3.5-flash", "Gemini 3.5 Flash");
-    // Gemini Pro Models
     gemini_model_combo->append("gemini-2.5-pro", "Gemini 2.5 Pro");
     gemini_model_combo->append("gemini-3-pro-preview", "Gemini 3 Pro");
     gemini_model_combo->append("gemini-3.1-pro-preview", "Gemini 3.1 Pro");
@@ -730,7 +709,6 @@ void MainWindow::show_ai_key_dialog() {
     gemini_box->append(*gemini_model_lbl);
     gemini_box->append(*gemini_model_combo);
 
-    // Ollama bölümü
     auto* ollama_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 8);
 
     auto* ollama_header = Gtk::make_managed<Gtk::Label>("");
@@ -777,7 +755,6 @@ void MainWindow::show_ai_key_dialog() {
     content->append(*gemini_box);
     content->append(*ollama_box);
 
-    // Sağlayıcı değişince görünürlüğü ayarla
     auto update_visibility = [groq_box, or_box, gemini_box, ollama_box, provider_combo]() {
         std::string id = provider_combo->get_active_id();
         groq_box->set_visible(id == "groq");
@@ -788,7 +765,6 @@ void MainWindow::show_ai_key_dialog() {
     provider_combo->signal_changed().connect(update_visibility);
     update_visibility();
 
-    // Kullanıcının ayarları kaydetmesi veya iptal etmesi için butonlar
     auto* btn_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 8);
     btn_box->set_halign(Gtk::Align::END);
     btn_box->set_margin_top(12);
@@ -814,7 +790,6 @@ void MainWindow::show_ai_key_dialog() {
         else ai_provider = AIProvider::GROQ;
         set_provider(ai_provider);
 
-        // Groq ayarlarını kaydet
         std::string groq_key = groq_key_entry->get_text();
         if (!groq_key.empty()) {
             ai_api_key_groq = groq_key;
@@ -822,7 +797,6 @@ void MainWindow::show_ai_key_dialog() {
         }
         ai_model_groq = groq_model_combo->get_active_id();
 
-        // OpenRouter ayarlarını kaydet
         std::string or_key = or_key_entry->get_text();
         if (!or_key.empty()) {
             ai_api_key_openrouter = or_key;
@@ -830,7 +804,6 @@ void MainWindow::show_ai_key_dialog() {
         }
         ai_model_openrouter = or_model_combo->get_active_id();
 
-        // Gemini ayarlarını kaydet
         std::string gemini_key = gemini_key_entry->get_text();
         if (!gemini_key.empty()) {
             ai_api_key_gemini = gemini_key;
@@ -838,7 +811,6 @@ void MainWindow::show_ai_key_dialog() {
         }
         ai_model_gemini = gemini_model_combo->get_active_id();
 
-        // Ollama ayarlarını kaydet
         std::string ollama_url = ollama_url_entry->get_text();
         if (!ollama_url.empty()) {
             ai_ollama_url = ollama_url;
@@ -847,7 +819,6 @@ void MainWindow::show_ai_key_dialog() {
         ai_model_ollama = ollama_model_combo->get_active_id();
         set_ollama_model(ai_model_ollama);
 
-        // Aktif sağlayıcının modelini uygula
         if (ai_provider == AIProvider::GROQ) {
             set_model(ai_model_groq);
         } else if (ai_provider == AIProvider::OPENROUTER) {
@@ -860,7 +831,6 @@ void MainWindow::show_ai_key_dialog() {
 
         save_data();
 
-        // Model rozetini güncelle
         if (ai_model_badge) {
             std::string model_id = get_model();
             std::string display = model_id;

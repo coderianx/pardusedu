@@ -391,7 +391,6 @@ void MainWindow::setup_dashboard() {
     auto* box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::VERTICAL, 0);
     box->set_halign(Gtk::Align::CENTER);
 
-    // --- Welcome ---
     dash_logo.set_resource("/org/ogrenci/merkezi/assets/pardus.svg");
     dash_logo.set_content_fit(Gtk::ContentFit::SCALE_DOWN);
     dash_logo.set_size_request(30, 30);
@@ -413,7 +412,6 @@ void MainWindow::setup_dashboard() {
     box->append(dash_welcome);
     box->append(*sub);
 
-    // --- Stats Cards ---
     auto* stats_box = Gtk::make_managed<Gtk::Box>(Gtk::Orientation::HORIZONTAL, 20);
     stats_box->set_halign(Gtk::Align::CENTER);
     stats_box->set_margin_top(48);
@@ -454,7 +452,6 @@ void MainWindow::setup_dashboard() {
 
     box->append(*stats_box);
 
-    // --- Weekly Analysis Button ---
     auto* btn_weekly = Gtk::make_managed<Gtk::Button>("Haftal\u0131k Analizlerim");
     btn_weekly->set_halign(Gtk::Align::CENTER);
     btn_weekly->set_margin_bottom(16);
@@ -463,7 +460,6 @@ void MainWindow::setup_dashboard() {
         sigc::mem_fun(*this, &MainWindow::navigate_to_weekly_analysis));
     box->append(*btn_weekly);
 
-    // --- Copyright ---
     auto* pardusedu = Gtk::make_managed<Gtk::Label>("©PardusEdu");
     pardusedu->set_halign(Gtk::Align::CENTER);
     pardusedu->add_css_class("pardusedu");

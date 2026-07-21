@@ -349,19 +349,15 @@ void MainWindow::setup_data() {
         }
     }
 
-    // AI Koç
     auto akf = dir + "/ai_koc.dat";
     if (fs::exists(akf)) {
-        // Read entire file (fields may contain newlines)
         std::ifstream f(akf);
         std::stringstream buf;
         buf << f.rdbuf();
         std::string content = buf.str();
-        // Remove trailing newline
         if (!content.empty() && content.back() == '\n')
             content.pop_back();
 
-        // Parse: only split on first three pipes, rest is content
         auto p1 = content.find('|');
         auto p2 = content.find('|', p1 + 1);
         auto p3 = content.find('|', p2 + 1);
@@ -371,8 +367,6 @@ void MainWindow::setup_data() {
             if (p3 != std::string::npos) {
                 koc_son_rapor = koc_unescape(content.substr(p2+1, p3-p2-1));
                 koc_hedef.opsiyonel_alan = koc_unescape(content.substr(p3+1));
-                // Detect and repair old-style corruption: if opsiyonel contains | or \p,
-                // it means old parsing split the report field on a pipe inside AI text.
                 if (koc_hedef.opsiyonel_alan.find('|') != std::string::npos ||
                     koc_hedef.opsiyonel_alan.find("\\p") != std::string::npos) {
                     auto last = content.rfind('|');
@@ -409,7 +403,6 @@ void MainWindow::setup_data() {
         }
     }
 
-    // Apply the active provider's model
     if (ai_provider == AIProvider::GROQ)
         set_model(ai_model_groq);
     else if (ai_provider == AIProvider::OPENROUTER)
@@ -507,7 +500,6 @@ void MainWindow::save_data() {
               << gs.dogru << "|" << gs.yanlis << "|" << gs.bos << "\n";
         } }
 
-    // Sync anki_export TSV files with current data
     std::string export_dir = dir + "/anki_export";
     fs::create_directories(export_dir);
     for (auto& entry : fs::directory_iterator(export_dir)) {

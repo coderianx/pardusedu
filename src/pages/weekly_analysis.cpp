@@ -13,10 +13,6 @@
 
 using json = nlohmann::json;
 
-// ============================================================
-// Weekly Analysis Functions
-// ============================================================
-
 static Gtk::Frame* make_section_card(const std::string& header_markup, Gtk::Widget& content) {
     auto* card = Gtk::make_managed<Gtk::Frame>();
     card->add_css_class("card");
@@ -62,8 +58,6 @@ void MainWindow::setup_weekly_analysis() {
     weekly_stats_box.set_halign(Gtk::Align::CENTER);
     weekly_stats_box.set_margin_bottom(20);
     weekly_box.append(weekly_stats_box);
-
-    // Daily study time chart
 
 
     weekly_ai_summary.set_wrap(true);
@@ -360,7 +354,6 @@ void MainWindow::collect_weekly_data() {
         report.daily_stats.push_back(ds);
     }
 
-    // Distribute pomodoro and minutes proportionally by card activity
     int active_days = 0;
     for (int di = 0; di < 7; di++) {
         if (day_card_counts[di] > 0) active_days++;

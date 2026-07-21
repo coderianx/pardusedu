@@ -17,7 +17,6 @@ void MainWindow::setup_parduslab() {
     parduslab = new PardusLab();
     lab_ready = false;
 
-    // Challenges'i yükle (podman gerektirmez, hızlı)
     GBytes* bytes = g_resources_lookup_data(
         "/org/ogrenci/merkezi/assets/parduslab/challenges.json",
         G_RESOURCE_LOOKUP_FLAGS_NONE, nullptr);
@@ -34,7 +33,6 @@ void MainWindow::setup_parduslab() {
         g_bytes_unref(bytes);
     }
 
-    // Podman kontrolü idle'da (UI bloklamasın)
     Glib::signal_idle().connect_once([this]() {
         if (!parduslab->podman_available()) {
             if (lab_warning)

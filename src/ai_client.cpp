@@ -20,21 +20,16 @@ struct Message
     std::string content;
 };
 
-// Konuşma geçmişi (AI bağlam için)
 static std::vector<Message> conversation_history;
 
-// API anahtarları, kullanıcı kendi anahtarını girer
 static std::string global_groq_api_key = "";
 static std::string global_openrouter_api_key = "";
 static std::string global_gemini_api_key = "";
 
-// Hangi sağlayıcı (Groq / OpenRouter / Gemini / Ollama)
 static AIProvider global_provider = AIProvider::GROQ;
 
-// Varsayılan model, kullanıcı ayarlardan değiştirebilir
 static std::string global_model = "llama-3.3-70b-versatile";
 
-// Ollama ayarları
 static std::string global_ollama_model = "llama3.2";
 static std::string global_ollama_url = "http://localhost:11434";
 
@@ -101,7 +96,6 @@ std::string get_ollama_url() {
     return global_ollama_url;
 }
 
-// CURL yazma callback'i
 static size_t WriteCallback(void* contents,
                             size_t size,
                             size_t nmemb,
@@ -113,7 +107,6 @@ static size_t WriteCallback(void* contents,
     return size * nmemb;
 }
 
-// API JSON yanıtından AI metnini çıkar
 std::string extract_ai_reply(
     const std::string& response)
 {
@@ -168,7 +161,6 @@ std::string extract_ai_reply(
     }
 }
 
-// Gemini groundingMetadata varsa "Google Search" ibaresini ekle
 static std::string append_grounding_sources(
     const std::string& raw_response,
     const std::string& ai_text)
@@ -243,7 +235,6 @@ static std::string remove_markdown(
         ""
     );
 
-    // Liste işaretlerini •'ya çevir
     text = std::regex_replace(
         text,
         std::regex(R"(^[-*+]\s)",
@@ -254,7 +245,6 @@ static std::string remove_markdown(
     return text;
 }
 
-// YouTube linki var mı?
 static bool has_youtube_url(
     const std::string& text)
 {
@@ -266,7 +256,6 @@ static bool has_youtube_url(
         text.find("youtube.com/embed/") != std::string::npos;
 }
 
-// İlk YouTube linkini bul
 static std::string extract_youtube_url(
     const std::string& text)
 {
@@ -277,7 +266,6 @@ static std::string extract_youtube_url(
     return "";
 }
 
-// nlohmann/json UTF-8 doğrulamasından geçmeyen byte'ları temizler
 static std::string sanitize_utf8(const std::string& input)
 {
     std::string result;
@@ -309,23 +297,17 @@ static std::string sanitize_utf8(const std::string& input)
     return result;
 }
 
-// yt-dlp ile transkript al
 static std::string fetch_youtube_transcript(
     const std::string& url)
 {
-    // Önce yt-dlp kurulu mu kontrol et
     int check = system("which yt-dlp > /dev/null 2>&1");
     if (check != 0)
         return "yt-dlp_bulunamadi";
 
-    // Transkript dosyasını indir (vtt formatında — daha az yer kaplar)
     std::string output = "/tmp/yt_transcript_%(id)s";
     std::string dl_cmd = "yt-dlp --skip-download --write-auto-sub --sub-lang tr --convert-subs vtt --output '" + output + "' " + url + " 2>/dev/null";
     system(dl_cmd.c_str());
 
-    // İndirilen dosyayı oku (önce Türkçe, sonra İngilizce dene)
-    // Tüm gereksiz bilgileri temizle: HTML tagları, zaman damgaları, satır numaraları,
-    // WEBVTT başlıkları, [Müzik] gibi işaretleyiciler, boş satırlar ve ardışık tekrarlar
     std::string read_cmd = "cat /tmp/yt_transcript_*.tr.vtt /tmp/yt_transcript_*.en.vtt 2>/dev/null | sed -E 's/<[^>]+>//g; /^[[:space:]]*$/d; /^[0-9]+$/d; /^[0-9]{2}:[0-9]{2}:/d; /^WEBVTT/d; /^Kind:/d; /^Language:/d; /^\\[.*\\]/d; /^♪|^♫|^♬/d' | uniq";
 
     std::string result;
@@ -338,28 +320,23 @@ static std::string fetch_youtube_transcript(
         pclose(pipe);
     }
 
-    // Geçici dosyaları temizle
     system("rm -f /tmp/yt_transcript_* 2>/dev/null");
 
-    // JSON'a girmeden önce geçersiz UTF-8 byte'larını temizle
     return sanitize_utf8(result);
 }
 
-// Kabaca token sayısı (3.5 karakter ≈ 1 token)
 static int estimate_tokens(const std::string& text)
 {
     if (text.empty()) return 0;
     return std::max(1, (int)(text.length() / 3.5f));
 }
 
-// Modelin context limitini döndürür (çoğu model 128K destekler)
 static int get_model_limit()
 {
     return 128000;
 }
 
 std::string duckduckgo_search(const std::string& query) {
-    // Sorguyu temizle
     std::string cleaned = query;
     cleaned = std::regex_replace(cleaned, std::regex(R"([?¿?!¡]+)"), " ");
     cleaned = std::regex_replace(cleaned, std::regex(R"(\b(kimdir|kim|nedir|neden|nasıl|nasil|nerede|nereye|hangi|kaç|kac|mı|mi|mu|mü|miyim|misin|midir)\b)", std::regex::icase), " ");
@@ -587,7 +564,6 @@ std::string call_ai(
     "sadece o derse ait notları kullan.\n\n"
     + app_context;
 
-    // Kullanıcı YouTube linki attıysa yt-dlp ile transkript indir
     std::string transcript_context;
 
     if (has_youtube_url(user_text))
@@ -615,13 +591,11 @@ std::string call_ai(
         }
         else
         {
-            // Token limitini aşmamak için transkripti kısalt
             const size_t MAX_TRANSCRIPT_CHARS = 18000;
             std::string truncated = transcript;
 
             if (truncated.size() > MAX_TRANSCRIPT_CHARS)
             {
-                // İlk yarı ve son yarıyı al ki giriş+sonuç kaybolmasın
                 size_t half = MAX_TRANSCRIPT_CHARS / 2;
                 truncated = truncated.substr(0, half)
                     + "\n\n[...ortadaki kısım atlandı, video çok uzun...]\n\n"
@@ -640,13 +614,11 @@ std::string call_ai(
     std::string final_user_text =
         transcript_context + user_text;
 
-    // Kullanıcı mesajını geçmişe ekle
     conversation_history.push_back({
         "user",
         final_user_text
     });
 
-    // Mesajları hazırla
     json messages = json::array();
 
     messages.push_back({
@@ -664,13 +636,11 @@ std::string call_ai(
         });
     }
 
-    // Token tahmini ve kırpma
     int max_tokens = (global_provider == AIProvider::OPENROUTER) ? 512 : 2048;
     const int MIN_TOKENS = 128;
     const int MODEL_LIMIT = get_model_limit();
-    const int SAFETY_MARGIN = 1024; // model limitine göre emniyet payı
+    const int SAFETY_MARGIN = 1024;
 
-    // Toplam prompt token'larını tahmin et
     int estimated_prompt = 0;
     for (const auto& msg : messages)
     {
@@ -679,13 +649,11 @@ std::string call_ai(
         estimated_prompt += 4; // her mesajın format overhead'i
     }
 
-    // Eğer prompt + max_tokens limiti aşıyorsa, önce history'yi kırp
     int total_target = estimated_prompt + max_tokens;
     int limit = MODEL_LIMIT - SAFETY_MARGIN;
 
     while (total_target > limit && (int)messages.size() > 1)
     {
-        // System mesajını (index 0) koru, en eski sohbet mesajını sil
         auto removed = messages[1]["content"];
         estimated_prompt -= estimate_tokens(removed.get<std::string>());
         estimated_prompt -= 4;
@@ -693,11 +661,9 @@ std::string call_ai(
         total_target = estimated_prompt + max_tokens;
     }
 
-    // Hala aşıyorsa max_tokens'ı kırp
     if (total_target > limit)
         max_tokens = std::max(MIN_TOKENS, max_tokens - (total_target - limit));
 
-    // cURL ayarları
     struct curl_slist* headers = nullptr;
 
     bool is_gemini = (global_provider == AIProvider::GEMINI);
@@ -715,12 +681,17 @@ std::string call_ai(
     std::string api_url;
     if (is_ollama) {
         std::string base_url = global_ollama_url;
+        if (base_url.find("://") == std::string::npos)
+            base_url = "http://" + base_url;
         if (base_url.back() == '/') base_url.pop_back();
         api_url = base_url + "/v1/chat/completions";
     } else if (global_provider == AIProvider::GROQ) {
         api_url = "https://api.groq.com/openai/v1/chat/completions";
     } else if (is_gemini) {
-        api_url = "https://generativelanguage.googleapis.com/v1beta/models/" + global_model + ":generateContent?key=" + api_key;
+        char* enc_key = curl_easy_escape(curl, api_key.c_str(), (int)api_key.size());
+        std::string safe_key = enc_key ? enc_key : api_key;
+        if (enc_key) curl_free(enc_key);
+        api_url = "https://generativelanguage.googleapis.com/v1beta/models/" + global_model + ":generateContent?key=" + safe_key;
     } else {
         api_url = "https://openrouter.ai/api/v1/chat/completions";
     }
@@ -737,14 +708,12 @@ std::string call_ai(
     curl_easy_setopt(curl, CURLOPT_WRITEDATA, &response);
 
     curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 1L);
-    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 2L);
+    curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 1L);
     curl_easy_setopt(curl, CURLOPT_TIMEOUT, is_ollama ? 120L : (global_provider == AIProvider::OPENROUTER ? 30L : 60L));
     curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 10L);
 
-    // İsteği gönder, 413'te tekrar dene
     long http_code = 0;
 
-    // OpenAI-compat (Groq) vision modelleri için son mesajı array formatına çevir
     bool is_openai_vision = !image_base64.empty() && !is_gemini &&
         global_provider == AIProvider::GROQ && (
             global_model.find("llama-4-scout") != std::string::npos ||
@@ -778,7 +747,6 @@ std::string call_ai(
                 std::string content = messages[mi]["content"];
                 json parts = json::array({json{{"text", content}}});
 
-                // Son kullanıcı mesajına görsel ekle
                 if (!image_base64.empty() && mi == messages.size() - 1 && role == "user") {
                     parts.push_back({
                         {"inline_data", {
@@ -844,13 +812,11 @@ std::string call_ai(
 
         if (http_code == 413)
         {
-            // Önce history'den en eski mesajı at
             if ((int)messages.size() > 1)
             {
                 messages.erase(messages.begin() + 1);
                 continue;
             }
-            // History bitmişse max_tokens'ı yarıya indir
             if (max_tokens > MIN_TOKENS)
             {
                 max_tokens = std::max(MIN_TOKENS, max_tokens / 2);
@@ -899,7 +865,6 @@ std::string call_ai(
 
     ai_reply = remove_markdown(ai_reply);
 
-    // Baştaki/sondaki boşlukları temizle
     ai_reply.erase(0, ai_reply.find_first_not_of(" \n\r\t"));
     ai_reply.erase(ai_reply.find_last_not_of(" \n\r\t") + 1);
 
@@ -960,10 +925,15 @@ std::string call_ai_json(const std::string& prompt) {
 
     if (is_ollama) {
         std::string base_url = global_ollama_url;
+        if (base_url.find("://") == std::string::npos)
+            base_url = "http://" + base_url;
         if (base_url.back() == '/') base_url.pop_back();
         api_url = base_url + "/v1/chat/completions";
     } else if (is_gemini) {
-        api_url = "https://generativelanguage.googleapis.com/v1beta/models/" + global_model + ":generateContent?key=" + api_key;
+        char* enc_key = curl_easy_escape(curl, api_key.c_str(), (int)api_key.size());
+        std::string safe_key = enc_key ? enc_key : api_key;
+        if (enc_key) curl_free(enc_key);
+        api_url = "https://generativelanguage.googleapis.com/v1beta/models/" + global_model + ":generateContent?key=" + safe_key;
         headers = curl_slist_append(headers, "Content-Type: application/json");
     } else {
         api_url = global_provider == AIProvider::GROQ
@@ -994,7 +964,6 @@ std::string call_ai_json(const std::string& prompt) {
 
     if (res != CURLE_OK || http_code != 200) {
         if (!response.empty()) {
-            // Try to extract an error message from the API response
             try {
                 auto err = json::parse(response);
                 if (err.contains("error") && err["error"].contains("message")) {
@@ -1007,7 +976,6 @@ std::string call_ai_json(const std::string& prompt) {
 
     std::string reply = extract_ai_reply(response);
 
-    // Strip markdown code block markers if present
     size_t start = reply.find("```");
     if (start != std::string::npos) {
         start = reply.find('\n', start);
@@ -1072,4 +1040,3 @@ std::string base64_encode(const std::string& data) {
     return out;
 }
 
-// 0fb350a5f83740d49e65b28bcb258cda.WHEZmLQ-PWxR6sUnBMyULStM

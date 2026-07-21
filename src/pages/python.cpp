@@ -5,13 +5,11 @@
 
 void MainWindow::setup_python() {
 
-    // Python dersleri için kaydırılabilir bir alan oluşturuyoruz
     auto* sw = Gtk::make_managed<Gtk::ScrolledWindow>();
     sw->set_policy(Gtk::PolicyType::AUTOMATIC, Gtk::PolicyType::AUTOMATIC);
     sw->set_hexpand(true);
     sw->set_vexpand(true);
 
-    // İçerikleri düzenli bir şekilde yerleştirmek için dikey bir kutu kullanıyoruz
     auto* box = Gtk::make_managed<Gtk::Box>(
         Gtk::Orientation::VERTICAL,
         0
@@ -19,7 +17,6 @@ void MainWindow::setup_python() {
     box->set_hexpand(true);
     box->set_vexpand(true);
 
-    // Web tabanlı ders içeriğini göstermek için WebKit tarayıcı bileşenini kullanıyoruz
     python_webview = WEBKIT_WEB_VIEW(webkit_web_view_new());
 
     auto* web_widget =
@@ -28,16 +25,13 @@ void MainWindow::setup_python() {
     web_widget->set_hexpand(true);
     web_widget->set_vexpand(true);
 
-    // Python derslerini HTML'e çevirip gösteriyoruz, tema değişince de yeniden yüklüyoruz
     reload_python();
 
-    // WebKit bileşenini kutuya ekleyip kaydırılabilir alanla ana sayfaya yerleştiriyoruz
     box->append(*web_widget);
     sw->set_child(*box);
 
     stack.add(*sw, "python");
 
-    // Sayfanın tüm alanı kaplaması için genişlik ve yükseklik ayarlarını yapıyoruz
     stack.set_hexpand(true);
     stack.set_vexpand(true);
 }
@@ -81,7 +75,6 @@ void MainWindow::reload_python() {
         0
     );
 
-    // Aydınlık ve karanlık mod için ayrı CSS stilleri hazırlıyoruz
     std::string css_light = R"(
 html, body { margin:0; padding:0; height:100%; }
 body{ background:transparent; color:#111111 !important; font-family: Inter, sans-serif; }
@@ -112,7 +105,6 @@ hr{ border:none; height:1px; background:#1f2933; margin:40px 0; }
         + html
         + std::string("\n</div>\n</body>\n</html>\n");
 
-    // WebView arka plan rengini temaya göre ayarlıyoruz, bazı platformlarda CSS geçmeyebiliyor
     GdkRGBA bg;
     gdk_rgba_parse(&bg, (dark_mode ? "#111213" : "#ffffff"));
     webkit_web_view_set_background_color(python_webview, &bg);

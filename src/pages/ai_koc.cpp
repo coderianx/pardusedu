@@ -17,9 +17,7 @@ namespace {
 int koc_days_until(const std::string& date_str) {
     if (date_str.size() < 8) return -999;
     std::string d = date_str;
-    // Normalize separators: replace / or - with .
     for (auto& c : d) { if (c == '/' || c == '-') c = '.'; }
-    // Expect DD.MM.YYYY or D.M.YYYY
     int day = 0, month = 0, year = 0;
     if (std::sscanf(d.c_str(), "%d.%d.%d", &day, &month, &year) != 3) return -999;
     if (year < 100) year += 2000;
@@ -193,7 +191,6 @@ void MainWindow::koc_gorevleriguncelle() {
 }
 
 std::string MainWindow::koc_materyal_prompt() {
-    // Gather current week's weak topics
     std::string hafta_bas = hafta_basi_str();
     std::map<std::string, std::pair<int,int>> zor_konular; // konu -> (yanlis, toplam)
     for (auto& s : gunluk_sorular) {
@@ -202,7 +199,6 @@ std::string MainWindow::koc_materyal_prompt() {
         zor_konular[anahtar].first += s.yanlis;
         zor_konular[anahtar].second += (s.dogru + s.yanlis + s.bos);
     }
-    // Filter to only weak topics (>= 40% wrong)
     std::vector<std::string> zor_liste;
     for (auto& [k, v] : zor_konular) {
         if (v.second > 0 && (double)v.first / v.second >= 0.4) {
@@ -438,7 +434,6 @@ void MainWindow::on_koc_plan_response() {
     if (pending_koc_plan_response.empty()) return;
     std::string text = pending_koc_plan_response;
 
-    // Find JSON object in response (first { to last })
     {
         size_t start = text.find('{');
         size_t end = text.rfind('}');
@@ -446,7 +441,6 @@ void MainWindow::on_koc_plan_response() {
             text = text.substr(start, end - start + 1);
         }
     }
-    // Trim whitespace
     {
         auto is_not_space = [](unsigned char c) { return !std::isspace(c); };
         auto left = std::find_if(text.begin(), text.end(), is_not_space);
@@ -501,7 +495,6 @@ Gtk::Widget* MainWindow::koc_plan_tablosu() {
     }
 
     try {
-    // ---- Öncelikli Konular ----
     if (j.contains("oncelikli_konular") && j["oncelikli_konular"].is_array()) {
         auto* baslik = Gtk::make_managed<Gtk::Label>("");
         baslik->set_markup("<b>\u00d6ncelikli Konular</b>");
@@ -532,7 +525,6 @@ Gtk::Widget* MainWindow::koc_plan_tablosu() {
         }
     }
 
-    // ---- Haftalık Program ----
     if (j.contains("haftalik_program") && j["haftalik_program"].is_array()) {
             auto* prog_baslik = Gtk::make_managed<Gtk::Label>("");
             prog_baslik->set_markup("<b>Haftal\u0131k \u00c7al\u0131\u015fma Program\u0131</b>");
@@ -545,7 +537,6 @@ Gtk::Widget* MainWindow::koc_plan_tablosu() {
             grid->set_row_spacing(6);
             grid->set_margin_start(4);
 
-            // Başlıklar
             auto* h_gun = Gtk::make_managed<Gtk::Label>("");
             h_gun->set_markup("<b>G\u00fcn</b>");
             h_gun->set_halign(Gtk::Align::START);
@@ -836,7 +827,6 @@ void MainWindow::setup_ai_koc() {
     box->set_margin_bottom(20);
     box->set_spacing(20);
 
-    // ---- HEDEF BANNER ----
     auto* hedef_card = Gtk::make_managed<Gtk::Frame>();
     hedef_card->add_css_class("koc-hedef-card");
     hedef_card->set_hexpand(true);
@@ -881,7 +871,6 @@ void MainWindow::setup_ai_koc() {
     hedef_card->set_child(*hedef_ic);
     box->append(*hedef_card);
 
-    // ---- YAKLAŞAN SINAVLAR & ÖDEVLER KARTI ----
     auto* gorev_card = Gtk::make_managed<Gtk::Frame>();
     gorev_card->add_css_class("card");
 
@@ -1015,10 +1004,8 @@ void MainWindow::setup_ai_koc() {
     soru_card->set_child(*soru_vbox);
     box->append(*soru_card);
 
-    // Populate today's list
     koc_bugunku_listeyi_guncelle(bugun_liste);
 
-    // ---- HAFTALIK RAPOR KARTI ----
     auto* rapor_card = Gtk::make_managed<Gtk::Frame>();
     rapor_card->add_css_class("card");
 
@@ -1082,7 +1069,6 @@ void MainWindow::setup_ai_koc() {
     rapor_card->set_child(*rapor_vbox);
     box->append(*rapor_card);
 
-    // ---- HAFTALIK PLAN KARTI ----
     auto* plan_kart = Gtk::make_managed<Gtk::Frame>();
     plan_kart->add_css_class("card");
 
@@ -1115,7 +1101,6 @@ void MainWindow::setup_ai_koc() {
     plan_kart->set_child(*plan_vbox);
     box->append(*plan_kart);
 
-    // ---- MATERYAL ÖNERİ KARTI ----
     auto* materyal_kart = Gtk::make_managed<Gtk::Frame>();
     materyal_kart->add_css_class("card");
 

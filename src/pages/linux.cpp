@@ -36,7 +36,6 @@ void MainWindow::setup_linux() {
     }
     lab_warning->set_margin_bottom(8);
 
-    // --- Challenge Section ---
     Gtk::Label* xp_lbl = nullptr;
     if (parduslab) {
         auto& challenges = parduslab->get_challenges();
@@ -145,7 +144,6 @@ void MainWindow::setup_linux() {
                             xp_lbl->set_markup("<b>Toplam XP: " + std::to_string(total) + "</b>");
                         }
                     } else {
-                        // Kurulum hala devam ediyor olabilir; 3sn sonra tekrar dene
                         status_lbl->set_markup("<span foreground='orange'>⟳ Kurulum devam ediyor, tekrar deneniyor...</span>");
                         btn_check->set_sensitive(false);
                         Glib::signal_timeout().connect_once([this, ch, status_lbl, btn_check, xp_lbl]() {

@@ -15,7 +15,6 @@
 #include "ai_client.h"
 #include "parduslab.h"
 
-// Koç data escaping for | pipe-separated files
 inline std::string koc_escape(const std::string& s) {
     std::string r;
     r.reserve(s.size());
@@ -266,7 +265,6 @@ private:
     int focus_seconds = 0;
     sigc::connection focus_timer_conn;
 
-    // --- PardusLab ---
     PardusLab* parduslab = nullptr;
     std::string current_lab_container_id;
     Gtk::Window* terminal_window = nullptr;
@@ -376,7 +374,6 @@ private:
     void block_sites();
     void unblock_sites();
 
-    // --- PardusLab ---
     void setup_parduslab();
     void on_lab_try_command(const std::string& command);
     void on_lab_open_terminal(const std::string& command_hint);
@@ -456,7 +453,6 @@ private:
     void flash_export_anki(const std::string& deck_id);
     void flash_load_anki_exports();
 
-    // --- Weekly Analysis ---
     void setup_weekly_analysis();
     void collect_weekly_data();
     void render_weekly_analysis_ui();
@@ -523,7 +519,6 @@ private:
     std::string flash_current_deck_id;
     std::vector<int> flash_review_queue;
 
-    // --- Weekly Analysis UI ---
     std::vector<WeeklyReport> weekly_reports;
     Gtk::Box weekly_box{Gtk::Orientation::VERTICAL, 0};
     Gtk::ScrolledWindow weekly_scroll;
